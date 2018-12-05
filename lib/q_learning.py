@@ -4,32 +4,62 @@ See: https://en.wikipedia.org/wiki/Q-learning
 """
 
 from abc import ABC, abstractmethod
-from typing import Iterable
+from typing import Iterable, List
 
 
 class State:
+    """A generic state."""
     pass
 
+
 class Action:
+    """A generic action."""
     pass
+
+
+class Environment(ABC):
+    """A generic environment class."""
+    
+    def __init__(self):
+        self._current_state = None  # type: State
+        self._last_action = None  # type: Action
+        self._last_reward = 0.0  # type: float
+        
+    def GetCurrentState(self) -> State:
+        return self._current_state
+        
+    def GetLastAction(self) -> Action:
+        return self._last_action
+        
+    def GetLastReward(self) -> float:
+        return self._last_reward
+        
+    @abstractmethod
+    def GetActionSpace(self) -> List[Action]:
+        """Returns a list of possible actions for the current state."""
+        pass
+
+    @abstractmethod
+    def TakeAction(self, action: Action) -> None:
+        """Takes an action, updates internal states."""
+        pass
 
 
 class QFunction(ABC):
+    """A generic Q-function."""
 
-    def __init__(
-            self, 
-            learning_rate: float,
-            discount_factor: float,
-        ):
+    def __init__(self):
+        self._alpha = 0.5
+        self._gamma = 0.5
+        
+    def SetLearningRate(self, learning_rate: float) -> None:
         self._alpha = learning_rate
-        self._gamma = discount_factor
-        
         assert 0 <= self._alpha <= 1
+        
+    def SetDiscountFactor(self, discount_factor: float) -> None:
+        self._gamma = discount_factor
         assert 0 <= self._gamma < 1
-        
-        self._1_minus_alpha = 1.0 - self._alpha
-        
-    
+
     @abstractmethod
     def GetValue(
             self,
@@ -40,7 +70,7 @@ class QFunction(ABC):
         pass
     
     @abstractmethod
-    def SetValue(
+    def _SetValue(
             self,
             state: State,
             action: Action,
@@ -71,14 +101,16 @@ class QFunction(ABC):
             self.GetValue(state_t_plus_1, action_t_plut_1)
             for action_t_plut_1 in action_space_t_plus_1)
         
-        self.SetValue(
-            state_t_plus_1,
-            self._1_minus_alpha * GetValue(state_t, action_t) + 
+        self._SetValue(
+            state_t,
+            action_t,
+            (1.0 - self._alpha) * self.GetValue(state_t, action_t) + 
             self._alpha * (
                 reward_t + self._gamma * estimated_best_future_value))
 
 
 class Policy(ABC):
+    """The Policy interface."""
     
     @abstractmethod
     def Decide(
