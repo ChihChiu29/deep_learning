@@ -3,6 +3,7 @@
 from typing import Dict, Iterable, Tuple
 
 import numpy
+from keras import models
 
 from lib import q_learning
 
@@ -35,20 +36,77 @@ class FiniteStateQFunction(q_learning.QFunction):
         
     # @Override
     def GetValue(
-            self,
-            state: HashableState,
-            action: HashableAction,
-        ) -> float:
+        self,
+        state: HashableState,
+        action: HashableAction,
+    ) -> float:
         return self._values.setdefault(self.Hash(state, action), 0.0)
         
     # @Override
     def _SetValue(
-            self,
-            state: HashableState,
-            action: HashableAction,
-            new_value: float,
-        ) -> None:
+        self,
+        state: HashableState,
+        action: HashableAction,
+        new_value: float,
+    ) -> None:
         self._values[self.Hash(state, action)] = new_value
+    
+
+NpArrayState = numpy.ndarray
+NpArrayAction = numpy.ndarray
+_NpArrayStateActionVector = numpy.ndarray
+    
+class KerasModelQFunction(q_learning.QFunction):
+    """A Q-Function implementation using a model built in Keras.
+    
+    This function takes in a Keras model whose "fit" action is used to write
+    to the model, and "predict" is used to train the model.
+    
+    In this setup both the state and the action are numpy arrays of any
+    dimention. However when fed into the model they are flattened and
+    concatenated into a 1-d array, so the model's input layer should be
+    declared to have input_dim equals to the combined degree of freedom of
+    the state and action space. The output layer should output a single float
+    for the value.
+    """
+    
+    def __init__(self, model: models.Model):
+        super().__init__()
+        self.debug = False  # Sets to True to print out stuff.
+        
+        self._model = model
+        
+    @staticmethod
+    def _GetStateActionVector(
+        state: NpArrayState,
+        action: NpArrayAction,
+    ) -> _NpArrayStateActionVector:
+        """Prepares a [[state], [action]] vector suitable as an input."""
+        return numpy.concatenate(
+            (state.reshape(state.size),
+             action.reshape(action.size)), axis=0).reshape(
+                 1, state.size + action.size)
+        
+    # @Override
+    def GetValue(
+        self,
+        state: NpArrayState,
+        action: NpArrayAction,
+    ) -> float:
+        value = self._model.predict(self._GetStateActionVector(state, action))
+        if self.debug:
+            print('GET: (%s, %s) -> %s' % (state, action, value))
+        return value
+        
+    # @Override
+    def _SetValue(
+        self,
+        state: NpArrayState,
+        action: NpArrayAction,
+        new_value: float,
+    ) -> None:
+        return self._model.fit(
+            self._GetStateActionVector(state, action), new_value, verbose=0)
     
     
 class MaxValuePolicy(q_learning.Policy):

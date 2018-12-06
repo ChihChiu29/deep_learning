@@ -5,9 +5,8 @@ from typing import Dict, List, Tuple
 import gym
 import keras
 
-from keras.layers import Activation
-from keras.layers import Dense
-from keras.models import Sequential
+from keras.layers import Activation, Dense, InputLayer
+from keras.models import Model, Sequential
 
 from lib import q_learning
 from lib import q_learning_impl
