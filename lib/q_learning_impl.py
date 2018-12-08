@@ -127,3 +127,29 @@ class MaxValuePolicy(q_learning.Policy):
                 max_value = try_value
                 max_value_action = action
         return max_value_action
+
+
+class MaxValueWithRandomnessPolicy(q_learning.Policy):
+    """A policy that returns the action that yields the max value."""
+    
+    def __init__(self, certainty: float = 0.9):
+        self._certainty = certainty
+    
+    # @Override
+    def Decide(
+        self,
+        q_function: q_learning.QFunction,
+        current_state: q_learning.State,
+        action_space: Iterable[q_learning.Action],
+    ) -> q_learning.Action:
+        max_value = -numpy.inf
+        max_value_action = None
+        for action in action_space:
+            try_value = q_function.GetValue(current_state, action)
+            if try_value > max_value:
+                max_value = try_value
+                max_value_action = action
+        if numpy.random.random() > self._certainty:
+            return max_value_action
+        else:
+            return action_space[numpy.random.choice(range(len(action_space)))]
