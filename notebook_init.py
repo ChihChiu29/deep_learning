@@ -9,7 +9,9 @@ from keras.layers import Activation, Dense, InputLayer
 from keras.models import Model, Sequential
 
 from lib import q_learning
+from lib import q_learning_v2
 from lib import q_learning_impl
+from lib import q_learning_impl_v2
 
 
 # Add this to the first cell of your notebook:
