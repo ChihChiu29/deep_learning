@@ -27,27 +27,32 @@ Reward = float
 class Environment(ABC):
     """A generic environment class."""
     
-    def __init__(self, state_size: int, action_space_size: int):
-        self._state_size = state_size
+    def __init__(self, state_array_size: int, action_space_size: int):
+        self._state_array_size = state_array_size
         self._action_space = range(action_space_size)
+        
+        self._state = numpy.zeros(state_array_size)
     
-    def GetStateSize(self) -> int:
+    def GetStateArraySize(self) -> int:
         """Gets the size of all state arrays (they are all 1-d)."""
-        return self._state_size
+        return self._state_array_size
     
     def GetActionSpace(self) -> ActionSpace:
         """Gets the action space, which is uniform per environment."""
         return self._action_space
     
-    @abstractmethod
     def GetState(self) -> State:
         """Gets the current state."""
-        pass
+        return self._state
 
     @abstractmethod
     def TakeAction(self, action: Action) -> Reward:
         """Takes an action, updates state."""
         pass
+    
+    def _protected_SetState(self, state: State) -> None:
+        """Used by subclasses to set state."""
+        self._state = state
 
 
 class QFunction(ABC):
@@ -107,7 +112,7 @@ class QFunction(ABC):
             state_t_plus_1: the state to land at after action_t.
             action_space: the possible actions to take.
         """
-        estimated_best_future_value = numpy.max(
+        estimated_best_future_value = max(
             self.GetValue(state_t_plus_1, action_t_plut_1)
             for action_t_plut_1 in action_space)
         

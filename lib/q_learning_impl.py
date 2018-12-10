@@ -149,7 +149,8 @@ class MaxValueWithRandomnessPolicy(q_learning.Policy):
             if try_value > max_value:
                 max_value = try_value
                 max_value_action = action
-        if numpy.random.random() > self._certainty:
+
+        if numpy.random.random() < self._certainty:
             return max_value_action
         else:
             return action_space[numpy.random.choice(range(len(action_space)))]

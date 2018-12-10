@@ -3,6 +3,7 @@
 from typing import Dict, Iterable, Tuple
 
 import numpy
+from keras import layers
 from keras import models
 
 from lib import q_learning_v2
@@ -13,8 +14,7 @@ class KerasModelQFunction(q_learning_v2.QFunction):
 
     def __init__(
         self,
-        state_array_size: int,
-        action_space: q_learning_v2.ActionSpace,
+        env: q_learning_v2.Environment,
         num_nodes_in_layers: Iterable[int],
         learning_rate: float = None,
         discount_factor: float = None,
@@ -31,13 +31,17 @@ class KerasModelQFunction(q_learning_v2.QFunction):
             learning_rate=learning_rate,
             discount_factor=discount_factor)
             
-        self.state_array_size = state_array_size
-        self._action_space = action_space
+        self._env = env
+        self._state_array_size = env.GetStateArraySize()
+        self._action_space_size = len(env.GetActionSpace())
+        self._input_size = self._state_array_size + self._action_space_size
+        
         self._model = _BuildClassifierModel(
-            state_array_size, len(action_space), num_nodes_in_layers)
+            self._env.GetStateArraySize(),
+            len(self._env.GetActionSpace()),
+            num_nodes_in_layers)
         
         self._debug_verbosity = 0
-        self._input_array = numpy.zeros(state_array_size + 1)
         
     def SetDebugVerbosity(self, debug_verbosity: int) -> None:
         """Sets the debug verbosity, which controls the amount of output."""
@@ -72,9 +76,30 @@ class KerasModelQFunction(q_learning_v2.QFunction):
         action: q_learning_v2.Action,
     ) -> numpy.ndarray:
         """Creates a (state, action) array."""
-        self._input_array[:self._state_size] = state
-        self._input_array[-1] = action
-        return self._input_array
+        input_array = numpy.zeros((1, self._input_size))
+        input_array[0, :self._state_array_size] = state
+        # Use hot-spot for action.
+        input_array[0, self._state_array_size + action] = 1.0
+        return input_array
+        
+    # @Shadow
+    def UpdateWithTransition(
+        self,
+        state_t: q_learning_v2.State,
+        action_t: q_learning_v2.Action,
+        reward_t: q_learning_v2.Reward,
+        state_t_plus_1: q_learning_v2.State,
+    ) -> None:
+        """Updates values by a transition.
+        
+        Args:
+            state_t: the state at t.
+            action_t: the action to perform at t.
+            reward_t: the direct reward as the result of (s_t, a_t).
+            state_t_plus_1: the state to land at after action_t.
+        """
+        super().UpdateWithTransition(
+            state_t, action_t, reward_t, state_t_plus_1, self._env.GetActionSpace())
     
 
 def _BuildClassifierModel(
@@ -83,17 +108,15 @@ def _BuildClassifierModel(
     num_nodes_in_layers:Iterable[int],
 ) -> models.Model:
     """Builds a model with the given info."""
-    input_size = state_array_size + 1
-    model = Sequential()
-    model.add(Dense(input_size, activation='relu', input_dim=input_size))
+    input_size = state_array_size + action_space_size
+    model = models.Sequential()
+    model.add(
+        layers.Dense(input_size, activation='relu', input_dim=input_size))
     for num_nodes in num_nodes_in_layers:
-        model.add(Dense(num_nodes, activation='relu'))
-    model.add(Dense(action_space_size, activation='softmax'))
+        model.add(layers.Dense(num_nodes, activation='relu'))
+    model.add(layers.Dense(1))
     
-    model.compile(
-        optimizer='rmsprop',
-        loss='binary_crossentropy',
-        metrics=['accuracy'])
+    model.compile(optimizer='sgd', loss='mse')
     
     return model    
     
@@ -129,3 +152,34 @@ class RandomActionPolicy(q_learning_v2.Policy):
         action_space: q_learning_v2.ActionSpace,
     ) -> q_learning_v2.Action:
         return numpy.random.choice(action_space)
+
+
+class MaxValueWithRandomnessPolicy(q_learning_v2.Policy):
+    """A policy that returns the action that yields the max value."""
+    
+    def __init__(self, certainty: float = 0.9):
+        self._certainty = certainty
+        
+        self.debug_verbosity = 0
+    
+    # @Override
+    def Decide(
+        self,
+        q_function: q_learning_v2.QFunction,
+        current_state: q_learning_v2.State,
+        action_space: q_learning_v2.ActionSpace,
+    ) -> q_learning_v2.Action:
+        max_value = -numpy.inf
+        max_value_action = None
+        for action in action_space:
+            try_value = q_function.GetValue(current_state, action)
+            if try_value > max_value:
+                max_value = try_value
+                max_value_action = action
+
+        if numpy.random.random() < self._certainty:
+            return max_value_action
+        else:
+            if self.debug_verbosity >= 2:
+                print('<use random choice>')
+            return numpy.random.choice(action_space)
