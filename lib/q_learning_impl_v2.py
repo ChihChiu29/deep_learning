@@ -127,6 +127,7 @@ class MultiModelQFunction(q_learning_v2.QFunction):
         env: q_learning_v2.Environment,
         num_nodes_in_shared_layers: Iterable[int],
         num_nodes_in_multi_head_layers: Iterable[int],
+        activation: str = 'relu',
         learning_rate: float = None,
         discount_factor: float = None,
     ):
@@ -140,6 +141,7 @@ class MultiModelQFunction(q_learning_v2.QFunction):
             num_nodes_in_multi_head_layers: a list of how many nodes are used
                 in the rest of the model for each action, starting from the
                 next layer after the last shared layer.
+            activation: the activation function.
         """
         super().__init__(
             learning_rate=learning_rate,
@@ -150,7 +152,8 @@ class MultiModelQFunction(q_learning_v2.QFunction):
             self._env.GetStateArraySize(),
             self._env.GetActionSpace(),
             num_nodes_in_shared_layers,
-            num_nodes_in_multi_head_layers)
+            num_nodes_in_multi_head_layers,
+            activation)
 
     # @Override
     def GetValue(
@@ -201,24 +204,25 @@ def _BuildMultiHeadModels(
     action_space: q_learning_v2.ActionSpace,
     num_nodes_in_shared_layers: Iterable[int],
     num_nodes_in_multi_head_layers: Iterable[int],
+    activation: str,
 ) -> Tuple[models.Model]:
     """Builds a model with the given info."""
     shared_layers = []
     for num_nodes in num_nodes_in_shared_layers:
-        shared_layers.append(layers.Dense(num_nodes, activation='relu'))
+        shared_layers.append(layers.Dense(num_nodes, activation=activation))
 
     input_size = state_array_size
     action_models = []
     for action in action_space:
         model = models.Sequential()
         model.add(layers.Dense(
-            input_size, activation='relu', input_dim=input_size))
+            input_size, activation=activation, input_dim=input_size))
         # First shared layers.
         for layer in shared_layers:
             model.add(layer)
         # Then separated layers.
         for num_nodes in num_nodes_in_multi_head_layers:
-            model.add(layers.Dense(num_nodes, activation='relu'))
+            model.add(layers.Dense(num_nodes, activation=activation))
         # Output layer.
         model.add(layers.Dense(1))
         model.compile(optimizer='sgd', loss='mse')
