@@ -22,8 +22,7 @@ class KerasModelQFunction(q_learning_v2.QFunction):
         """Constructor.
         
         Args:
-            state_array_size: the size of the state arrays.
-            action_space: the action space.
+            env: environment.
             num_nodes_in_layers: a list of how many nodes are used in each
                 layer, starting from the input layter.
         """
@@ -97,7 +96,8 @@ class KerasModelQFunction(q_learning_v2.QFunction):
             state_t_plus_1: the state to land at after action_t.
         """
         super().UpdateWithTransition(
-            state_t, action_t, reward_t, state_t_plus_1, self._env.GetActionSpace())
+            state_t, action_t, reward_t, state_t_plus_1,
+            self._env.GetActionSpace())
     
 
 def _BuildClassifierModel(
@@ -226,6 +226,89 @@ def _BuildMultiHeadModels(
 
     return tuple(action_models)
     
+    
+class MemoizationQFunction(q_learning_v2.QFunction):
+    """A Q-Function memoizes values for (state, action)."""
+
+    def __init__(
+        self,
+        env: q_learning_v2.Environment,
+        learning_rate: float = None,
+        discount_factor: float = None,
+    ):
+        """Constructor.
+        
+        Args:
+            env: the environment.
+        """
+        super().__init__(
+            learning_rate=learning_rate,
+            discount_factor=discount_factor)
+        
+        self._env = env
+            
+        # The "actual" q-funtion. {(s, a): value}
+        self._values = {}
+        # When get values, use this value if the key does not exist.
+        self._default_value = 0.0
+        
+    def ChangeSettings(
+        self,
+        default_value = 0.0,
+    ) -> None:
+        self._default_value = default_value
+        
+    # @Override
+    def GetValue(
+        self,
+        state: q_learning_v2.State,
+        action: q_learning_v2.Action,
+    ) -> float:
+        value = self._values.get(
+            self._GetStateActionHashKey(state, action), 0.0)
+        if self.debug_verbosity >= 5:
+            print('GET: (%s, %s) -> %s' % (state, action, value))
+        return value
+        
+    # @Override
+    def _SetValue(
+        self,
+        state: q_learning_v2.State,
+        action: q_learning_v2.Action,
+        new_value: float,
+    ) -> None:
+        if self.debug_verbosity >= 5:
+            print('SET: (%s, %s) <- %s' % (state, action, new_value))
+        self._values[self._GetStateActionHashKey(state, action)] = new_value
+            
+    def _GetStateActionHashKey(
+        self,
+        state: q_learning_v2.State,
+        action: q_learning_v2.Action,
+    ) -> numpy.ndarray:
+        """Gets a hashable (state, action) state."""
+        return (str(state), action)
+        
+    # @Shadow
+    def UpdateWithTransition(
+        self,
+        state_t: q_learning_v2.State,
+        action_t: q_learning_v2.Action,
+        reward_t: q_learning_v2.Reward,
+        state_t_plus_1: q_learning_v2.State,
+    ) -> None:
+        """Updates values by a transition.
+        
+        Args:
+            state_t: the state at t.
+            action_t: the action to perform at t.
+            reward_t: the direct reward as the result of (s_t, a_t).
+            state_t_plus_1: the state to land at after action_t.
+        """
+        super().UpdateWithTransition(
+            state_t, action_t, reward_t, state_t_plus_1,
+            self._env.GetActionSpace())
+
     
 class MaxValuePolicy(q_learning_v2.Policy):
     """A policy that returns the action that yields the max value."""

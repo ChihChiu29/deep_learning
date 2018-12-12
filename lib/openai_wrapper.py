@@ -45,8 +45,8 @@ class GymEnvironment(q_learning_v2.Environment):
         
     def ChangeSettings(
         self,
-        continue_from_done: bool,
-        reward_when_done: float,) -> None:
+        continue_from_done: bool = True,
+        reward_when_done: float = 0.0,) -> None:
         """Change settings."""
         self._continue_from_done = continue_from_done
         self._reward_when_done = reward_when_done
