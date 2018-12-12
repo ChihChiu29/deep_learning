@@ -175,7 +175,7 @@ class MultiModelQFunction(q_learning_v2.QFunction):
     ) -> None:
         if self.debug_verbosity >= 5:
             print('SET: (%s, %s) <- %s' % (state, action, new_value))
-        return self._models[action].fit(
+        self._models[action].fit(
             state.reshape(1, state.size), new_value, verbose=0)
 
     # @Shadow
@@ -197,6 +197,108 @@ class MultiModelQFunction(q_learning_v2.QFunction):
         super().UpdateWithTransition(
             state_t, action_t, reward_t, state_t_plus_1,
             self._env.GetActionSpace())
+    
+    
+class MultiModelQFunctionBatchWrite(q_learning_v2.QFunction):
+    """A Q-Function implementation using one model per action."""
+
+    def __init__(
+        self,
+        env: q_learning_v2.Environment,
+        num_nodes_in_shared_layers: Iterable[int],
+        num_nodes_in_multi_head_layers: Iterable[int],
+        batch_size: int,
+        activation: str = 'relu',
+        learning_rate: float = None,
+        discount_factor: float = None,
+    ):
+        """Constructor.
+        
+        Args:
+            state_array_size: the size of the state arrays.
+            action_space: the action space.
+            num_nodes_in_shared_layers: a list of how many nodes are used in
+                each shared layer, starting from the input layter.
+            num_nodes_in_multi_head_layers: a list of how many nodes are used
+                in the rest of the model for each action, starting from the
+                next layer after the last shared layer.
+            batch_size: writes happens in batch of this size.
+            activation: the activation function.
+        """
+        super().__init__(
+            learning_rate=learning_rate,
+            discount_factor=discount_factor)
+            
+        self._env = env
+        self._models = _BuildMultiHeadModels(
+            self._env.GetStateArraySize(),
+            self._env.GetActionSpace(),
+            num_nodes_in_shared_layers,
+            num_nodes_in_multi_head_layers,
+            activation)
+            
+        self._batch_size = batch_size
+        # [(state, action, value), ...]
+        self._write_buffer = []
+
+    # @Override
+    def GetValue(
+        self,
+        state: q_learning_v2.State,
+        action: q_learning_v2.Action,
+    ) -> float:
+        value = self._models[action].predict(state.reshape(1, state.size))
+        if self.debug_verbosity >= 5:
+            print('GET: (%s, %s) -> %s' % (state, action, value))
+        return value
+        
+    # @Override
+    def _SetValue(
+        self,
+        state: q_learning_v2.State,
+        action: q_learning_v2.Action,
+        new_value: float,
+    ) -> None:
+        if len(self._write_buffer) < self._batch_size:
+            if self.debug_verbosity >= 5:
+                print('[PENDING] SET: (%s, %s) <- %s' % (
+                    state, action, new_value))
+            self._write_buffer.append((state, action, new_value))
+        else:
+            for state, action, new_value in self._write_buffer:
+                self._ExecuteSetValue(state, action, new_value)
+            self._write_buffer.clear()
+
+    def _ExecuteSetValue(
+        self,
+        state: q_learning_v2.State,
+        action: q_learning_v2.Action,
+        new_value: float,
+    ) -> None:
+        if self.debug_verbosity >= 5:
+            print('SET: (%s, %s) <- %s' % (state, action, new_value))
+        self._models[action].fit(
+            state.reshape(1, state.size), new_value, verbose=0)
+
+    # @Shadow
+    def UpdateWithTransition(
+        self,
+        state_t: q_learning_v2.State,
+        action_t: q_learning_v2.Action,
+        reward_t: q_learning_v2.Reward,
+        state_t_plus_1: q_learning_v2.State,
+    ) -> None:
+        """Updates values by a transition.
+        
+        Args:
+            state_t: the state at t.
+            action_t: the action to perform at t.
+            reward_t: the direct reward as the result of (s_t, a_t).
+            state_t_plus_1: the state to land at after action_t.
+        """
+        super().UpdateWithTransition(
+            state_t, action_t, reward_t, state_t_plus_1,
+            self._env.GetActionSpace())    
     
 
 def _BuildMultiHeadModels(
