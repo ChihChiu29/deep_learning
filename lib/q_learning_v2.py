@@ -28,6 +28,8 @@ class Environment(ABC):
     """A generic environment class."""
     
     def __init__(self, state_array_size: int, action_space_size: int):
+        self.debug_verbosity = 0
+        
         self._state_array_size = state_array_size
         self._action_space = range(action_space_size)
         
@@ -63,6 +65,8 @@ class QFunction(ABC):
         learning_rate: float = None,
         discount_factor: float = None,
     ):
+        self.debug_verbosity = 0
+        
         if learning_rate:
             self._alpha = learning_rate
         else:
@@ -75,7 +79,7 @@ class QFunction(ABC):
         
         assert 0 <= self._alpha <= 1
         assert 0 <= self._gamma < 1
-
+        
     @abstractmethod
     def GetValue(
         self,
@@ -127,6 +131,9 @@ class QFunction(ABC):
 class Policy(ABC):
     """The Policy interface."""
     
+    def __init__(self):
+        self.debug_verbosity = 0
+    
     @abstractmethod
     def Decide(
         self,
@@ -136,3 +143,30 @@ class Policy(ABC):
     ) -> Action:
         """Makes an decision using a QFunction."""
         pass
+
+
+def Run(
+    env: Environment,
+    qfunc: QFunction,
+    policy: Policy,
+    num_of_runs: int = 10,
+    debug_verbosity: int = 0):
+    """Runs a training or testing loop.
+    
+    Args:
+        env: an environment.
+        qfunc: a Q-Function.
+        policy: a policy.
+        num_of_runs: how many runs this runs for.
+        debug_verbosity: what verbosity to use
+        
+    """
+    env.debug_verbosity = debug_verbosity
+    qfunc.debug_verbosity = debug_verbosity
+    policy.debug_verbosity = debug_verbosity
+    for _ in range(num_of_runs):
+        s = env.GetState()
+        a = policy.Decide(qfunc, s, env.GetActionSpace())
+        r = env.TakeAction(a)
+        s_new = env.GetState()
+        qfunc.UpdateWithTransition(s, a, r, s_new)

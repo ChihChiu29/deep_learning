@@ -41,8 +41,6 @@ class KerasModelQFunction(q_learning_v2.QFunction):
             len(self._env.GetActionSpace()),
             num_nodes_in_layers)
         
-        self._debug_verbosity = 0
-        
     def SetDebugVerbosity(self, debug_verbosity: int) -> None:
         """Sets the debug verbosity, which controls the amount of output."""
         self._debug_verbosity = debug_verbosity
@@ -153,8 +151,6 @@ class MultiModelQFunction(q_learning_v2.QFunction):
             self._env.GetActionSpace(),
             num_nodes_in_shared_layers,
             num_nodes_in_multi_head_layers)
-        
-        self.debug_verbosity = 0
 
     # @Override
     def GetValue(
@@ -162,7 +158,7 @@ class MultiModelQFunction(q_learning_v2.QFunction):
         state: q_learning_v2.State,
         action: q_learning_v2.Action,
     ) -> float:
-        value = self._models[action].predict(state)
+        value = self._models[action].predict(state.reshape(1, state.size))
         if self.debug_verbosity >= 5:
             print('GET: (%s, %s) -> %s' % (state, action, value))
         return value
@@ -176,7 +172,8 @@ class MultiModelQFunction(q_learning_v2.QFunction):
     ) -> None:
         if self.debug_verbosity >= 5:
             print('SET: (%s, %s) <- %s' % (state, action, new_value))
-        return self._models[action].fit(state, new_value, verbose=0)
+        return self._models[action].fit(
+            state.reshape(1, state.size), new_value, verbose=0)
 
     # @Shadow
     def UpdateWithTransition(
@@ -267,9 +264,9 @@ class MaxValueWithRandomnessPolicy(q_learning_v2.Policy):
     """A policy that returns the action that yields the max value."""
     
     def __init__(self, certainty: float = 0.9):
-        self._certainty = certainty
+        super().__init__()
         
-        self.debug_verbosity = 0
+        self._certainty = certainty
     
     # @Override
     def Decide(
