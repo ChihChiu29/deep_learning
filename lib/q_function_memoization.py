@@ -98,6 +98,7 @@ class ContinuousMemoizationQFunction(q_learning_v2.QFunction):
     def __init__(
         self,
         env: q_learning_v2.Environment,
+        buffer_size: int = 500,
         learning_rate: float = None,
         discount_factor: float = None,
     ):
@@ -105,23 +106,34 @@ class ContinuousMemoizationQFunction(q_learning_v2.QFunction):
         
         Args:
             env: the environment.
+            buffer_size: the size of the memoization buffers (per action).
         """
         super().__init__(
             learning_rate=learning_rate,
             discount_factor=discount_factor)
         
         self._env = env
+        # One value container per action.
+        self._value_containers = [
+            _ContinuousMemoizationContainer(buffer_size)
+            for _ in env.GetActionSpace()]
             
-        # The "actual" q-funtion. {(s, a): value}
-        self._values = {}
-        # When get values, use this value if the key does not exist.
-        self._default_value = 0.0
-        
+        self.ChangeSettings()
+
     def ChangeSettings(
         self,
+        debug_verbosity = 0,
+        distance_threshold: float = 0.1,
+        num_averaged_states: int = 5,      
         default_value = 0.0,
     ) -> None:
         self._default_value = default_value
+        for container in self._value_containers:
+            container.ChangeSettings(
+                debug_verbosity = debug_verbosity,
+                distance_threshold = distance_threshold,
+                num_averaged_states = num_averaged_states,
+                default_value = default_value)
         
     # @Override
     def GetValue(
@@ -129,8 +141,7 @@ class ContinuousMemoizationQFunction(q_learning_v2.QFunction):
         state: q_learning_v2.State,
         action: q_learning_v2.Action,
     ) -> float:
-        value = self._values.get(
-            self._GetStateActionHashKey(state, action), 0.0)
+        value = self._value_containers[action].Read(state)
         if self.debug_verbosity >= 5:
             print('GET: (%s, %s) -> %s' % (state, action, value))
         return value
@@ -144,16 +155,8 @@ class ContinuousMemoizationQFunction(q_learning_v2.QFunction):
     ) -> None:
         if self.debug_verbosity >= 5:
             print('SET: (%s, %s) <- %s' % (state, action, new_value))
-        self._values[self._GetStateActionHashKey(state, action)] = new_value
-            
-    def _GetStateActionHashKey(
-        self,
-        state: q_learning_v2.State,
-        action: q_learning_v2.Action,
-    ) -> numpy.ndarray:
-        """Gets a hashable (state, action) state."""
-        return (str(state), action)
-        
+        self._value_containers[action].Write(state, new_value)
+
     # @Shadow
     def UpdateWithTransition(
         self,
@@ -241,19 +244,30 @@ class _ContinuousMemoizationContainer:
         """Reads the value for a state."""
         close_states, far_states = self._OrderByDistance(state)
         if close_states:
-            return numpy.average([s.distance for s in close_states])
+            return numpy.average([s.value for s in close_states])
         else:
-            return self._GetInverseDistanceAveragedValue(
+            return self._GuessValue(
                 far_states[:self._num_averaged_states])
                 
     def Write(self, state: numpy.ndarray, value: float) -> None:
         """Writes a new value for a state."""
+        new_memoized_state = _ContinuousMemoizedState(state)
+        new_memoized_state.value = value
+        
         close_states, far_states = self._OrderByDistance(state)
         if close_states:
             # Replace all close states with the new one.
             self._states = far_states
-            self
-        
+            self._states.append(new_memoized_state)
+        else:
+            if len(self._states) < self._buffer_size:
+                # There is room in the buffer, just add the new state.
+                self._states.append(new_memoized_state)
+            else:
+                # Kick out the state with farrest distance.
+                far_states[-1] = new_memoized_state
+                self._states = close_states
+                self._states.extend(far_states)
     
     def _OrderByDistance(
         self,
@@ -272,20 +286,20 @@ class _ContinuousMemoizationContainer:
         """
         close_states, far_states = [], []
         for state in self._states:
-            state.distance = numpy.linalg.norm(state - target_state)
+            state.distance = numpy.linalg.norm(state.state - target_state)
             if state.distance < self._distance_threshold:
                 close_states.append(state)
             else:
                 far_states.append(state)
-        close_states.sort(lambda s: s.distance)
-        far_states.sort(lambda s: s.distance)
+        close_states.sort(key=lambda s: s.distance)
+        far_states.sort(key=lambda s: s.distance)
         return close_states, far_states
     
-    def _GetInverseDistanceAveragedValue(
+    def _GuessValue(
         self,
         states: Iterable[_ContinuousMemoizedState],
     ) -> float:
-        """Gets an averaged value using inverse distance as weight."""
+        """Gets an educated guess of a value."""
         if not states:
             return self._default_value
 
@@ -296,4 +310,59 @@ class _ContinuousMemoizationContainer:
             weight_sum += weight
             partial_sum += state.value * weight
         return partial_sum / weight_sum
-        
+
+
+def TestContinuousMemoizationContainer():
+    container = _ContinuousMemoizationContainer(5)
+    container.ChangeSettings(
+        debug_verbosity=10,
+        distance_threshold=1.0,
+        num_averaged_states=2,
+    )
+    
+    # Read default value:
+    print('expect 0.0: %s' % container.Read(numpy.array([1])))
+    
+    # Writes a new value:
+    container.Write(numpy.array([1]), 2)
+    print('expect 2.0: %s' % container.Read(numpy.array([1])))
+    
+    # Write with new value:
+    container.Write(numpy.array([1]), 3)
+    print('expect 3.0: %s' % container.Read(numpy.array([1])))
+    
+    # Write with new value with a close state:
+    container.Write(numpy.array([1.1]), 4)
+    print('expect 4.0: %s' % container.Read(numpy.array([1])))
+    print('expect 1: %s' % len(container._states))
+    
+    # Read far value (no average):
+    print('expect 4.0: %s' % container.Read(numpy.array([5.1])))
+    print('expect 1: %s' % len(container._states))
+    
+    # Read far value (with average):
+    container.Write(numpy.array([1]), 4)
+    container.Write(numpy.array([5]), 2)
+    print('expect 3.0: %s' % container.Read(numpy.array([3])))
+    print('expect 2: %s' % len(container._states))
+    
+    # Buffer manipulation: remove close states
+    container.Write(numpy.array([1.9]), 5)
+    container.Write(numpy.array([2.8]), 6)
+    container.Write(numpy.array([3.7]), 7)
+    container.Write(numpy.array([4.1]), 8)
+    print('expect 8.0: %s' % container.Read(numpy.array([4])))
+    print('expect 1: %s' % len(container._states))
+    
+    # Buffer manipulation: far states
+    container._states = []
+    container.Write(numpy.array([1]), 1)
+    container.Write(numpy.array([3]), 3)
+    container.Write(numpy.array([5]), 5)
+    container.Write(numpy.array([7]), 7)
+    container.Write(numpy.array([9]), 9)
+    container.Write(numpy.array([11]), 11)
+    print('expect 3.6xxx: %s' % container.Read(numpy.array([1])))
+    print('expect 5: %s' % len(container._states))    
+    
+    return container
