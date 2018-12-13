@@ -20,11 +20,6 @@ class GymEnvironment(q_learning_v2.Environment):
             gym_env: an environment made from `gym.make`.
             reset: if to reset/initialize the environment.
         """
-        # Set to False to stop when the environment is "done".
-        self._continue_from_done = True
-        # Gives this reward when done is detected.
-        self._reward_when_done = 0.0
-        
         # Debug verbosity encoding:
         # 0: nothing
         # 1-9: debug output
@@ -43,17 +38,22 @@ class GymEnvironment(q_learning_v2.Environment):
         
         self._gym_env = gym_env
         
+        self.ChangeSettings()
+        
     def ChangeSettings(
         self,
         continue_from_done: bool = True,
-        reward_when_done: float = 0.0,) -> None:
+        reward_when_done: float = 0.0,
+        plot: bool = False,
+    ) -> None:
         """Change settings."""
         self._continue_from_done = continue_from_done
         self._reward_when_done = reward_when_done
+        self._plot = plot
         
     #@ Override
     def TakeAction(self, action: q_learning_v2.Action) -> q_learning_v2.Reward:
-        if self.debug_verbosity >= 10:
+        if self._plot:
             self.PlotState()
         current_state = self.GetState()
         observation, reward, done, info = self._gym_env.step(action)
