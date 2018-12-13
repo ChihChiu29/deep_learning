@@ -246,7 +246,7 @@ class _ContinuousMemoizationContainer:
         if close_states:
             return numpy.average([s.value for s in close_states])
         else:
-            return self._GuessValue(
+            return self._GuessValueFromFarStates(
                 far_states[:self._num_averaged_states])
                 
     def Write(self, state: numpy.ndarray, value: float) -> None:
@@ -295,18 +295,21 @@ class _ContinuousMemoizationContainer:
         far_states.sort(key=lambda s: s.distance)
         return close_states, far_states
     
-    def _GuessValue(
+    def _GuessValueFromFarStates(
         self,
         states: Iterable[_ContinuousMemoizedState],
     ) -> float:
-        """Gets an educated guess of a value."""
+        """Gets an educated guess of a value from given far states."""
         if not states:
             return self._default_value
-
+        
+        dist_scale = -1.0 / self._distance_threshold
+        overall_factor = numpy.exp(states[0].distance * dist_scale)
+        
         weight_sum = 0.0
         partial_sum = 0.0
         for state in states:
-            weight = 1.0 / state.distance
+            weight = numpy.exp(state.distance * dist_scale)
             weight_sum += weight
             partial_sum += state.value * weight
         return partial_sum / weight_sum
@@ -362,7 +365,7 @@ def TestContinuousMemoizationContainer():
     container.Write(numpy.array([7]), 7)
     container.Write(numpy.array([9]), 9)
     container.Write(numpy.array([11]), 11)
-    print('expect 3.6xxx: %s' % container.Read(numpy.array([1])))
+    print('expect 3.xxx (some average): %s' % container.Read(numpy.array([1])))
     print('expect 5: %s' % len(container._states))    
     
     return container
