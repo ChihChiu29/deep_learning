@@ -200,7 +200,10 @@ class MultiModelQFunction(q_learning_v2.QFunction):
     
     
 class MultiModelQFunctionBatchWrite(q_learning_v2.QFunction):
-    """A Q-Function implementation using one model per action."""
+    """A Q-Function implementation using one model per action.
+    
+    This version batch write actions.
+    """
 
     def __init__(
         self,
@@ -298,8 +301,96 @@ class MultiModelQFunctionBatchWrite(q_learning_v2.QFunction):
         """
         super().UpdateWithTransition(
             state_t, action_t, reward_t, state_t_plus_1,
-            self._env.GetActionSpace())    
+            self._env.GetActionSpace())
+            
+
+class MultiModelQFunctionMultiFitPerSet(q_learning_v2.QFunction):
+    """A Q-Function implementation using one model per action.
     
+    This version calls fit action multiple times per Set call.
+    """
+
+    def __init__(
+        self,
+        env: q_learning_v2.Environment,
+        num_nodes_in_shared_layers: Iterable[int],
+        num_nodes_in_multi_head_layers: Iterable[int],
+        num_fit_per_set: int = 20,
+        activation: str = 'relu',
+        learning_rate: float = None,
+        discount_factor: float = None,
+    ):
+        """Constructor.
+        
+        Args:
+            state_array_size: the size of the state arrays.
+            action_space: the action space.
+            num_nodes_in_shared_layers: a list of how many nodes are used in
+                each shared layer, starting from the input layter.
+            num_nodes_in_multi_head_layers: a list of how many nodes are used
+                in the rest of the model for each action, starting from the
+                next layer after the last shared layer.
+            num_fit_per_set: how many times to call fit for a single Set call.
+            activation: the activation function.
+        """
+        super().__init__(
+            learning_rate=learning_rate,
+            discount_factor=discount_factor)
+            
+        self._env = env
+        self._models = _BuildMultiHeadModels(
+            self._env.GetStateArraySize(),
+            self._env.GetActionSpace(),
+            num_nodes_in_shared_layers,
+            num_nodes_in_multi_head_layers,
+            activation)
+            
+        self._num_fit_per_set = num_fit_per_set
+
+    # @Override
+    def GetValue(
+        self,
+        state: q_learning_v2.State,
+        action: q_learning_v2.Action,
+    ) -> float:
+        value = self._models[action].predict(state.reshape(1, state.size))
+        if self.debug_verbosity >= 5:
+            print('GET: (%s, %s) -> %s' % (state, action, value))
+        return value
+        
+    # @Override
+    def _SetValue(
+        self,
+        state: q_learning_v2.State,
+        action: q_learning_v2.Action,
+        new_value: float,
+    ) -> None:
+        if self.debug_verbosity >= 5:
+            print('SET: (%s, %s) <- %s' % (state, action, new_value))
+        for _ in range(self._num_fit_per_set):
+            self._models[action].fit(
+                state.reshape(1, state.size), new_value, verbose=0)
+
+    # @Shadow
+    def UpdateWithTransition(
+        self,
+        state_t: q_learning_v2.State,
+        action_t: q_learning_v2.Action,
+        reward_t: q_learning_v2.Reward,
+        state_t_plus_1: q_learning_v2.State,
+    ) -> None:
+        """Updates values by a transition.
+        
+        Args:
+            state_t: the state at t.
+            action_t: the action to perform at t.
+            reward_t: the direct reward as the result of (s_t, a_t).
+            state_t_plus_1: the state to land at after action_t.
+        """
+        super().UpdateWithTransition(
+            state_t, action_t, reward_t, state_t_plus_1,
+            self._env.GetActionSpace())
+
 
 def _BuildMultiHeadModels(
     state_array_size: int,

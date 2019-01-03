@@ -10,6 +10,10 @@ class OpenAiWrapperError(Exception):
     pass
 
 
+class OpenAiEnvironmentDone(OpenAiWrapperError):
+    pass
+
+
 class GymEnvironment(q_learning_v2.Environment):
     """Wrapper for Gym environment."""
     
@@ -28,16 +32,16 @@ class GymEnvironment(q_learning_v2.Environment):
         
         if len(gym_env.observation_space.shape) != 1:
             raise OpenAiWrapperError('observation_space is not 1-d.')
-            
-        if reset:
-            gym_env.reset()
-        
+
         super().__init__(
             state_array_size=gym_env.observation_space.shape[0],
             action_space_size=gym_env.action_space.n)
         
         self._gym_env = gym_env
-        
+            
+        if reset:
+            self.Reset()
+
         self.ChangeSettings()
         
     def ChangeSettings(
@@ -50,6 +54,9 @@ class GymEnvironment(q_learning_v2.Environment):
         self._continue_from_done = continue_from_done
         self._reward_when_done = reward_when_done
         self._plot = plot
+        
+    def Reset(self):
+        self._gym_env.reset()
         
     #@ Override
     def TakeAction(self, action: q_learning_v2.Action) -> q_learning_v2.Reward:
@@ -71,7 +78,7 @@ class GymEnvironment(q_learning_v2.Environment):
                           self._reward_when_done)
                 return self._reward_when_done
             else:
-                raise OpenAiWrapperError('gym environment returned done.')
+                raise OpenAiEnvironmentDone('gym environment returned done.')
 
         self._protected_SetState(new_state)
         return reward
