@@ -8,12 +8,13 @@ from typing import Iterable
 
 import numpy
 
-class WeightLayer:
-    """Helps to manager weights in a layer."""
-    
+
+class LayerWeightManager:
+    """Manages weights in a Keras layer."""
+
     def __init__(self, keras_layer):
         """Constructor.
-        
+
         Args:
             keras_layer: a Keras layer. It needs to have get/set_weights
                 functioins.
@@ -47,9 +48,9 @@ class WeightLayer:
             
     def SetWeights(self, weight_source: numpy.ndarray) -> None:
         """Sets weights.
-        
+
         Args:
-            weight_array: the source of the weights. It needs to have more
+            weight_source: the source of the weights. It needs to have more
                 elements than required by this layer.
         """
         cursor = 0
@@ -61,16 +62,49 @@ class WeightLayer:
         self._layer.set_weights(new_weights)
 
 
-class WeigthFunction:
-    """A weight function treats a Keras model as a function of weights."""
+class ModelWeightManager:
+    """Manages weights in a Keras model."""
     
     def __init__(self, keras_model):
         """Constructor.
-        
+
         Args:
             keras_model: a Keras model. It needs to have `layers` attribute.
         """
         self._model = keras_model
         
         # Total number of weights in the model.
-        self._total_weight_size = None
+        self._size = None
+        # Weight layers in the model.
+        self._weight_layers = []
+        
+        self._SetWeightLayers()
+        
+    @property
+    def size(self):
+        return self._size
+        
+    def _SetWeightLayers(self):
+        self._size = 0
+        for layer in self._model.layers:
+            weight_layer = LayerWeightManager(layer)
+            self._weight_layers.append(weight_layer)
+            self._size += weight_layer.size
+    
+    def GetWeights(self) -> numpy.ndarray:
+        """Gets all weights as a 1-d ndarray."""
+        return numpy.concatenate(list(
+            weight_layer.GetWeights() for weight_layer in self._weight_layers))
+            
+    def SetWeights(self, weight_source: numpy.ndarray) -> None:
+        """Sets weights.
+
+        Args:
+            weight_source: the source of the weights. It needs to have exact
+                same number of elements as self.size.
+        """
+        cursor = 0
+        for weight_layer in self._weight_layers:
+            weight_layer.SetWeights(
+                weight_source[cursor:cursor+weight_layer.size])
+            cursor += weight_layer.size
