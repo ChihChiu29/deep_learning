@@ -211,6 +211,7 @@ class MultiModelQFunctionBatchWrite(q_learning_v2.QFunction):
         num_nodes_in_shared_layers: Iterable[int],
         num_nodes_in_multi_head_layers: Iterable[int],
         batch_size: int,
+        num_batch_write: int = 1,
         activation: str = 'relu',
         learning_rate: float = None,
         discount_factor: float = None,
@@ -226,6 +227,8 @@ class MultiModelQFunctionBatchWrite(q_learning_v2.QFunction):
                 in the rest of the model for each action, starting from the
                 next layer after the last shared layer.
             batch_size: writes happens in batch of this size.
+            num_batch_write: write data in batch this number of times when
+                flushing.
             activation: the activation function.
         """
         super().__init__(
@@ -241,6 +244,7 @@ class MultiModelQFunctionBatchWrite(q_learning_v2.QFunction):
             activation)
             
         self._batch_size = batch_size
+        self._num_batch_write = num_batch_write
         # [(state, action, value), ...]
         self._write_buffer = []
 
@@ -268,8 +272,9 @@ class MultiModelQFunctionBatchWrite(q_learning_v2.QFunction):
                     state, action, new_value))
             self._write_buffer.append((state, action, new_value))
         else:
-            for state, action, new_value in self._write_buffer:
-                self._ExecuteSetValue(state, action, new_value)
+            for _ in range(self._num_batch_write):
+                for state, action, new_value in self._write_buffer:
+                    self._ExecuteSetValue(state, action, new_value)
             self._write_buffer.clear()
 
     def _ExecuteSetValue(

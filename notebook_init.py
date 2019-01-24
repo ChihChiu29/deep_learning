@@ -8,6 +8,7 @@ import keras
 from keras.layers import Activation, Dense, InputLayer
 from keras.models import Model, Sequential
 
+from lib import model_optimization
 from lib import q_function_memoization
 from lib import q_learning
 from lib import q_learning_v2
