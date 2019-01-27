@@ -81,6 +81,10 @@ class ModelWeightManager:
         self._SetWeightLayers()
         
     @property
+    def model(self):
+        return self._model
+        
+    @property
     def size(self):
         return self._size
         
