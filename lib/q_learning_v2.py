@@ -6,7 +6,7 @@ This version has tighter interface definition, which primany targets
 reinforcement learning with openai gym.
 """
 from abc import ABC, abstractmethod
-from typing import Iterable, List, Tuple
+from typing import Callable, Iterable, List, Tuple
 
 import numpy
 
@@ -150,7 +150,10 @@ def Run(
     qfunc: QFunction,
     policy: Policy,
     num_of_runs: int = 10,
-    debug_verbosity: int = 0):
+    callback_func: Callable[[int], None] = None,
+    callback_every_steps: int = 500,
+    debug_verbosity: int = 0,
+):
     """Runs a training or testing loop.
     
     Args:
@@ -158,15 +161,19 @@ def Run(
         qfunc: a Q-Function.
         policy: a policy.
         num_of_runs: how many runs this runs for.
-        debug_verbosity: what verbosity to use
-        
+        debug_verbosity: what verbosity to use.
+        callback_func: a function takes the step number and returns None.
+        callback_every_steps: calls the callback function after every these
+            many steps, if the callback function is not None.
     """
     env.debug_verbosity = debug_verbosity
     qfunc.debug_verbosity = debug_verbosity
     policy.debug_verbosity = debug_verbosity
-    for _ in range(num_of_runs):
+    for step_idx in range(num_of_runs):
         s = env.GetState()
         a = policy.Decide(qfunc, s, env.GetActionSpace())
         r = env.TakeAction(a)
         s_new = env.GetState()
         qfunc.UpdateWithTransition(s, a, r, s_new)
+        if callback_func and (step_idx % callback_every_steps == 0):
+            callback_func(step_idx)
