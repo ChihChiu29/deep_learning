@@ -104,6 +104,11 @@ class QFunction(ABC):
         pass
 
     @abstractmethod
+    def UpdateCopy(self, target: 'QFunction') -> None:
+        """Updates a QFunction created by MakeCopy method to the same state."""
+        pass
+
+    @abstractmethod
     def GetValue(
             self,
             state: State,
@@ -256,6 +261,7 @@ def DQNRun(
         callback_func: a callback function invoked after every episode.
         debug_verbosity: what verbosity to use.
     """
+    qfunc_snapshot = qfunc.MakeCopy()  # Used to update qfunc.
     experience_history = _ExperienceHistory(experience_history_capacity)
     for episode_idx in range(num_of_episode):
         env = env_factory()
@@ -276,10 +282,11 @@ def DQNRun(
 
                 if step_idx % training_every_steps == 0:
                     # Update Q-Function.
-                    snapshot = qfunc.MakeCopy()
+                    qfunc.UpdateCopy(qfunc_snapshot)
                     for _ in range(num_training_samples):
-                        qfunc.SetValue(s, a, snapshot.GetNewValueFromTransition(
-                            s, a, r, s_new, env.GetActionSpace()))
+                        qfunc.SetValue(
+                            s, a, qfunc_snapshot.GetNewValueFromTransition(
+                                s, a, r, s_new, env.GetActionSpace()))
 
                 step_idx += 1
             except EnvironmentDoneSignal:

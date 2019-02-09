@@ -1,5 +1,7 @@
 """Callback functions used with run methods in q_learning_v3.py."""
 
+import time
+
 from IPython import display
 from matplotlib import pyplot
 
@@ -10,6 +12,7 @@ class MonitoringCallback(q_learning_v3.CallbackFunctionInterface):
 
     def __init__(self):
         self._reward_history = []
+        self._tick = None
 
     def GetRewardHistory(self):
         return self._reward_history
@@ -25,6 +28,12 @@ class MonitoringCallback(q_learning_v3.CallbackFunctionInterface):
         self._reward_history.append((episode_idx, float(
             total_reward_last_episode) / num_steps_last_episode))
         self.PlotHistory()
+        if self._tick:
+            tock = int(time.time() * 1000)
+            print('Execution took %s ms.' % (tock - self._tick))
+            self._tick = tock
+        else:
+            self._tick = int(time.time() * 1000)
 
     def PlotHistory(self):
         display.clear_output(wait=True)
