@@ -5,7 +5,7 @@ from JSAnimation.IPython_display import display_animation
 from matplotlib import animation
 from matplotlib import pyplot
 
-from lib import q_learning_v2
+from lib import q_learning_v3
 
 
 class OpenAiWrapperError(Exception):
@@ -16,7 +16,7 @@ class OpenAiEnvironmentDone(OpenAiWrapperError):
     pass
 
 
-class GymEnvironment(q_learning_v2.Environment):
+class GymEnvironment(q_learning_v3.Environment):
     """Wrapper for Gym environment."""
     
     def __init__(self, gym_env, reset=True):
@@ -51,10 +51,10 @@ class GymEnvironment(q_learning_v2.Environment):
         self._in_recording = False
         
     def ChangeSettings(
-        self,
-        continue_from_done: bool = True,
-        reward_when_done: float = 0.0,
-        plot: bool = False,
+            self,
+            continue_from_done: bool = False,
+            reward_when_done: float = 0.0,
+            plot: bool = False,
     ) -> None:
         """Change settings."""
         self._continue_from_done = continue_from_done
@@ -65,7 +65,7 @@ class GymEnvironment(q_learning_v2.Environment):
         self._gym_env.reset()
         
     #@ Override
-    def TakeAction(self, action: q_learning_v2.Action) -> q_learning_v2.Reward:
+    def TakeAction(self, action: q_learning_v3.Action) -> q_learning_v3.Reward:
         if self._plot:
             self.PlotState()
         if self._in_recording:
@@ -87,7 +87,7 @@ class GymEnvironment(q_learning_v2.Environment):
                           self._reward_when_done)
                 return self._reward_when_done
             else:
-                raise OpenAiEnvironmentDone('gym environment returned done.')
+                self._protected_SetDone(True)
 
         self._protected_SetState(new_state)
         return reward

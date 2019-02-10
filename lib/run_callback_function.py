@@ -25,8 +25,7 @@ class MonitoringCallback(q_learning_v3.CallbackFunctionInterface):
             total_reward_last_episode: float,
             num_steps_last_episode: int,
     ) -> None:
-        self._reward_history.append((episode_idx, float(
-            total_reward_last_episode) / num_steps_last_episode))
+        self._reward_history.append((episode_idx, total_reward_last_episode))
         self.PlotHistory()
         if self._tick:
             tock = int(time.time() * 1000)
