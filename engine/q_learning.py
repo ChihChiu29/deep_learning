@@ -1,8 +1,8 @@
-"""For Q-Learning, version 4.
+"""Key interfaces and functions used in Q-Learning.
 
 See: https://en.wikipedia.org/wiki/Q-learning
 
-This version has a QFuntion model setup as described in:
+This version has a QFuntion setup as described in:
 https://jaromiru.com/2016/09/27/lets-make-a-dqn-theory/
 which is more CPU friendly.
 """
@@ -11,50 +11,71 @@ from abc import ABC, abstractmethod
 
 import numpy
 
-from qpylib import t
+from qpylib import t, numpy_util
 
 DEFAULT_DISCOUNT_FACTOR = 0.9
 
-# A state is a n x 1 numpy array.
+# A state is a 1 x n numpy array, where n is the dimension of the state vector.
 State = numpy.ndarray
 
-# An action is represented with a k x 1 one-hot vector in the space that has
-# dimension equals to the number of possible actions.
+# An m x n numpy array holding m states.
+States = numpy.ndarray
+
+# An action is a 1 x k one-hot vector, where k is the number of possible
+# actions.
 Action = numpy.ndarray
 
-# A k x 1 vector, the i-th component is the Q value for the i-th action.
+# An m x k numpy array holding m states.
+Actions = numpy.ndarray
+
+# A Q-value is a 1 x k vector, and the i-th component is the Q value for
+# the i-th action (all values are for the same state).
 QValue = numpy.ndarray
 
-# All rewards are floats.
+# An m x k numpy array holding m Q-values.
+QValues = numpy.ndarray
+
+# Q-value for a state and an action.
+QActionValue = float
+
+# An (m,)-shape numpy array holding m Q-action-values.
+QActionValues = numpy.ndarray
+
+# Reward from environment for a single step.
 Reward = float
 
-# A value vector has dimension 1 x n.
-Values = numpy.ndarray
+# An (m,)-shape numpy array holding m rewards.
+Rewards = numpy.ndarray
 
 
-class EnvironmentSignal(Exception):
-  pass
-
-
-class EnvironmentDoneSignal(EnvironmentSignal):
+class EnvironmentDoneSignal(Exception):
   """Signal for environment terminates."""
   pass
 
 
 class Transition:
-  """A transition of an agent in an enviroment."""
+  """A transition of an agent in an environment."""
 
   def __init__(
       self,
-      from_state: State,
-      action: Action,
-      reward: Reward,
-      to_state: State,
+      s: State,
+      a: Action,
+      r: Reward,
+      sp: t.Optional[State],
   ):
-    self.s = from_state
-    self.a = action
-    self.r = reward
-    self.sp = to_state
+    """Constructor.
+
+    Args:
+      s: the state before the transition.
+      a: the action that caused the transition.
+      r: the reward for the transition.
+      sp: the new state after the transition. If it's None, the environment
+        needs to be reset.
+    """
+    self.s = s
+    self.a = a
+    self.r = r
+    self.sp = sp
 
 
 class Environment(ABC):
@@ -68,9 +89,6 @@ class Environment(ABC):
     self._state_array_size = state_array_size
     self._action_space_size = action_space_size
 
-    self._zero_state = numpy.zeros((self._state_array_size, 1))
-    self._done = False
-
   def GetStateArraySize(self) -> int:
     """Gets the size of all state arrays (they are all 1-d)."""
     return self._state_array_size
@@ -79,24 +97,23 @@ class Environment(ABC):
     """Gets the action space, which is uniform per environment."""
     return self._action_space_size
 
-  def GetState(self) -> State:
-    """Gets the current state."""
-    if self._done:
-      raise EnvironmentDoneSignal()
-    return self._state
+  def GetActionArray(self, choice: int) -> Action:
+    """Gets a one-hot vector for the action of the choice.
+
+    Args:
+      choice: an integer from 0 to action_space_size-1 indicating an action.
+    """
+    action = numpy.zeros((1, self._action_space_size))
+    action[0, choice] = 1
+    return action
+
+  @abstractmethod
+  def Reset(self):
+    pass
 
   @abstractmethod
   def TakeAction(self, action: Action) -> Transition:
-    """Takes an action, updates state."""
     pass
-
-  def _protected_SetState(self, state: State) -> None:
-    """Used by subclasses to set state."""
-    self._state = state
-
-  def _protected_SetDone(self, done: bool) -> None:
-    """Used by subclasses to set done status."""
-    self._done = done
 
 
 class QFunction(ABC):
@@ -111,28 +128,51 @@ class QFunction(ABC):
   @abstractmethod
   def GetValues(
       self,
-      states: t.Iterable[State],
-      actions: t.Iterable[Action],
-  ) -> Values:
-    """Gets the Q values for (s, a) pairs.
-
-    The numbers of states and actions must equal. Returns a 1 x m
-    vector for the Q function values, where m is the number of (s, a) pairs.
-    """
+      states: States,
+  ) -> QValues:
+    """Gets the Q values for states, for all actions."""
     pass
+
+  def GetActionValues(
+      self,
+      states: States,
+      actions: Actions,
+  ) -> QActionValues:
+    """Gets Q values for (state, action) pairs.
+
+    The numbers of states and actions must equal.
+    """
+    return numpy_util.SelectReduce(self.GetValues(states), actions)
 
   @abstractmethod
   def SetValues(
       self,
-      states: t.Iterable[State],
-      actions: t.Iterable[Action],
-      values: Values,
+      states: States,
+      values: QValues,
+  ) -> None:
+    """Sets/trains Q values for states.
+
+    The number of states and values must equal. Values for all actions are
+    set at the same time.
+    """
+    pass
+
+  def SetActionValues(
+      self,
+      states: States,
+      actions: Actions,
+      action_values: QActionValues,
   ) -> None:
     """Sets/trains the Q values for (s, a) pairs.
 
+    For each state, only one action is taken (the one with the same index in
+    the actions array), and Q-values for other actions are fetched using
+    GetValues with the current internal states (before set happens).
+
     The numbers of states, actions, and values must all be equal.
     """
-    pass
+    self.SetValues(
+      numpy_util.Replace(self.GetValues(states), actions, action_values))
 
   def GetNewValueFromTransition(
       self,
