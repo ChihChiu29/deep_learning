@@ -82,10 +82,10 @@ class Environment(abc.ABC):
 
   def __init__(
       self,
-      state_array_size: int,
+      state_space_size: int,
       action_space_size: int,
   ):
-    self._state_array_size = state_array_size
+    self._state_array_size = state_space_size
     self._action_space_size = action_space_size
 
   def GetStateArraySize(self) -> int:
@@ -146,14 +146,14 @@ class QFunction(abc.ABC):
     """Sets/trains Q values for states.
 
     This function is the one subclass uses to update the value storage. The
-    runners use SetActionValues to indirectly set values.
+    runners use UpdateValuesFromTransitions to indirectly set values.
 
     The number of states and values must equal. Values for all actions are
     set at the same time.
     """
     pass
 
-  def SetActionValues(
+  def _SetActionValues(
       self,
       states: States,
       actions: Actions,
@@ -174,7 +174,7 @@ class QFunction(abc.ABC):
   def UpdateValuesFromTransitions(
       self,
       transitions: t.Iterable[Transition],
-      discount_factor: float = None
+      discount_factor: float = None,
   ) -> None:
     """Update Q-values using the given set of transitions."""
     if not discount_factor:
@@ -184,20 +184,27 @@ class QFunction(abc.ABC):
     a_list = []  # type: t.List[Action]
     r_list = []  # type: t.List[Reward]
     sp_list = []  # type: t.List[State]
-    for transition in transitions:
+    done_sp_indices = []
+    for idx, transition in enumerate(transitions):
       s_list.append(transition.s)
       a_list.append(transition.a)
       r_list.append(transition.r)
-      sp_list.append(transition.sp)
+      if transition.sp is not None:
+        sp_list.append(transition.sp)
+      else:
+        sp_list.append(transition.s)
+        done_sp_indices.append(idx)
     states, actions, rewards, new_states = (
       numpy.concatenate(s_list),
       numpy.concatenate(a_list),
-      numpy.concatenate(r_list),
+      numpy.array(r_list),
       numpy.concatenate(sp_list),
     )
-    new_action_values = rewards + discount_factor * numpy.amax(
-      self.GetValues(new_states), axis=1)
-    self.SetActionValues(states, actions, new_action_values)
+    new_action_values = numpy.amax(self.GetValues(new_states), axis=1)
+    for idx in done_sp_indices:
+      new_action_values[0, idx] = 0.0
+    self._SetActionValues(
+      states, actions, rewards + discount_factor * new_action_values)
 
 
 class Policy(abc.ABC):

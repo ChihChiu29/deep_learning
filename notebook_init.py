@@ -8,7 +8,7 @@ import keras
 from keras.layers import Activation, Dense, InputLayer
 from keras.models import Model, Sequential
 
-from engine import q_learning_v4
+from deep_learning.engine import q_base
 
 # Add this to the first cell of your notebook:
 # ReloadProject('deep_learning')
