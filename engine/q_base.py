@@ -12,8 +12,6 @@ import numpy
 
 from qpylib import t, numpy_util, logging
 
-DEFAULT_DISCOUNT_FACTOR = 0.9  # aka "gamma"
-
 # A state is a 1 x n numpy array, where n is the dimension of the state vector.
 State = numpy.ndarray
 
@@ -106,6 +104,10 @@ class Environment(abc.ABC):
     action[0, choice] = 1
     return action
 
+  def GetChoice(self, action: Action) -> int:
+    """Gets the int choice corresponding to the action."""
+    return int(numpy.argmax(action))
+
   @abc.abstractmethod
   def Reset(self):
     pass
@@ -178,8 +180,7 @@ class QFunction(abc.ABC):
   def UpdateValues(
       self,
       transitions: t.Iterable[Transition],
-      discount_factor: float = None,
-
+      discount_factor: float,
   ) -> None:
     """Update Q-values using the given set of transitions.
 
@@ -187,9 +188,6 @@ class QFunction(abc.ABC):
     (different actions), there is a conflict since the values for other actions
     for each transition is read from the current QFunction before update.
     """
-    if not discount_factor:
-      discount_factor = DEFAULT_DISCOUNT_FACTOR
-
     s_list = []  # type: t.List[State]
     a_list = []  # type: t.List[Action]
     r_list = []  # type: t.List[Reward]
@@ -226,8 +224,14 @@ class Policy(abc.ABC):
       env: Environment,
       qfunc: QFunction,
       state: State,
+      episode_idx: int,
+      num_of_episodes: int,
   ) -> Action:
-    """Makes an decision using a QFunction."""
+    """Makes an decision using a QFunction.
+
+    The episode info is provided to support policy that changes parameters
+    over training.
+    """
     pass
 
 
@@ -254,7 +258,7 @@ class Runner(abc.ABC):
     """Runs an agent for some episodes.
 
     For each episode, the environment is reset first, then run until it's
-    done. Between
+    done. Between episodes, Report function is called to give user feedback.
     """
     for episode_idx in range(num_of_episodes):
       env.Reset()
@@ -263,8 +267,18 @@ class Runner(abc.ABC):
       step_idx = 0
       episode_reward = 0.0
       while True:
-        tran = env.TakeAction(policy.Decide(env, qfunc, s))
-        self._protected_ProcessTransition(qfunc, tran, step_idx)
+        tran = env.TakeAction(
+          policy.Decide(
+            env=env,
+            qfunc=qfunc,
+            state=s,
+            episode_idx=episode_idx,
+            num_of_episodes=num_of_episodes,
+          ))
+        self._protected_ProcessTransition(
+          qfunc=qfunc,
+          transition=tran,
+          step_idx=step_idx)
         episode_reward += tran.r
         s = tran.s
         step_idx += 1
