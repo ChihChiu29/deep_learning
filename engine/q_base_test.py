@@ -10,7 +10,7 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
 
   def setUp(self) -> None:
     # State space size is 3; Action space size is 2.
-    self.qfunc = qfunc_impl.MemoizationQFunction(state_space_size=3)
+    self.qfunc = qfunc_impl.MemoizationQFunction(action_space_size=3)
 
     self.states = numpy.array([
       [1, 2, 3],

@@ -10,12 +10,12 @@ class GreedyPolicy(q_base.Policy):
   def Decide(
       self,
       env: q_base.Environment,
-      q_function: q_base.QFunction,
+      qfunc: q_base.QFunction,
       state: q_base.State,
       episode_idx: int,
       num_of_episodes: int,
   ) -> q_base.Action:
-    return env.GetAction(int(numpy.argmax(q_function.GetValues(state))))
+    return env.GetAction(int(numpy.argmax(qfunc.GetValues(state))))
 
 
 class GreedyPolicyWithRandomness(q_base.Policy):
@@ -36,7 +36,7 @@ class GreedyPolicyWithRandomness(q_base.Policy):
   def Decide(
       self,
       env: q_base.Environment,
-      q_function: q_base.QFunction,
+      qfunc: q_base.QFunction,
       state: q_base.State,
       episode_idx: int,
       num_of_episodes: int,
@@ -44,4 +44,4 @@ class GreedyPolicyWithRandomness(q_base.Policy):
     if numpy.random.uniform(0, 1) < self._e:
       return env.GetAction(numpy.random.randint(0, env.GetStateArraySize()))
     else:
-      return env.GetAction(int(numpy.argmax(q_function.GetValues(state))))
+      return env.GetAction(int(numpy.argmax(qfunc.GetValues(state))))

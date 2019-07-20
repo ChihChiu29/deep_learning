@@ -29,6 +29,7 @@ class CircularWorld(q_base.Environment):
     self.Reset()
 
   def Reset(self):
+    self._current_state = 0
     self._num_actions_taken = 0
 
   def TakeAction(self, action: q_base.Action) -> q_base.Transition:

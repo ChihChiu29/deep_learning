@@ -10,7 +10,7 @@ import abc
 
 import numpy
 
-from qpylib import t, numpy_util, logging
+from qpylib import t, numpy_util, parameters
 
 # A state is a 1 x n numpy array, where n is the dimension of the state vector.
 State = numpy.ndarray
@@ -73,6 +73,10 @@ class Transition:
     self.a = a
     self.r = r
     self.sp = sp
+
+  def __str__(self):
+    return '(state %s, action %s) -> state %s: reward %3.2f' % (
+      self.s, self.a, self.sp, self.r)
 
 
 class Environment(abc.ABC):
@@ -275,6 +279,8 @@ class Runner(abc.ABC):
             episode_idx=episode_idx,
             num_of_episodes=num_of_episodes,
           ))
+        if parameters.ENV.debug_verbosity > 5:
+          print(str(tran))
         self._protected_ProcessTransition(
           qfunc=qfunc,
           transition=tran,
@@ -307,6 +313,5 @@ class Runner(abc.ABC):
       episode_reward: reward for this episode.
       steps: number of steps in this episode.
     """
-    logging.info(
-      'Episode %d/%d: total_reward = %3.2f, total_steps=%d',
-      episode_idx, num_of_episodes, episode_reward, steps)
+    print('Episode %d/%d: total_reward = %3.2f, total_steps=%d' % (
+      episode_idx, num_of_episodes, episode_reward, steps))
