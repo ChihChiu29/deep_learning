@@ -10,7 +10,7 @@ import abc
 
 import numpy
 
-from qpylib import t, numpy_util
+from qpylib import t, numpy_util, logging
 
 DEFAULT_DISCOUNT_FACTOR = 0.9  # aka "gamma"
 
@@ -112,6 +112,10 @@ class Environment(abc.ABC):
 
   @abc.abstractmethod
   def TakeAction(self, action: Action) -> Transition:
+    """Returns the transition from an action.
+
+    If transition.sp is None, it means the environment is done.
+    """
     pass
 
 
@@ -220,8 +224,75 @@ class Policy(abc.ABC):
   def Decide(
       self,
       env: Environment,
-      q_function: QFunction,
+      qfunc: QFunction,
       state: State,
   ) -> Action:
     """Makes an decision using a QFunction."""
     pass
+
+
+class Runner(abc.ABC):
+
+  @abc.abstractmethod
+  def _protected_ProcessTransition(
+      self,
+      qfunc: QFunction,
+      transition: Transition,
+      step_idx: int,
+  ) -> None:
+    """Processes a new transition; e.g. to train the QFunction."""
+    pass
+
+  # @Final
+  def Run(
+      self,
+      env: Environment,
+      qfunc: QFunction,
+      policy: Policy,
+      num_of_episodes: int,
+  ):
+    """Runs an agent for some episodes.
+
+    For each episode, the environment is reset first, then run until it's
+    done. Between
+    """
+    for episode_idx in range(num_of_episodes):
+      env.Reset()
+
+      s = numpy.zeros((1, env.GetStateArraySize()))
+      step_idx = 0
+      episode_reward = 0.0
+      while True:
+        tran = env.TakeAction(policy.Decide(env, qfunc, s))
+        self._protected_ProcessTransition(qfunc, tran, step_idx)
+        episode_reward += tran.r
+        s = tran.s
+        step_idx += 1
+        if tran.sp is None:
+          break
+      self._protected_Report(
+        episode_idx=episode_idx,
+        num_of_episodes=num_of_episodes,
+        episode_reward=episode_reward,
+        steps=step_idx)
+
+  def _protected_Report(
+      self,
+      episode_idx: int,
+      num_of_episodes: int,
+      episode_reward: float,
+      steps: int,
+  ):
+    """Creates a report after an episode.
+
+    Subclass can override this function to provide custom reports.
+
+    Args:
+      episode_idx: the index of the episode.
+      num_of_episodes: the total number of episodes to run.
+      episode_reward: reward for this episode.
+      steps: number of steps in this episode.
+    """
+    logging.info(
+      'Episode %d/%d: total_reward = %3.2f, total_steps=%d',
+      episode_idx, num_of_episodes, episode_reward, steps)

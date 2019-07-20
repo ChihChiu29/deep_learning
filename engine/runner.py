@@ -36,34 +36,9 @@ class _Experience:
     if len(self._history) > self._capacity:
       self._history.pop(0)
 
-  def Sample(
-      self,
-  ) -> t.Tuple[
-    q_base.States,
-    q_base.Actions,
-    q_base.Rewards,
-    q_base.States,
-  ]:
-    """Samples an event from the history.
-
-    Returns:
-      A tuple of (states, actions, rewards, new states).
-    """
-    s_list = []  # type: t.List[q_base.State]
-    a_list = []  # type: t.List[q_base.Action]
-    r_list = []  # type: t.List[q_base.Reward]
-    sp_list = []  # type: t.List[q_base.State]
-    for transition in numpy.random.choice(self._history):
-      s_list.append(transition.s)
-      a_list.append(transition.a)
-      r_list.append(transition.r)
-      sp_list.append(transition.sp)
-    return (
-      numpy.concatenate(s_list),
-      numpy.concatenate(a_list),
-      numpy.concatenate(r_list),
-      numpy.concatenate(sp_list),
-    )
+  def Sample(self) -> t.Iterable[q_base.Transition]:
+    """Samples an event from the history."""
+    return numpy.random.choice(self._history)
 
 
 class CallbackFunctionInterface(abc.ABC):
@@ -80,9 +55,9 @@ class CallbackFunctionInterface(abc.ABC):
 
 
 def SimpleRun(
-    env_factory: Callable[[], Environment],
-    qfunc: QFunction,
-    policy: QFunctionPolicy,
+    env_factory: q_base.Environment,
+    qfunc: q_base.QFunction,
+    policy: q_base.Policy,
     num_of_episode: int,
     callback_func: CallbackFunctionInterface = None,
     debug_verbosity: int = 0,
