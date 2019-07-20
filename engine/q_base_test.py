@@ -43,7 +43,7 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
       numpy.array([[0.2, 0.5], [0.3, 0.8]]),
       self.qfunc.GetValues(self.states))
 
-  def test_UpdateValuesFromTransitions_singleTransition(self):
+  def test_UpdateValues_singleTransition(self):
     self.qfunc._protected_SetValues(
       numpy.array([
         [1, 2, 3],
@@ -56,7 +56,7 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
         [0.8, 0.9],
       ]))
 
-    self.qfunc.UpdateValuesFromTransitions([q_base.Transition(
+    self.qfunc.UpdateValues([q_base.Transition(
       s=numpy.array([[1, 2, 3]]),
       a=numpy.array([[0, 1]]),
       r=1.0,
@@ -68,4 +68,67 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
     # - action (0,1): max(0.8, 0.9) * 0.5 + 1.0 = 1.45
     self.assertArrayEq(
       numpy.array([[0.5, 1.45]]),
+      self.qfunc.GetValues(numpy.array([[1, 2, 3]])))
+
+  def test_UpdateValues_multipleTransitions(self):
+    self.qfunc._protected_SetValues(
+      numpy.array([
+        [1, 2, 3],
+        [4, 5, 6],
+        [2, 2, 2],
+      ]),
+      numpy.array([
+        [0.5, 0.5],
+        [0.3, 0.7],
+        [0.8, 0.9],
+      ]))
+
+    self.qfunc.UpdateValues([
+      q_base.Transition(
+        s=numpy.array([[1, 2, 3]]),
+        a=numpy.array([[0, 1]]),
+        r=1.0,
+        sp=numpy.array([[2, 2, 2]]),
+      ),
+      q_base.Transition(
+        s=numpy.array([[4, 5, 6]]),
+        a=numpy.array([[0, 1]]),
+        r=0.7,
+        sp=numpy.array([[2, 2, 2]]),
+      )],
+      discount_factor=0.5)
+
+    # The new values for state (1,2,3) should be:
+    # - action (1,0): 0.5, since it's not changed.
+    # - action (0,1): max(0.8, 0.9) * 0.5 + 1.0 = 1.45
+    # The new values for state (4,5,6) should be:
+    # - action (1,0): 0.3, since it's not changed.
+    # - action (0,1): max(0.8, 0.9) * 0.5 + 0.7 = 1.15
+    self.assertArrayEq(
+      numpy.array([[0.5, 1.45], [0.3, 1.15]]),
+      self.qfunc.GetValues(numpy.array([[1, 2, 3], [4, 5, 6]])))
+
+  def test_UpdateValues_environmentDone(self):
+    self.qfunc._protected_SetValues(
+      numpy.array([
+        [1, 2, 3],
+        [4, 5, 6],
+      ]),
+      numpy.array([
+        [0.5, 0.5],
+        [0.3, 0.7],
+      ]))
+
+    self.qfunc.UpdateValues([q_base.Transition(
+      s=numpy.array([[1, 2, 3]]),
+      a=numpy.array([[0, 1]]),
+      r=1.0,
+      sp=None,
+    )], discount_factor=0.5)
+
+    # The new values for state (1,2,3) should be:
+    # - action (1,0): 0.5, since it's not changed.
+    # - action (0,1): 1.0, since environment is done, only reward is used.
+    self.assertArrayEq(
+      numpy.array([[0.5, 1.0]]),
       self.qfunc.GetValues(numpy.array([[1, 2, 3]])))

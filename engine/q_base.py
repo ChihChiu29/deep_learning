@@ -171,12 +171,18 @@ class QFunction(abc.ABC):
       states,
       numpy_util.Replace(self.GetValues(states), actions, action_values))
 
-  def UpdateValuesFromTransitions(
+  def UpdateValues(
       self,
       transitions: t.Iterable[Transition],
       discount_factor: float = None,
+
   ) -> None:
-    """Update Q-values using the given set of transitions."""
+    """Update Q-values using the given set of transitions.
+
+    Notes when there are multiple transitions from the same state
+    (different actions), there is a conflict since the values for other actions
+    for each transition is read from the current QFunction before update.
+    """
     if not discount_factor:
       discount_factor = DEFAULT_DISCOUNT_FACTOR
 
@@ -202,7 +208,7 @@ class QFunction(abc.ABC):
     )
     new_action_values = numpy.amax(self.GetValues(new_states), axis=1)
     for idx in done_sp_indices:
-      new_action_values[0, idx] = 0.0
+      new_action_values[idx] = 0.0
     self._SetActionValues(
       states, actions, rewards + discount_factor * new_action_values)
 
