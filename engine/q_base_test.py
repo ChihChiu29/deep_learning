@@ -10,7 +10,12 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
 
   def setUp(self) -> None:
     # State space size is 3; Action space size is 2.
-    self.qfunc = qfunc_impl.MemoizationQFunction(action_space_size=3)
+    # Learning from old values is disabled in the majority of tests.
+    self.qfunc = qfunc_impl.MemoizationQFunction(
+      action_space_size=2,
+      discount_factor=0.5,
+      learning_rate=1.0,
+    )
 
     self.states = numpy.array([
       [1, 2, 3],
@@ -61,7 +66,7 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
       a=numpy.array([[0, 1]]),
       r=1.0,
       sp=numpy.array([[2, 2, 2]]),
-    )], discount_factor=0.5)
+    )])
 
     # The new values for state (1,2,3) should be:
     # - action (1,0): 0.5, since it's not changed.
@@ -95,8 +100,7 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
         a=numpy.array([[0, 1]]),
         r=0.7,
         sp=numpy.array([[2, 2, 2]]),
-      )],
-      discount_factor=0.5)
+      )])
 
     # The new values for state (1,2,3) should be:
     # - action (1,0): 0.5, since it's not changed.
@@ -124,7 +128,7 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
       a=numpy.array([[0, 1]]),
       r=1.0,
       sp=None,
-    )], discount_factor=0.5)
+    )])
 
     # The new values for state (1,2,3) should be:
     # - action (1,0): 0.5, since it's not changed.
@@ -132,3 +136,33 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
     self.assertArrayEq(
       numpy.array([[0.5, 1.0]]),
       self.qfunc.GetValues(numpy.array([[1, 2, 3]])))
+
+  def test_learningRate(self):
+    # Disables learning from Q* to simplifies testing.
+    qfunc = qfunc_impl.MemoizationQFunction(
+      action_space_size=2,
+      discount_factor=0.0,
+      learning_rate=0.9,
+    )
+    qfunc._protected_SetValues(
+      numpy.array([
+        [1, 2, 3],
+        [4, 5, 6],
+      ]),
+      numpy.array([
+        [0.5, 0.6],
+        [0.3, 0.7],
+      ]))
+    qfunc.UpdateValues([q_base.Transition(
+      s=numpy.array([[1, 2, 3]]),
+      a=numpy.array([[0, 1]]),
+      r=1.0,
+      sp=numpy.array([[2, 2, 2]]),
+    )])
+
+    # The new values for state (1,2,3) should be:
+    # - action (1,0): 0.5, since it's not changed.
+    # - action (0,1): (1-0.9) * 0.6 + 0.9 * 1.0 = 0.96.
+    self.assertArrayEq(
+      numpy.array([[0.5, 0.96]]),
+      qfunc.GetValues(numpy.array([[1, 2, 3]])))

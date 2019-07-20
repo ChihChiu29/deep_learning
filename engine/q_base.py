@@ -12,6 +12,9 @@ import numpy
 
 from qpylib import t, numpy_util, parameters
 
+DEFAULT_DISCOUNT_FACTOR = 0.9  # "gamma"
+DEFAULT_LEARNING_RATE = 0.9  # "alpha"
+
 # A state is a 1 x n numpy array, where n is the dimension of the state vector.
 State = numpy.ndarray
 
@@ -128,6 +131,26 @@ class Environment(abc.ABC):
 class QFunction(abc.ABC):
   """A generic Q-function."""
 
+  def __init__(
+      self,
+      discount_factor: float = None,
+      learning_rate: float = None,
+  ):
+    """Constructor.
+
+    Args:
+      discount_factor: gamma, discount factor, must be strictly less than 1.
+        Affects iterations in UpdateValues.
+      learning_rate: alpha, learning rate = 1 means completely ignores previous
+        Q values during iteration in UpdateValues.
+    """
+    self._gamma = (
+      discount_factor if discount_factor is not None
+      else DEFAULT_DISCOUNT_FACTOR)
+    self._alpha = (
+      learning_rate if learning_rate is not None
+      else DEFAULT_LEARNING_RATE)
+
   @abc.abstractmethod
   def GetValues(
       self,
@@ -184,7 +207,6 @@ class QFunction(abc.ABC):
   def UpdateValues(
       self,
       transitions: t.Iterable[Transition],
-      discount_factor: float,
   ) -> None:
     """Update Q-values using the given set of transitions.
 
@@ -204,6 +226,7 @@ class QFunction(abc.ABC):
       if transition.sp is not None:
         sp_list.append(transition.sp)
       else:
+        # If environment is done, max(Q*(sp,a)) is replaced by 0.
         sp_list.append(transition.s)
         done_sp_indices.append(idx)
     states, actions, rewards, new_states = (
@@ -212,11 +235,20 @@ class QFunction(abc.ABC):
       numpy.array(r_list),
       numpy.concatenate(sp_list),
     )
+    # See: https://en.wikipedia.org/wiki/Q-learning
     new_action_values = numpy.amax(self.GetValues(new_states), axis=1)
     for idx in done_sp_indices:
       new_action_values[idx] = 0.0
-    self._SetActionValues(
-      states, actions, rewards + discount_factor * new_action_values)
+    learn_new_action_values = rewards + self._gamma * new_action_values
+
+    if self._alpha < 0.9999999:
+      old_action_values = self.GetActionValues(states, actions)
+      self._SetActionValues(
+        states, actions,
+        ((1.0 - self._alpha) * old_action_values
+         + self._alpha * learn_new_action_values))
+    else:
+      self._SetActionValues(states, actions, learn_new_action_values)
 
 
 class Policy(abc.ABC):

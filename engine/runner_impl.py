@@ -10,8 +10,6 @@ import numpy
 from deep_learning.engine import q_base
 from qpylib import t
 
-DEFAULT_FIXED_DISCOUNT_FACTOR = 0.9  # aka "gamma"
-
 
 class _Experience:
   """A fixed size history of experiences."""

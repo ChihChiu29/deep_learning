@@ -8,7 +8,13 @@ from qpylib import t, parameters
 class MemoizationQFunction(q_base.QFunction):
   """QFunction that uses memoization."""
 
-  def __init__(self, action_space_size: int):
+  def __init__(
+      self,
+      action_space_size: int,
+      discount_factor: float = None,
+      learning_rate: float = None,
+  ):
+    super().__init__(discount_factor, learning_rate)
     self._action_space_size = action_space_size
 
     self._storage = {}  # {state: value}.
