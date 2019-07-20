@@ -48,11 +48,6 @@ Reward = float
 Rewards = numpy.ndarray
 
 
-class EnvironmentDoneSignal(Exception):
-  """Signal for environment terminates."""
-  pass
-
-
 class Transition:
   """A transition of an agent in an environment."""
 

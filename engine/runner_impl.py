@@ -43,19 +43,13 @@ class _Experience:
 class SimpleRunner(q_base.Runner):
   """A simple runner that updates the QFunction after each step."""
 
-  def __init__(
-      self,
-      discount_factor: float = DEFAULT_FIXED_DISCOUNT_FACTOR,
-  ):
-    self._gamma = discount_factor
-
   def _protected_ProcessTransition(
       self,
       qfunc: q_base.QFunction,
       transition: q_base.Transition,
       step_idx: int,
   ) -> None:
-    qfunc.UpdateValues([transition], discount_factor=self._gamma)
+    qfunc.UpdateValues([transition])
 
 
 class DQNRunner(q_base.Runner):
@@ -65,11 +59,9 @@ class DQNRunner(q_base.Runner):
       self,
       experience_capacity: int,
       experience_sample_batch_size: int,
-      discount_factor: float = DEFAULT_FIXED_DISCOUNT_FACTOR,
   ):
     self._experience_capacity = experience_capacity
     self._experience_sample_batch_size = experience_sample_batch_size
-    self._gamma = discount_factor
 
     self._experience = _Experience(capacity=self._experience_capacity)
 
@@ -79,6 +71,6 @@ class DQNRunner(q_base.Runner):
       transition: q_base.Transition,
       step_idx: int,
   ) -> None:
+    self._experience.AddTransition(transition)
     qfunc.UpdateValues(
-      self._experience.Sample(self._experience_sample_batch_size),
-      discount_factor=self._gamma)
+      self._experience.Sample(self._experience_sample_batch_size))
