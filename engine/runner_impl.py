@@ -1,4 +1,4 @@
-"""DL runner.
+"""DL runner implementations.
 
 Ref:
   https://en.wikipedia.org/wiki/Q-learning

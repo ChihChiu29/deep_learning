@@ -21,7 +21,7 @@ class CircularWorld(q_base.Environment):
     Args:
       size: the integers between +/- size are used.
     """
-    super().__init__(state_space_size=1, action_space_size=3)
+    super().__init__(state_space_dim=1, action_space_size=3)
     self._size = size
 
     self._current_state = 0
@@ -34,7 +34,7 @@ class CircularWorld(q_base.Environment):
 
   def TakeAction(self, action: q_base.Action) -> q_base.Transition:
     current_state = self._current_state
-    move = self.GetChoice(action) - 1  # -1, 0, 1
+    move = self.GetChoiceFromAction(action) - 1  # -1, 0, 1
     new_state = current_state + move
 
     r = None

@@ -53,7 +53,7 @@ class PolicyTest(numpy_util_test.NumpyTestCase):
     policy = policy_impl.GreedyPolicyWithRandomness(epsilon=1.0)
     choices = []
     for _ in range(500):
-      choices.append(env.GetChoice(policy.Decide(
+      choices.append(env.GetChoiceFromAction(policy.Decide(
         env=env,
         qfunc=mock_qfunc,
         state=numpy.array([[0]]),

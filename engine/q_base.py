@@ -82,21 +82,21 @@ class Environment(abc.ABC):
 
   def __init__(
       self,
-      state_space_size: int,
+      state_space_dim: int,
       action_space_size: int,
   ):
-    self._state_array_size = state_space_size
+    self._state_array_dim = state_space_dim
     self._action_space_size = action_space_size
 
-  def GetStateArraySize(self) -> int:
-    """Gets the size of all state arrays (they are all 1-d)."""
-    return self._state_array_size
+  def GetStateSpaceDimension(self) -> int:
+    """Gets the dimension of state space."""
+    return self._state_array_dim
 
   def GetActionSpaceSize(self) -> int:
     """Gets the action space, which is uniform per environment."""
     return self._action_space_size
 
-  def GetAction(self, choice: int) -> Action:
+  def GetActionFromChoice(self, choice: int) -> Action:
     """Gets a one-hot vector for the action of the choice.
 
     Args:
@@ -106,7 +106,11 @@ class Environment(abc.ABC):
     action[0, choice] = 1
     return action
 
-  def GetChoice(self, action: Action) -> int:
+  def GetRandomChoice(self) -> int:
+    """Gets a random choice."""
+    return numpy.random.randint(0, self.GetActionSpaceSize())
+
+  def GetChoiceFromAction(self, action: Action) -> int:
     """Gets the int choice corresponding to the action."""
     return int(numpy.argmax(action))
 
@@ -320,7 +324,8 @@ class Runner(abc.ABC):
       logging.vlog(3, 'Running episode: %d', episode_idx)
       env.Reset()
 
-      s = numpy.zeros((1, env.GetStateArraySize()))
+      # Gets an initial state from a random action.
+      s = env.TakeAction(env.GetActionFromChoice(env.GetRandomChoice())).sp
       step_idx = 0
       episode_reward = 0.0
       while True:

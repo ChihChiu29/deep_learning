@@ -24,7 +24,7 @@ class RunnerTest(unittest.TestCase):
     runner_impl.SimpleRunner().Run(
       env=self.env, qfunc=self.qfunc, policy=self.policy, num_of_episodes=1)
 
-  def test_DQNRunner(self):
+  def test_experienceReplayRunner(self):
     # Tests that it can run; quality if not important for this test.
     runner_impl.ExperienceReplayRunner(
       experience_capacity=100,
