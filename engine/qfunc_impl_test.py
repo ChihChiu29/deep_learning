@@ -57,4 +57,4 @@ class DQNTest(numpy_util_test.NumpyTestCase):
     diff2 = numpy.sum(
       numpy.abs(self.values - self.qfunc.GetValues(self.states)))
 
-    self.assertLess(diff2, diff1 / 5.0)
+    self.assertLess(diff2, diff1 / 3.0)

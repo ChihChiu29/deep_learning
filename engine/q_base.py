@@ -115,7 +115,12 @@ class Environment(abc.ABC):
     return int(numpy.argmax(action))
 
   @abc.abstractmethod
-  def Reset(self):
+  def Reset(self) -> State:
+    """Resets an environment.
+
+    This function is expected to be called first, which also returns the
+    initial state in the environment.
+    """
     pass
 
   @abc.abstractmethod
@@ -322,10 +327,8 @@ class Runner(abc.ABC):
     """
     for episode_idx in range(num_of_episodes):
       logging.vlog(3, 'Running episode: %d', episode_idx)
-      env.Reset()
 
-      # Gets an initial state from a random action.
-      s = env.TakeAction(env.GetActionFromChoice(env.GetRandomChoice())).sp
+      s = env.Reset()
       step_idx = 0
       episode_reward = 0.0
       while True:

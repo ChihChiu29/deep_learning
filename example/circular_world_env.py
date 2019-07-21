@@ -24,13 +24,14 @@ class CircularWorld(q_base.Environment):
     super().__init__(state_space_dim=1, action_space_size=3)
     self._size = size
 
-    self._current_state = 0
+    self._current_state = None
     self._num_actions_taken = None
     self.Reset()
 
-  def Reset(self):
+  def Reset(self) -> q_base.State:
     self._current_state = 0
     self._num_actions_taken = 0
+    return numpy.array([[self._current_state]])
 
   def TakeAction(self, action: q_base.Action) -> q_base.Transition:
     current_state = self._current_state
