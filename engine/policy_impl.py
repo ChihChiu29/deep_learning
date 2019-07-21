@@ -19,7 +19,8 @@ class GreedyPolicy(q_base.Policy):
     values = qfunc.GetValues(state)
     choice = int(numpy.argmax(values))
     logging.vlog(
-      7, 'making greedy decision using values: %s; choice: %d', values, choice)
+      7, 'making greedy decision for state %s using values: %s; choice: %d',
+      state, values, choice)
     return env.GetAction(choice)
 
 
@@ -50,7 +51,8 @@ class GreedyPolicyWithRandomness(q_base.Policy):
   ) -> q_base.Action:
     if numpy.random.uniform(0, 1) < self._e:
       choice = numpy.random.randint(0, env.GetStateArraySize())
-      logging.vlog(7, 'making random decision choice: %d', choice)
+      logging.vlog(
+        7, 'making random decision for state %s choice: %d', state, choice)
       return env.GetAction(choice)
     else:
       return self._greedy_policy.Decide(

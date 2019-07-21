@@ -306,13 +306,13 @@ class Runner(abc.ABC):
             episode_idx=episode_idx,
             num_of_episodes=num_of_episodes,
           ))
-        logging.vlog(5, str(tran))
+        logging.vlog(3, str(tran))
         self._protected_ProcessTransition(
           qfunc=qfunc,
           transition=tran,
           step_idx=step_idx)
         episode_reward += tran.r
-        s = tran.s
+        s = tran.sp
         step_idx += 1
         if tran.sp is None:
           break
@@ -339,5 +339,5 @@ class Runner(abc.ABC):
       episode_reward: reward for this episode.
       steps: number of steps in this episode.
     """
-    print('Episode %d/%d: total_reward = %3.2f, total_steps=%d' % (
+    logging.vlog(2, 'Episode %d/%d: total_reward = %3.2f, total_steps=%d' % (
       episode_idx, num_of_episodes, episode_reward, steps))

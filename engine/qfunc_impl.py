@@ -29,7 +29,7 @@ class MemoizationQFunction(q_base.QFunction):
     qvalues = numpy.vstack([
       self._storage.get(self._Key(s), numpy.zeros((1, self._action_space_size)))
       for s in states])
-    logging.vlog(7, 'GET: (%s) -> %s', states, qvalues)
+    logging.vlog(9, 'GET: (%s) -> %s', states, qvalues)
     return qvalues
 
   def _protected_SetValues(
@@ -39,4 +39,4 @@ class MemoizationQFunction(q_base.QFunction):
   ) -> None:
     for s, v in zip(states, values):
       self._storage[self._Key(s)] = v
-      logging.vlog(7, 'SET: (%s) <- %s', s, v)
+      logging.vlog(9, 'SET: (%s) <- %s', s, v)

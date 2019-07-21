@@ -1,8 +1,9 @@
 """Unit tests for q_base.py."""
+from unittest import mock
 
 import numpy
 
-from deep_learning.engine import qfunc_impl, q_base
+from deep_learning.engine import qfunc_impl, q_base, runner_impl
 from qpylib import numpy_util_test, logging
 
 
@@ -166,3 +167,41 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
     self.assertArrayEq(
       numpy.array([[0.5, 0.96]]),
       qfunc.GetValues(numpy.array([[1, 2, 3]])))
+
+
+class RunnerTest(numpy_util_test.NumpyTestCase):
+
+  def setUp(self) -> None:
+    self.env = mock.MagicMock()
+    self.qfunc = mock.MagicMock()
+    self.policy = mock.MagicMock()
+
+    self.runner = runner_impl.NoOpRunner()
+
+  def test_runUsesNewStateAfterIteration(self):
+    self.env.TakeAction.side_effect = [
+      q_base.Transition(
+        s=numpy.array([[0]]),
+        a=numpy.array([[0]]),
+        r=1.0,
+        sp=numpy.array([[1]]),
+      ),
+      q_base.Transition(
+        s=numpy.array([[1]]),
+        a=numpy.array([[0]]),
+        r=1.0,
+        sp=None,
+      )
+    ]
+
+    self.runner.Run(
+      env=self.env,
+      qfunc=self.qfunc,
+      policy=self.policy,
+      num_of_episodes=1,
+    )
+
+    # Tests that the second call is with the new state 1.
+    self.policy.Decide.assert_called_with(
+      env=mock.ANY, qfunc=mock.ANY, state=numpy.array([[1]]),
+      episode_idx=0, num_of_episodes=1)
