@@ -10,7 +10,7 @@ import abc
 
 import numpy
 
-from qpylib import t, numpy_util, parameters
+from qpylib import t, numpy_util, logging
 
 DEFAULT_DISCOUNT_FACTOR = 0.9  # "gamma"
 DEFAULT_LEARNING_RATE = 0.9  # "alpha"
@@ -306,8 +306,7 @@ class Runner(abc.ABC):
             episode_idx=episode_idx,
             num_of_episodes=num_of_episodes,
           ))
-        if parameters.ENV.debug_verbosity > 5:
-          print(str(tran))
+        logging.vlog(5, str(tran))
         self._protected_ProcessTransition(
           qfunc=qfunc,
           transition=tran,

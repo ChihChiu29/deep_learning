@@ -2,6 +2,7 @@
 import numpy
 
 from deep_learning.engine import q_base
+from qpylib import logging
 
 
 class GreedyPolicy(q_base.Policy):
@@ -42,6 +43,7 @@ class GreedyPolicyWithRandomness(q_base.Policy):
       num_of_episodes: int,
   ) -> q_base.Action:
     if numpy.random.uniform(0, 1) < self._e:
+      logging.vlog(7, 'use random action')
       return env.GetAction(numpy.random.randint(0, env.GetStateArraySize()))
     else:
       return env.GetAction(int(numpy.argmax(qfunc.GetValues(state))))

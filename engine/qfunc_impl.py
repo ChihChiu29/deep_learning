@@ -2,7 +2,7 @@
 import numpy
 
 from deep_learning.engine import q_base
-from qpylib import t, parameters
+from qpylib import t, logging
 
 
 class MemoizationQFunction(q_base.QFunction):
@@ -29,8 +29,7 @@ class MemoizationQFunction(q_base.QFunction):
     qvalues = numpy.vstack([
       self._storage.get(self._Key(s), numpy.zeros((1, self._action_space_size)))
       for s in states])
-    if parameters.ENV.debug_verbosity > 7:
-      print('GET: (%s) -> %s' % (states, qvalues))
+    logging.vlog(7, 'GET: (%s) -> %s', states, qvalues)
     return qvalues
 
   def _protected_SetValues(
@@ -40,5 +39,4 @@ class MemoizationQFunction(q_base.QFunction):
   ) -> None:
     for s, v in zip(states, values):
       self._storage[self._Key(s)] = v
-      if parameters.ENV.debug_verbosity > 7:
-        print('SET: (%s) <- %s' % (s, v))
+      logging.vlog(7, 'SET: (%s) <- %s', s, v)
