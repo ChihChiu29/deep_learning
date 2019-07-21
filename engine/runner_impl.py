@@ -71,9 +71,11 @@ class DQNRunner(q_base.Runner):
       self,
       experience_capacity: int,
       experience_sample_batch_size: int,
+      train_every_n_steps: int = 1,
   ):
     self._experience_capacity = experience_capacity
     self._experience_sample_batch_size = experience_sample_batch_size
+    self._train_every_n_steps = train_every_n_steps
 
     self._experience = _Experience(capacity=self._experience_capacity)
 
@@ -84,5 +86,6 @@ class DQNRunner(q_base.Runner):
       step_idx: int,
   ) -> None:
     self._experience.AddTransition(transition)
-    qfunc.UpdateValues(
-      self._experience.Sample(self._experience_sample_batch_size))
+    if step_idx % self._train_every_n_steps == 0:
+      qfunc.UpdateValues(
+        self._experience.Sample(self._experience_sample_batch_size))
