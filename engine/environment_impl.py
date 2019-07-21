@@ -1,9 +1,10 @@
 """Provides some environment implementations."""
-import IPython
 import numpy
+from gym.wrappers.monitoring import video_recorder
 
 from deep_learning.engine import q_base
 from deep_learning.engine.q_base import Action, Transition
+from qpylib import t
 
 
 class GymEnvironmentError(Exception):
@@ -71,21 +72,32 @@ class GymEnvironment(q_base.Environment):
 
     self._current_state = None  # Initialized by `Reset`.
 
+    self._render_frames = False
+
     # For recording
-    self._frames = None
-    self._in_recording = False
+    self._recorder = None  # Initialized in `StartRecording`.
+
+  def SetRenderFrames(self, render: bool):
+    """Whether to render each frame.
+
+    Note that the "native" rendering for each frame is fast, but it's very
+    slow when each frame is showed in notebook -- use recording instead.
+    """
+    self._render_frames = render
 
   # @Override
   def Reset(self) -> q_base.State:
     self._current_state = self._gym_env.reset()
-    IPython.get_ipython().magic('matplotlib inline')
     return self._current_state
 
   # @Override
   def TakeAction(self, action: Action) -> Transition:
 
-    if self._in_recording:
-      self._frames.append(self._gym_env.render(mode='rgb_array'))
+    if self._render_frames:
+      self._gym_env.render(mode='rgb_array')
+
+    if self._recorder and self._recorder.enabled:
+      self._recorder.capture_frame()
 
     observation, reward, done, info = self._gym_env.step(
       self.GetChoiceFromAction(action))
@@ -100,15 +112,12 @@ class GymEnvironment(q_base.Environment):
     self._current_state = sp
     return transition
 
-  def StartRecording(self):
+  def StartRecording(self, video_filename: t.Text):
     """Starts to record a new animation; requires plot=True."""
-    self._frames = []
-    self._in_recording = True
+    self._recorder = video_recorder.VideoRecorder(
+      self._gym_env, video_filename, enabled=True)
 
   def StopRecording(self):
     """Stops recording."""
-    self._in_recording = False
-
-  def PlayRecording(self):
-    """Plays the last recording."""
-    _DisplayFramesAsGif(self._frames)
+    self._recorder.close()
+    self._recorder = None
