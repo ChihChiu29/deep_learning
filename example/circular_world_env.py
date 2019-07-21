@@ -64,3 +64,7 @@ class CircularWorld(q_base.Environment):
     self._num_actions_taken += 1
 
     return q_base.Transition(s, a, r, sp)
+
+  def GetAllStates(self):
+    return numpy.vstack(
+      [numpy.array([s]) for s in range(-self._size, self._size + 1)])
