@@ -340,9 +340,10 @@ class Runner(abc.ABC):
           step_idx=step_idx)
         episode_reward += tran.r
         s = tran.sp
-        step_idx += 1
         if tran.sp is None:
           break
+        step_idx += 1
+
       self._protected_Report(
         episode_idx=episode_idx,
         num_of_episodes=num_of_episodes,
