@@ -26,7 +26,7 @@ class RunnerTest(unittest.TestCase):
 
   def test_DQNRunner(self):
     # Tests that it can run; quality if not important for this test.
-    runner_impl.DQNRunner(
+    runner_impl.ExperienceReplayRunner(
       experience_capacity=100,
       experience_sample_batch_size=10).Run(
       env=self.env, qfunc=self.qfunc, policy=self.policy, num_of_episodes=1)

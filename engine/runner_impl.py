@@ -64,7 +64,7 @@ class SimpleRunner(q_base.Runner):
     qfunc.UpdateValues([transition])
 
 
-class DQNRunner(q_base.Runner):
+class ExperienceReplayRunner(q_base.Runner):
   """A runner that implements experience replay."""
 
   def __init__(
