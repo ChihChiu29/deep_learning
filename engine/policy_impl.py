@@ -16,7 +16,11 @@ class GreedyPolicy(q_base.Policy):
       episode_idx: int,
       num_of_episodes: int,
   ) -> q_base.Action:
-    return env.GetAction(int(numpy.argmax(qfunc.GetValues(state))))
+    values = qfunc.GetValues(state)
+    choice = int(numpy.argmax(values))
+    logging.vlog(
+      7, 'making greedy decision using values: %s; choice: %d', values, choice)
+    return env.GetAction(choice)
 
 
 class GreedyPolicyWithRandomness(q_base.Policy):
@@ -34,6 +38,8 @@ class GreedyPolicyWithRandomness(q_base.Policy):
     """
     self._e = epsilon
 
+    self._greedy_policy = GreedyPolicy()
+
   def Decide(
       self,
       env: q_base.Environment,
@@ -43,7 +49,14 @@ class GreedyPolicyWithRandomness(q_base.Policy):
       num_of_episodes: int,
   ) -> q_base.Action:
     if numpy.random.uniform(0, 1) < self._e:
-      logging.vlog(7, 'use random action')
-      return env.GetAction(numpy.random.randint(0, env.GetStateArraySize()))
+      choice = numpy.random.randint(0, env.GetStateArraySize())
+      logging.vlog(7, 'making random decision choice: %d', choice)
+      return env.GetAction(choice)
     else:
-      return env.GetAction(int(numpy.argmax(qfunc.GetValues(state))))
+      return self._greedy_policy.Decide(
+        env=env,
+        qfunc=qfunc,
+        state=state,
+        episode_idx=episode_idx,
+        num_of_episodes=num_of_episodes,
+      )
