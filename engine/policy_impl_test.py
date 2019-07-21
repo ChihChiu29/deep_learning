@@ -1,13 +1,29 @@
 """Unit tests for policy_impl.py."""
-import unittest
 from unittest import mock
 
 import numpy
 
-from deep_learning.engine import policy_impl, q_base
+from deep_learning.engine import environment_impl
+from deep_learning.engine import policy_impl
+from qpylib import numpy_util_test
 
 
-class PolicyTest(unittest.TestCase):
+class PolicyTest(numpy_util_test.NumpyTestCase):
+
+  def test_GreedyPolicy_choosesOptimalAction(self):
+    mock_qfunc = mock.MagicMock()
+    mock_qfunc.GetValues.return_value = numpy.array([[0.3, 0.7]])
+
+    policy = policy_impl.GreedyPolicy()
+    self.assertArrayEq(
+      numpy.array([[0, 1]]),
+      policy.Decide(
+        env=environment_impl.SingleStateEnvironment(
+          action_space_size=2, step_limit=10),
+        qfunc=mock_qfunc,
+        state=numpy.array([[0]]),
+        episode_idx=0,
+        num_of_episodes=500))
 
   def test_GreedyPolicyWithRandomness_choosesNonOptimalAction(self):
     mock_qfunc = mock.MagicMock()
@@ -16,7 +32,8 @@ class PolicyTest(unittest.TestCase):
     policy = policy_impl.GreedyPolicyWithRandomness(epsilon=0.5)
     for _ in range(500):
       policy.Decide(
-        env=q_base.Environment(action_space_size=2, state_space_size=1),
+        env=environment_impl.SingleStateEnvironment(
+          action_space_size=2, step_limit=10),
         qfunc=mock_qfunc,
         state=numpy.array([[0]]),
         episode_idx=0,

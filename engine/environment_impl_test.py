@@ -9,7 +9,8 @@ from deep_learning.engine import environment_impl
 class SingleStateEnvironmentTest(unittest.TestCase):
 
   def test_stepLimit(self):
-    env = environment_impl.SingleStateEnvironment(step_limit=10)
+    env = environment_impl.SingleStateEnvironment(
+      action_space_size=1, step_limit=10)
     env.Reset()
 
     transition = None

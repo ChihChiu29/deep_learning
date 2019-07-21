@@ -10,15 +10,17 @@ class SingleStateEnvironment(q_base.Environment):
 
   def __init__(
       self,
+      action_space_size: int,
       step_limit: int,
   ):
     """Constructor.
 
     Args:
+      action_space_size: the size of the action space. All actions are no-ops.
       step_limit: the number of actions allowed to take before environment
         is "done".
     """
-    super().__init__(1, 1)
+    super().__init__(state_space_size=1, action_space_size=action_space_size)
     self._step_limit = step_limit
 
     self._action_count = None

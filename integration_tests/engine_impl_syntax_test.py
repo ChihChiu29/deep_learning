@@ -2,14 +2,17 @@
 
 import unittest
 
-from deep_learning.engine import qfunc_impl, policy_impl, runner_impl
-from deep_learning.example import circular_world_env
+from deep_learning.engine import environment_impl
+from deep_learning.engine import policy_impl
+from deep_learning.engine import qfunc_impl
+from deep_learning.engine import runner_impl
 
 
 class RunnerTest(unittest.TestCase):
 
   def setUp(self) -> None:
-    self.env = circular_world_env.CircularWorld(size=1)
+    self.env = environment_impl.SingleStateEnvironment(
+      action_space_size=1, step_limit=10)
     self.qfunc = qfunc_impl.MemoizationQFunction(
       action_space_size=3,
       discount_factor=0.9,
@@ -32,7 +35,8 @@ class RunnerTest(unittest.TestCase):
 class PolicyTest(unittest.TestCase):
 
   def setUp(self) -> None:
-    self.env = circular_world_env.CircularWorld(size=1)
+    self.env = environment_impl.SingleStateEnvironment(
+      action_space_size=1, step_limit=10)
     self.qfunc = qfunc_impl.MemoizationQFunction(
       action_space_size=3,
       discount_factor=0.9,
