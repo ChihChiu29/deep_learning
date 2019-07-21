@@ -50,7 +50,7 @@ class GreedyPolicyWithRandomness(q_base.Policy):
       num_of_episodes: int,
   ) -> q_base.Action:
     if numpy.random.uniform(0, 1) < self._e:
-      choice = numpy.random.randint(0, env.GetStateArraySize())
+      choice = numpy.random.randint(0, env.GetActionSpaceSize())
       logging.vlog(
         7, 'making random decision for state %s choice: %d', state, choice)
       return env.GetAction(choice)

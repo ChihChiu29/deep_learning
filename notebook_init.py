@@ -8,7 +8,7 @@ import keras
 from keras.layers import Activation, Dense, InputLayer
 from keras.models import Model, Sequential
 
-from qpylib import logging
+from qpylib import logging, numpy_util
 from deep_learning.engine import q_base, policy_impl, qfunc_impl, runner_impl
 from deep_learning.example import circular_world_env
 

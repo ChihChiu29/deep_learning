@@ -19,8 +19,13 @@ class MemoizationQFunction(q_base.QFunction):
 
     self._storage = {}  # {state: value}.
 
-  def _Key(self, state: q_base.State) -> t.Text:
-    return str(state)
+  def _Key(self, state: numpy.ndarray) -> t.Hashable:
+    """Gets a key for a "state".
+
+    Note that the state is a 1d array instead of the 2d array as declared in
+    q_base.py.
+    """
+    return tuple(v for v in state)
 
   def _protected_GetValues(
       self,

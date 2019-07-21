@@ -43,3 +43,24 @@ class PolicyTest(numpy_util_test.NumpyTestCase):
     # decision.
     self.assertGreater(mock_qfunc.GetValues.call_count, 200)
     self.assertLess(mock_qfunc.GetValues.call_count, 300)
+
+  def test_GreedyPolicyWithRandomness_considerAllActions(self):
+    mock_qfunc = mock.MagicMock()
+    mock_qfunc.GetValues.return_value = numpy.array([[0.3, 0.7]])
+
+    env = environment_impl.SingleStateEnvironment(
+      action_space_size=2, step_limit=10)
+    policy = policy_impl.GreedyPolicyWithRandomness(epsilon=1.0)
+    choices = []
+    for _ in range(500):
+      choices.append(env.GetChoice(policy.Decide(
+        env=env,
+        qfunc=mock_qfunc,
+        state=numpy.array([[0]]),
+        episode_idx=0,
+        num_of_episodes=500)))
+
+    # Tests that roughly half of the time action 0 is chosen.
+    num_of_0s = len([c for c in choices if c == 0])
+    self.assertGreater(num_of_0s, 200)
+    self.assertLess(num_of_0s, 300)
