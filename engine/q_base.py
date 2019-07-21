@@ -146,8 +146,17 @@ class QFunction(abc.ABC):
       learning_rate if learning_rate is not None
       else DEFAULT_LEARNING_RATE)
 
-  @abc.abstractmethod
   def GetValues(
+      self,
+      states: States,
+  ) -> QValues:
+    """Gets the Q values for states, for all actions."""
+    values = self._protected_GetValues(states)
+    logging.vlog(9, 'GET: (%s) -> %s', states, values)
+    return values
+
+  @abc.abstractmethod
+  def _protected_GetValues(
       self,
       states: States,
   ) -> QValues:
@@ -164,6 +173,22 @@ class QFunction(abc.ABC):
     The numbers of states and actions must equal.
     """
     return numpy_util.SelectReduce(self.GetValues(states), actions)
+
+  def _SetValues(
+      self,
+      states: States,
+      values: QValues,
+  ) -> None:
+    """Sets/trains Q values for states.
+
+    This function is the one subclass uses to update the value storage. The
+    runners use UpdateValuesFromTransitions to indirectly set values.
+
+    The number of states and values must equal. Values for all actions are
+    set at the same time.
+    """
+    logging.vlog(9, 'SET: (%s) <- %s', states, values)
+    return self._protected_SetValues(states, values)
 
   @abc.abstractmethod
   def _protected_SetValues(
@@ -195,7 +220,7 @@ class QFunction(abc.ABC):
 
     The numbers of states, actions, and values must all be equal.
     """
-    self._protected_SetValues(
+    self._SetValues(
       states,
       numpy_util.Replace(self.GetValues(states), actions, action_values))
 
@@ -292,12 +317,14 @@ class Runner(abc.ABC):
     done. Between episodes, Report function is called to give user feedback.
     """
     for episode_idx in range(num_of_episodes):
+      logging.vlog(3, 'Running episode: %d', episode_idx)
       env.Reset()
 
       s = numpy.zeros((1, env.GetStateArraySize()))
       step_idx = 0
       episode_reward = 0.0
       while True:
+        logging.vlog(7, 'Running episode: %d, step: %d', episode_idx, step_idx)
         tran = env.TakeAction(
           policy.Decide(
             env=env,
@@ -306,7 +333,7 @@ class Runner(abc.ABC):
             episode_idx=episode_idx,
             num_of_episodes=num_of_episodes,
           ))
-        logging.vlog(3, str(tran))
+        logging.vlog(5, str(tran))
         self._protected_ProcessTransition(
           qfunc=qfunc,
           transition=tran,
