@@ -7,10 +7,6 @@ from deep_learning.engine.q_base import Action, Transition
 from qpylib import t
 
 
-class GymEnvironmentError(Exception):
-  pass
-
-
 class SingleStateEnvironment(q_base.Environment):
   """An environment of a single state."""
 
@@ -62,7 +58,7 @@ class GymEnvironment(q_base.Environment):
       gym_env: an environment made from `gym.make`.
     """
     if len(gym_env.observation_space.shape) != 1:
-      raise GymEnvironmentError('observation_space is not 1-d.')
+      raise NotImplementedError('observation_space is not 1-d.')
 
     super().__init__(
       state_space_dim=gym_env.observation_space.shape[0],
@@ -96,7 +92,7 @@ class GymEnvironment(q_base.Environment):
   def TakeAction(self, action: Action) -> Transition:
 
     if self._render_frames:
-      self._gym_env.render(mode='rgb_array')
+      self._gym_env.render()
 
     if self._recorder and self._recorder.enabled:
       self._recorder.capture_frame()

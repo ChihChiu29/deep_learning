@@ -383,6 +383,8 @@ class Runner(abc.ABC):
       episode_reward: reward for this episode.
       steps: number of steps in this episode.
     """
+    self._episode_rewards.append(episode_reward)
+
     progress_msg = (
         'Episode %d/%d: episode_total_reward = %3.2f, episode_steps=%d' % (
       episode_idx, num_of_episodes, episode_reward, steps))
@@ -396,7 +398,6 @@ class Runner(abc.ABC):
       logging.vlog(5, progress_msg)
 
     if logging.ENV.debug_verbosity > 3:
-      self._episode_rewards.append(episode_reward)
       display.clear_output(wait=True)
       pyplot.plot(self._episode_rewards)
       pyplot.show()
