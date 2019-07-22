@@ -11,6 +11,30 @@ from deep_learning.engine import q_base
 from qpylib import t
 
 
+class NoOpRunner(q_base.Runner):
+  """A runner that doesn't do anything to qfunc."""
+
+  def _protected_ProcessTransition(
+      self,
+      qfunc: q_base.QFunction,
+      transition: q_base.Transition,
+      step_idx: int,
+  ) -> None:
+    pass
+
+
+class SimpleRunner(q_base.Runner):
+  """A simple runner that updates the QFunction after each step."""
+
+  def _protected_ProcessTransition(
+      self,
+      qfunc: q_base.QFunction,
+      transition: q_base.Transition,
+      step_idx: int,
+  ) -> None:
+    qfunc.UpdateValues([transition])
+
+
 class _Experience:
   """A fixed size history of experiences."""
 
@@ -40,30 +64,6 @@ class _Experience:
     return numpy.random.choice(self._history, size=size)
 
 
-class NoOpRunner(q_base.Runner):
-  """A runner that doesn't do anything to qfunc."""
-
-  def _protected_ProcessTransition(
-      self,
-      qfunc: q_base.QFunction,
-      transition: q_base.Transition,
-      step_idx: int,
-  ) -> None:
-    pass
-
-
-class SimpleRunner(q_base.Runner):
-  """A simple runner that updates the QFunction after each step."""
-
-  def _protected_ProcessTransition(
-      self,
-      qfunc: q_base.QFunction,
-      transition: q_base.Transition,
-      step_idx: int,
-  ) -> None:
-    qfunc.UpdateValues([transition])
-
-
 class ExperienceReplayRunner(q_base.Runner):
   """A runner that implements experience replay."""
 
@@ -73,6 +73,7 @@ class ExperienceReplayRunner(q_base.Runner):
       experience_sample_batch_size: int,
       train_every_n_steps: int = 1,
   ):
+    super().__init__()
     self._experience_capacity = experience_capacity
     self._experience_sample_batch_size = experience_sample_batch_size
     self._train_every_n_steps = train_every_n_steps

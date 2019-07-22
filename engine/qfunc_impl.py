@@ -126,3 +126,23 @@ class DQN(q_base.QFunction):
     opt = optimizers.RMSprop(lr=self._rmsprop_learning_rate)
     model.compile(loss='mse', optimizer=opt)
     return model
+
+  def SaveModel(self, file_path: t.Text) -> None:
+    """Saves the model and other stats to a file.
+
+    See:
+      https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model
+    """
+    self._model.save(file_path)
+
+  def LoadModel(self, file_path: t.Text) -> None:
+    """Loads a model from a file saved by SaveModel.
+
+    Note that arguments to the constructor of this class is not saved. The
+    saved model can only be loaded by an instance whose models has the
+    identical structure.
+
+    See:
+      https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model
+    """
+    self._model = models.load_model(file_path)

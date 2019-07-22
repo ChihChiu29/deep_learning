@@ -29,7 +29,8 @@ class RunnerTest(unittest.TestCase):
     runner_impl.ExperienceReplayRunner(
       experience_capacity=100,
       experience_sample_batch_size=10).Run(
-      env=self.env, qfunc=self.qfunc, policy=self.policy, num_of_episodes=1)
+      env=self.env, qfunc=self.qfunc, policy=self.policy,
+      num_of_episodes=1)
 
 
 class PolicyTest(unittest.TestCase):

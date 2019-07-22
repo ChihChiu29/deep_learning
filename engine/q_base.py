@@ -9,6 +9,8 @@ which is more CPU friendly.
 import abc
 
 import numpy
+from IPython import display
+from matplotlib import pyplot
 
 from qpylib import t, numpy_util, logging
 
@@ -130,6 +132,9 @@ class Environment(abc.ABC):
     If transition.sp is None, it means the environment is done.
     """
     pass
+
+  def TakeRandomAction(self) -> Transition:
+    return self.TakeAction(self.GetActionFromChoice(self.GetRandomChoice()))
 
 
 class QFunction(abc.ABC):
@@ -302,6 +307,9 @@ class Policy(abc.ABC):
 
 class Runner(abc.ABC):
 
+  def __init__(self):
+    self._episode_rewards = []
+
   @abc.abstractmethod
   def _protected_ProcessTransition(
       self,
@@ -326,13 +334,13 @@ class Runner(abc.ABC):
     done. Between episodes, Report function is called to give user feedback.
     """
     for episode_idx in range(num_of_episodes):
-      logging.vlog(3, 'Running episode: %d', episode_idx)
+      logging.vlog(10, 'Running episode: %d', episode_idx)
 
       s = env.Reset()
       step_idx = 0
       episode_reward = 0.0
       while True:
-        logging.vlog(7, 'Running episode: %d, step: %d', episode_idx, step_idx)
+        logging.vlog(20, 'Running episode: %d, step: %d', episode_idx, step_idx)
         tran = env.TakeAction(
           policy.Decide(
             env=env,
@@ -375,5 +383,20 @@ class Runner(abc.ABC):
       episode_reward: reward for this episode.
       steps: number of steps in this episode.
     """
-    logging.vlog(2, 'Episode %d/%d: total_reward = %3.2f, total_steps=%d' % (
+    progress_msg = (
+        'Episode %d/%d: episode_total_reward = %3.2f, episode_steps=%d' % (
       episode_idx, num_of_episodes, episode_reward, steps))
+    if episode_idx % 1000 == 0:
+      logging.vlog(2, progress_msg)
+    elif episode_idx % 100 == 0:
+      logging.vlog(3, progress_msg)
+    elif episode_idx % 10 == 0:
+      logging.vlog(4, progress_msg)
+    else:
+      logging.vlog(5, progress_msg)
+
+    if logging.ENV.debug_verbosity > 3:
+      self._episode_rewards.append(episode_reward)
+      display.clear_output(wait=True)
+      pyplot.plot(self._episode_rewards)
+      pyplot.show()

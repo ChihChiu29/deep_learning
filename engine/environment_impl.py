@@ -73,11 +73,9 @@ class GymEnvironment(q_base.Environment):
     self._current_state = None  # Initialized by `Reset`.
 
     self._render_frames = False
-
-    # For recording
     self._recorder = None  # Initialized in `StartRecording`.
 
-  def SetRenderFrames(self, render: bool):
+  def TurnOnRendering(self, render: bool):
     """Whether to render each frame.
 
     Note that the "native" rendering for each frame is fast, but it's very
@@ -85,9 +83,13 @@ class GymEnvironment(q_base.Environment):
     """
     self._render_frames = render
 
+  def _ConvertState(self, state):
+    """Converts the Gym state to the interface standard."""
+    return state[numpy.newaxis, :]
+
   # @Override
   def Reset(self) -> q_base.State:
-    self._current_state = self._gym_env.reset()
+    self._current_state = self._ConvertState(self._gym_env.reset())
     return self._current_state
 
   # @Override
@@ -105,7 +107,7 @@ class GymEnvironment(q_base.Environment):
     if done:
       sp = None
     else:
-      sp = observation
+      sp = self._ConvertState(observation)
 
     transition = q_base.Transition(
       s=self._current_state, a=action, r=reward, sp=sp)
@@ -121,3 +123,11 @@ class GymEnvironment(q_base.Environment):
     """Stops recording."""
     self._recorder.close()
     self._recorder = None
+
+  def GetGymEnvMaxEpisodeSteps(self) -> int:
+    """Gets the max episode steps for the gym environment."""
+    return self._gym_env._max_episode_steps
+
+  def SetGymEnvMaxEpisodeSteps(self, steps: int) -> None:
+    """Sets the max episode steps for the gym environment."""
+    self._gym_env._max_episode_steps = steps
