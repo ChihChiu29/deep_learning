@@ -12,7 +12,9 @@ import numpy
 from IPython import display
 from matplotlib import pyplot
 
-from qpylib import t, numpy_util, logging
+from qpylib import logging
+from qpylib import numpy_util
+from qpylib import t
 
 DEFAULT_DISCOUNT_FACTOR = 0.9  # "gamma"
 DEFAULT_LEARNING_RATE = 0.9  # "alpha"
@@ -84,18 +86,22 @@ class Environment(abc.ABC):
 
   def __init__(
       self,
-      state_space_dim: int,
+      state_shape: t.Tuple[int],
       action_space_size: int,
   ):
-    self._state_array_dim = state_space_dim
+    """Constructor.
+
+    Args:
+      state_shape: the shape of the numpy.ndarray state.
+      action_space_size: the size of the discrete action space.
+    """
+    self._state_shape = state_shape
     self._action_space_size = action_space_size
 
-  def GetStateSpaceDimension(self) -> int:
-    """Gets the dimension of state space."""
-    return self._state_array_dim
+  def GetStateShape(self) -> t.Tuple[int]:
+    return self._state_shape
 
   def GetActionSpaceSize(self) -> int:
-    """Gets the action space, which is uniform per environment."""
     return self._action_space_size
 
   def GetActionFromChoice(self, choice: int) -> Action:

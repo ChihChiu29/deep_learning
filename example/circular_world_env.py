@@ -21,7 +21,7 @@ class CircularWorld(q_base.Environment):
     Args:
       size: the integers between +/- size are used.
     """
-    super().__init__(state_space_dim=1, action_space_size=3)
+    super().__init__(state_shape=1, action_space_size=3)
     self._size = size
 
     self._current_state = None

@@ -3,7 +3,8 @@ import numpy
 from gym.wrappers.monitoring import video_recorder
 
 from deep_learning.engine import q_base
-from deep_learning.engine.q_base import Action, Transition
+from deep_learning.engine.q_base import Action
+from deep_learning.engine.q_base import Transition
 from qpylib import t
 
 
@@ -22,7 +23,7 @@ class SingleStateEnvironment(q_base.Environment):
       step_limit: the number of actions allowed to take before environment
         is "done".
     """
-    super().__init__(state_space_dim=1, action_space_size=action_space_size)
+    super().__init__(state_shape=1, action_space_size=action_space_size)
     self._step_limit = step_limit
 
     self._action_count = None
@@ -57,11 +58,8 @@ class GymEnvironment(q_base.Environment):
     Args:
       gym_env: an environment made from `gym.make`.
     """
-    if len(gym_env.observation_space.shape) != 1:
-      raise NotImplementedError('observation_space is not 1-d.')
-
     super().__init__(
-      state_space_dim=gym_env.observation_space.shape[0],
+      state_shape=gym_env.observation_space.shape[0],
       action_space_size=gym_env.action_space.n)
 
     self._gym_env = gym_env

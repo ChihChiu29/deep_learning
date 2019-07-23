@@ -1,9 +1,12 @@
 """QFunction implementations."""
 import numpy
-from keras import models, layers, optimizers
+from keras import layers
+from keras import models
+from keras import optimizers
 
 from deep_learning.engine import q_base
-from deep_learning.engine.q_base import States, QValues
+from deep_learning.engine.q_base import QValues
+from deep_learning.engine.q_base import States
 from qpylib import t
 
 
@@ -53,7 +56,7 @@ class MemoizationQFunction(q_base.QFunction):
     Note that the state is a 1d array instead of the 2d array as declared in
     q_base.py.
     """
-    return tuple(v for v in state)
+    return tuple(v.item() for v in numpy.nditer(state))
 
   # @Override
   def _protected_GetValues(
