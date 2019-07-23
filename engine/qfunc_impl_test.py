@@ -10,7 +10,7 @@ class RandomValueQFunctionTest(numpy_util_test.NumpyTestCase):
 
   def test_GetValues(self):
     qfunc = qfunc_impl.RandomValueQFunction(action_space_size=3)
-    
+
     self.assertEqual(
       (2, 3), qfunc.GetValues(numpy.array([[1, 2, 3], [4, 5, 6]])).shape)
 
@@ -44,11 +44,11 @@ class DQNTest(numpy_util_test.NumpyTestCase):
   def setUp(self) -> None:
     # State space size is 3; Action space size is 2.
     self.qfunc = qfunc_impl.DQN(
-      state_space_dim=3,
-      action_space_size=2,
-      hidden_layer_sizes=(6, 4),
-      training_batch_size=1,
-    )
+      model=qfunc_impl.CreateSingleModelWithRMSProp(
+        state_shape=(3,),
+        action_space_size=2,
+        hidden_layer_sizes=(6, 4),
+      ))
     self.states = numpy.array([
       [1, 2, 3],
       [4, 5, 6],

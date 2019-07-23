@@ -4,7 +4,9 @@ import gym
 import keras
 import numpy
 
+from keras import layers
 from keras.layers import Activation, Dense, InputLayer
+from keras import models
 from keras.models import Model, Sequential
 from keras import optimizers
 

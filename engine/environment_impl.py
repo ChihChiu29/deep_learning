@@ -59,7 +59,7 @@ class GymEnvironment(q_base.Environment):
       gym_env: an environment made from `gym.make`.
     """
     super().__init__(
-      state_shape=gym_env.observation_space.shape[0],
+      state_shape=gym_env.observation_space.shape,
       action_space_size=gym_env.action_space.n)
 
     self._gym_env = gym_env

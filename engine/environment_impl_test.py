@@ -26,6 +26,10 @@ class SingleStateEnvironmentTest(unittest.TestCase):
 
 class GymEnvironment(numpy_util_test.NumpyTestCase):
 
+  def test_getStateShape(self):
+    env = environment_impl.GymEnvironment(gym.make('SpaceInvaders-v4'))
+    self.assertEqual((210, 160, 3), env.GetStateShape())
+
   def test_takeAction(self):
     env = environment_impl.GymEnvironment(gym.make('CartPole-v1'))
     s = env.Reset()
