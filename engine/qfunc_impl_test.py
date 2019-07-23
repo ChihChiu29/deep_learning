@@ -6,6 +6,18 @@ from deep_learning.engine import qfunc_impl
 from qpylib import numpy_util_test
 
 
+class RandomValueQFunctionTest(numpy_util_test.NumpyTestCase):
+
+  def test_GetValues(self):
+    qfunc = qfunc_impl.RandomValueQFunction(action_space_size=3)
+    
+    self.assertEqual(
+      (2, 3), qfunc.GetValues(numpy.array([[1, 2, 3], [4, 5, 6]])).shape)
+
+    self.assertEqual(
+      (2, 3), qfunc.GetValues(numpy.array([[1, 2], [4, 5]])).shape)
+
+
 class MemoizationQFunctionTest(numpy_util_test.NumpyTestCase):
 
   def setUp(self) -> None:

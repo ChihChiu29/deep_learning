@@ -3,7 +3,34 @@ import numpy
 from keras import models, layers, optimizers
 
 from deep_learning.engine import q_base
+from deep_learning.engine.q_base import States, QValues
 from qpylib import t
+
+
+class RandomValueQFunction(q_base.QFunction):
+  """QFunction that returns random value upon read, and write is no-op."""
+
+  def __init__(
+      self,
+      action_space_size: int,
+  ):
+    """Constructor.
+
+    Args:
+      action_space_size: the size of the action space.
+
+    """
+    super().__init__(None, None)
+    self._action_space_size = action_space_size
+
+  def _protected_GetValues(self, states: States) -> QValues:
+    return numpy.random.randint(
+      0, self._action_space_size - 1,
+      size=(len(states), self._action_space_size))
+
+  def _protected_SetValues(self, states: States, values: QValues) -> None:
+    """Writes has no effect."""
+    pass
 
 
 class MemoizationQFunction(q_base.QFunction):

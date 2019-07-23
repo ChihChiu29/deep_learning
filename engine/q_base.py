@@ -17,10 +17,10 @@ from qpylib import t, numpy_util, logging
 DEFAULT_DISCOUNT_FACTOR = 0.9  # "gamma"
 DEFAULT_LEARNING_RATE = 0.9  # "alpha"
 
-# A state is a 1 x n numpy array, where n is the dimension of the state vector.
+# A state is a 1 x (state.shape) numpy array.
 State = numpy.ndarray
 
-# An m x n numpy array holding m states.
+# An m x (state.shape) numpy array holding m states.
 States = numpy.ndarray
 
 # An action is a 1 x k one-hot vector, where k is the number of possible
