@@ -48,12 +48,12 @@ class E2E_DQNTest(unittest.TestCase):
     env = environment_impl.GymEnvironment(gym_env)
     env.SetGymEnvMaxEpisodeSteps(10)
     qfunc = qfunc_impl.DQN(
-      model=qfunc_impl.CreateSingleModelWithRMSProp(
+      model=qfunc_impl.CreateModel(
         state_shape=env.GetStateShape(),
         action_space_size=env.GetActionSpaceSize(),
         hidden_layer_sizes=(4,),
       ))
-    
+
     env.Reset()
     policy = policy_impl.GreedyPolicyWithRandomness(epsilon=1.0)
 

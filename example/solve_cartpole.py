@@ -15,7 +15,7 @@ def main(_):
   batch_size = 64  # used in qfunc and runner.
   env = environment_impl.GymEnvironment(gym.make('CartPole-v0'))
   qfunc = qfunc_impl.DQN(
-    model=qfunc_impl.CreateSingleModelWithRMSProp(
+    model=qfunc_impl.CreateModel(
       state_shape=env.GetStateShape(),
       action_space_size=env.GetActionSpaceSize(),
       hidden_layer_sizes=(20, 20, 20)),

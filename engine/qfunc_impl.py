@@ -12,11 +12,6 @@ from qpylib import t
 
 _DEFAULT_ACTIVATION = 'relu'
 
-# Ref:
-#   https://jaromiru.com/2016/10/03/lets-make-a-dqn-implementation/
-#   https://towardsdatascience.com/understanding-rmsprop-faster-neural-network-learning-62e116fcf29a
-_DEFAULT_RMSPROP_LEARNING_RATE = 0.00025
-
 _DEFAULT_TRAINING_BATCH_SIZE = 64
 
 
@@ -159,14 +154,14 @@ class DQN(q_base.QFunction):
     self._model = models.load_model(file_path)
 
 
-def CreateSingleModelWithRMSProp(
+def CreateModel(
     state_shape: t.Tuple[int],
     action_space_size: int,
     hidden_layer_sizes: t.Iterable[int],
     activation: t.Text = _DEFAULT_ACTIVATION,
-    rmsprop_learning_rate: float = _DEFAULT_RMSPROP_LEARNING_RATE,
+    optimizer: optimizers.Optimizer = None,
 ):
-  """Creates a single model with RMSProp optimizer.
+  """Creates a single head model.
 
   Following reference:
     https://jaromiru.com/2016/10/03/lets-make-a-dqn-implementation/
@@ -177,8 +172,12 @@ def CreateSingleModelWithRMSProp(
     hidden_layer_sizes: a list of number of nodes in the hidden layers,
       staring with the input layer.
     activation: the activation, for example "relu".
-    rmsprop_learning_rate: the learning rate used by the RMSprop optimizer.
+    optimizer: the optimizer to use. Default to the one created by
+      _CreateDefaultOptimizer.
   """
+  if optimizer is None:
+    optimizer = _CreateDefaultOptimizer()
+
   hidden_layer_sizes = tuple(hidden_layer_sizes)
   model = models.Sequential()
   if len(state_shape) > 1:
@@ -196,7 +195,13 @@ def CreateSingleModelWithRMSProp(
   model.add(layers.Dense(
     units=action_space_size, activation='linear'))
 
-  opt = optimizers.RMSprop(lr=rmsprop_learning_rate)
-  model.compile(loss='mse', optimizer=opt)
+  model.compile(loss='mse', optimizer=optimizer)
 
   return model
+
+
+def _CreateDefaultOptimizer() -> optimizers.Optimizer:
+  """Creates a default optimizer."""
+  # Ref:
+  #   https://jaromiru.com/2016/10/03/lets-make-a-dqn-implementation/
+  return optimizers.RMSprop(lr=0.00025)

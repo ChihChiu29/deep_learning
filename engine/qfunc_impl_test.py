@@ -44,7 +44,7 @@ class DQNTest(numpy_util_test.NumpyTestCase):
   def setUp(self) -> None:
     # State space size is 3; Action space size is 2.
     self.qfunc = qfunc_impl.DQN(
-      model=qfunc_impl.CreateSingleModelWithRMSProp(
+      model=qfunc_impl.CreateModel(
         state_shape=(3,),
         action_space_size=2,
         hidden_layer_sizes=(6, 4),
