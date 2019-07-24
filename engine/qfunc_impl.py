@@ -10,6 +10,8 @@ from deep_learning.engine.q_base import QValues
 from deep_learning.engine.q_base import States
 from qpylib import t
 
+_DEFAULT_ACTIVATION = 'relu'
+
 # Ref:
 #   https://jaromiru.com/2016/10/03/lets-make-a-dqn-implementation/
 #   https://towardsdatascience.com/understanding-rmsprop-faster-neural-network-learning-62e116fcf29a
@@ -161,6 +163,7 @@ def CreateSingleModelWithRMSProp(
     state_shape: t.Tuple[int],
     action_space_size: int,
     hidden_layer_sizes: t.Iterable[int],
+    activation: t.Text = _DEFAULT_ACTIVATION,
     rmsprop_learning_rate: float = _DEFAULT_RMSPROP_LEARNING_RATE,
 ):
   """Creates a single model with RMSProp optimizer.
@@ -173,10 +176,10 @@ def CreateSingleModelWithRMSProp(
     action_space_size: the size of the action space.
     hidden_layer_sizes: a list of number of nodes in the hidden layers,
       staring with the input layer.
+    activation: the activation, for example "relu".
     rmsprop_learning_rate: the learning rate used by the RMSprop optimizer.
   """
   hidden_layer_sizes = tuple(hidden_layer_sizes)
-  activation = 'relu'
   model = models.Sequential()
   if len(state_shape) > 1:
     model.add(layers.Flatten(input_shape=state_shape))

@@ -47,7 +47,11 @@ class SingleStateEnvironment(q_base.Environment):
 
 
 class GymEnvironment(q_base.Environment):
-  """Wraps a OpenAI Gym environment."""
+  """Wraps a OpenAI Gym environment.
+
+  For a list of environments see:
+  https://github.com/openai/gym/wiki/Table-of-environments
+  """
 
   def __init__(
       self,

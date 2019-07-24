@@ -28,6 +28,9 @@ class RunGymTest(unittest.TestCase):
   def test_AcrobotV1(self):
     self._RunEnv(gym.make('Acrobot-v1'))
 
+  def test_LunarLanderV2(self):
+    self._RunEnv(gym.make('LunarLander-v2'))
+
   def test_MsPacmanV4(self):
     self._RunEnv(gym.make('MsPacman-v4'))
 
@@ -54,6 +57,9 @@ class RunGymWithFullSetupTest(unittest.TestCase):
 
   def test_Acrobot(self):
     self._RunEnv(gym.make('Acrobot-v1'))
+
+  def test_LunarLanderV2(self):
+    self._RunEnv(gym.make('LunarLander-v2'))
 
   def test_MsPacman(self):
     self._RunEnv(gym.make('MsPacman-v4'))
