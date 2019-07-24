@@ -185,14 +185,16 @@ class QFunction(abc.ABC):
 
   def GetActionValues(
       self,
-      states: States,
+      values: QValues,
       actions: Actions,
   ) -> QActionValues:
-    """Gets Q values for (state, action) pairs.
+    """Gets Q values for (state, action) pairs from Q values.
 
-    The numbers of states and actions must equal.
+    The numbers of states and actions must equal. You should call GetValues
+    to get the Q values. It is not done here automatically so that GetValues
+    calls can be grouped for efficiency.
     """
-    return numpy_util.SelectReduce(self.GetValues(states), actions)
+    return numpy_util.SelectReduce(values, actions)
 
   def _SetValues(
       self,
@@ -231,6 +233,7 @@ class QFunction(abc.ABC):
       states: States,
       actions: Actions,
       action_values: QActionValues,
+      values: QValues = None,
   ) -> None:
     """Sets/trains the Q values for (s, a) pairs.
 
@@ -239,10 +242,21 @@ class QFunction(abc.ABC):
     GetValues with the current internal states (before set happens).
 
     The numbers of states, actions, and values must all be equal.
+
+    Args:
+      states: the states to set (s, a) values for.
+      actions: the actions to set (s, a) values for.
+      action_values: the new (s, a) values to set.
+      values: if set, use this as the Q values instead of reading it using
+        GetValues(states). This parameter is introduced in case Q values is
+        already known, in which case passing it in is more efficient.
     """
+    if values is None:
+      values = self.GetValues(states)
+
     self._SetValues(
       states,
-      numpy_util.Replace(self.GetValues(states), actions, action_values))
+      numpy_util.Replace(values, actions, action_values))
 
   def UpdateValues(
       self,
@@ -276,17 +290,20 @@ class QFunction(abc.ABC):
       numpy.concatenate(sp_list),
     )
     # See: https://en.wikipedia.org/wiki/Q-learning
+    # axis=1 because action is always assumed to be 1-dimensional.
     new_action_values = numpy.amax(self.GetValues(new_states), axis=1)
     for idx in done_sp_indices:
       new_action_values[idx] = 0.0
     learn_new_action_values = rewards + self._gamma * new_action_values
 
     if self._alpha < 0.9999999:
-      old_action_values = self.GetActionValues(states, actions)
+      values = self.GetValues(states)
+      old_action_values = self.GetActionValues(values, actions)
       self._SetActionValues(
         states, actions,
         ((1.0 - self._alpha) * old_action_values
-         + self._alpha * learn_new_action_values))
+         + self._alpha * learn_new_action_values),
+        values=values)
     else:
       self._SetActionValues(states, actions, learn_new_action_values)
 

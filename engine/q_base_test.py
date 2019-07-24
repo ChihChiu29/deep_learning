@@ -3,8 +3,11 @@ from unittest import mock
 
 import numpy
 
-from deep_learning.engine import qfunc_impl, q_base, runner_impl
-from qpylib import numpy_util_test, logging
+from deep_learning.engine import q_base
+from deep_learning.engine import qfunc_impl
+from deep_learning.engine import runner_impl
+from qpylib import logging
+from qpylib import numpy_util_test
 
 
 class QFunctionTest(numpy_util_test.NumpyTestCase):
@@ -38,7 +41,7 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
     self.assertArrayEq(
       numpy.array([0.5, 0.7]),
       self.qfunc.GetActionValues(
-        self.states, self.actions))
+        self.qfunc.GetValues(self.states), self.actions))
 
   def test_SetActionValues(self):
     self.qfunc._protected_SetValues(self.states, self.values)
