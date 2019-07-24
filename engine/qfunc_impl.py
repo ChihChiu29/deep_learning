@@ -1,4 +1,5 @@
 """QFunction implementations."""
+import keras
 import numpy
 from keras import layers
 from keras import models
@@ -90,10 +91,10 @@ class DQN(q_base.QFunction):
 
   def __init__(
       self,
-      model: object,
+      model: keras.Model,
       training_batch_size: object = _DEFAULT_TRAINING_BATCH_SIZE,
       discount_factor: object = None,
-  ) -> object:
+  ):
     """Constructor.
 
     Args:
