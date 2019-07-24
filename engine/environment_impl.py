@@ -84,7 +84,7 @@ class GymEnvironment(q_base.Environment):
         'WARNING: for some reason playing the animation from notebooks can'
         'only be done for one environment instance; creating a second one'
         'and play animation causes black animation screen, then restarting'
-        'python kernal CRASHES VIRTUAL BOX -- if you are running this command'
+        'python kernel CRASHES VIRTUAL BOX -- if you are running this command'
         'from notebooks, stop when you still have a chance!')
     self._render_frames = render
 
