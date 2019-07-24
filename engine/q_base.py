@@ -172,7 +172,7 @@ class QFunction(abc.ABC):
   ) -> QValues:
     """Gets the Q values for states, for all actions."""
     values = self._protected_GetValues(states)
-    logging.vlog(9, 'GET: (%s) -> %s', states, values)
+    logging.vlog(10, 'GET: (%s) -> %s', states, values)
     return values
 
   @abc.abstractmethod
@@ -209,7 +209,7 @@ class QFunction(abc.ABC):
     The number of states and values must equal. Values for all actions are
     set at the same time.
     """
-    logging.vlog(9, 'SET: (%s) <- %s', states, values)
+    logging.vlog(10, 'SET: (%s) <- %s', states, values)
     return self._protected_SetValues(states, values)
 
   @abc.abstractmethod
@@ -357,7 +357,7 @@ class Runner(abc.ABC):
     done. Between episodes, Report function is called to give user feedback.
     """
     for episode_idx in range(num_of_episodes):
-      logging.vlog(10, 'Running episode: %d', episode_idx)
+      logging.vlog(5, 'Running episode: %d', episode_idx)
 
       s = env.Reset()
       step_idx = 0
@@ -372,7 +372,7 @@ class Runner(abc.ABC):
             episode_idx=episode_idx,
             num_of_episodes=num_of_episodes,
           ))
-        logging.vlog(5, str(tran))
+        logging.vlog(15, str(tran))
         self._protected_ProcessTransition(
           qfunc=qfunc,
           transition=tran,
@@ -420,7 +420,7 @@ class Runner(abc.ABC):
     else:
       logging.vlog(5, progress_msg)
 
-    if logging.ENV.debug_verbosity > 3:
+    if logging.ENV.debug_verbosity >= 4:
       display.clear_output(wait=True)
       pyplot.plot(self._episode_rewards)
-      pyplot.show()
+      pyplot.show(block=False)

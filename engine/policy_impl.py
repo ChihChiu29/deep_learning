@@ -19,7 +19,7 @@ class GreedyPolicy(q_base.Policy):
     values = qfunc.GetValues(state)
     choice = int(numpy.argmax(values))
     logging.vlog(
-      7, 'making greedy decision for state %s using values: %s; choice: %d',
+      15, 'making greedy decision for state %s using values: %s; choice: %d',
       state, values, choice)
     return env.GetActionFromChoice(choice)
 

@@ -1,4 +1,5 @@
 """Provides some environment implementations."""
+
 import numpy
 from gym.wrappers.monitoring import video_recorder
 
@@ -6,6 +7,7 @@ from deep_learning.engine import q_base
 from deep_learning.engine.q_base import Action
 from deep_learning.engine.q_base import Transition
 from qpylib import t
+from qpylib.date_n_time import timing
 
 
 class SingleStateEnvironment(q_base.Environment):
@@ -70,23 +72,38 @@ class GymEnvironment(q_base.Environment):
 
     self._current_state = None  # Initialized by `Reset`.
 
-    self._render_frames = False
-    self._recorder = None  # Initialized in `StartRecording`.
+    # Initialized in `TurnOnRendering`.
+    self._render_frames = None  # type: bool
+    self._fps_controller = None  # type: timing.SingleThreadThrottler
+    # Initialized in `StartRecording`.
+    self._recorder = None
 
-  def TurnOnRendering(self, render: bool):
+  def TurnOnRendering(
+      self,
+      should_render: bool,
+      fps: int = 24,
+  ):
     """Whether to render each frame.
 
     Note that the "native" rendering for each frame is fast, but it's very
     slow when each frame is showed in notebook -- use recording instead.
+
+    Args:
+      should_render: whether each frame should be rendered.
+      fps: frames per second when playing animations.
     """
-    if render:
+    if should_render:
       print(
         'WARNING: for some reason playing the animation from notebooks can'
         'only be done for one environment instance; creating a second one'
         'and play animation causes black animation screen, then restarting'
         'python kernel CRASHES VIRTUAL BOX -- if you are running this command'
         'from notebooks, stop when you still have a chance!')
-    self._render_frames = render
+    self._render_frames = should_render
+    if self._render_frames:
+      self._fps_controller = timing.SingleThreadThrottler(limit_rate=fps)
+    else:
+      self._fps_controller = None
 
   def _ConvertState(self, state):
     """Converts the Gym state to the interface standard."""
@@ -102,6 +119,7 @@ class GymEnvironment(q_base.Environment):
 
     if self._render_frames:
       self._gym_env.render()
+      self._fps_controller.WaitUntilNextAllowedTime()
 
     if self._recorder and self._recorder.enabled:
       self._recorder.capture_frame()

@@ -1,10 +1,14 @@
-# DEEP LEARNING TOOLING
+# Deep Learning (DL) Beginner Toolkit
 
-Defines easy-to-use DL interfaces and provides common implementation.
+This project aims for DL researchers, especially beginners.
 
-The result is an easy-to-extend component libraries for performing DL research.
+It defines easy-to-use DL interfaces and provides common implementation, so that the CL concept is clear to beginners, and it's easy for users to jump to experimentation.
 
-Several trivial environments, runners, policies, etc. are implemented as well to help testing new components.
+Extra attention was paid to build a clean component libraries with type annotations instead of scripts that "just work" but hard to be modified over time.
+
+In addition to providing implementations of famous algorithms and wrappers for Gym environments, several textbook implementations for environments, runners, policies, etc. are implemented as well to help testing new components.
+
+Gym environment wrapper is implemented so that it's easy to show animations, record videos, etc.
 
 ## Concept
 For the concept and interfaces see definitions in `engine/q_base.py`.
