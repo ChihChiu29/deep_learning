@@ -105,7 +105,7 @@ class GreedyPolicyWithDecreasingRandomness(q_base.Policy):
     # Calculating e using exp instead of calculating it incrementally because
     # there is no guarantee if the policy is used in a new run.
     e = (
-        self._initial_epsilon +
+        self._final_epsilon +
         (self._initial_epsilon - self._final_epsilon) * numpy.exp(
       - self._decay_factor * episode_idx))
     if numpy.random.uniform(0, 1) < e:
