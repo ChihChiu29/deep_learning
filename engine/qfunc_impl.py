@@ -133,6 +133,14 @@ class DQN(q_base.QFunction):
     return self._model.fit(
       states, values, batch_size=self._training_batch_size, verbose=0)
 
+  def SaveWeights(self, file_path: t.Text) -> None:
+    """Saves the model's weights to a file."""
+    self._model.save_weights(file_path)
+
+  def LoadWeights(self, file_path: t.Text) -> None:
+    """Loads a model's weights from a file saved by SaveWeights."""
+    self._model.load_weights(file_path)
+
   def SaveModel(self, file_path: t.Text) -> None:
     """Saves the model and other stats to a file.
 

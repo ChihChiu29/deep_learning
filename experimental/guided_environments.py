@@ -18,12 +18,17 @@ class GuidedMountainCar(q_base.Environment):
   manages to get some momentum.
   """
 
-  def __init__(self):
+  def __init__(
+      self,
+      reward_factor: float = 10.0,
+  ):
     self._original_env = environment_impl.GymEnvironment(
       gym.make('MountainCar-v0'))
     super().__init__(
       state_shape=self._original_env.GetStateShape(),
       action_space_size=self._original_env.GetActionSpaceSize())
+
+    self._reward_factor = reward_factor
 
   def Reset(self) -> State:
     return self._original_env.Reset()
@@ -33,5 +38,5 @@ class GuidedMountainCar(q_base.Environment):
     if tran.sp is not None:
       # sp[1] is velocity, see:
       # https://github.com/openai/gym/wiki/MountainCarContinuous-v0#observation
-      tran.r += abs(tran.sp[0][1])
+      tran.r += abs(tran.sp[0][1]) * self._reward_factor
     return tran
