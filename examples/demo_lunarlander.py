@@ -1,4 +1,9 @@
-"""Solves Cartpole-v0."""
+"""Demo LunarLander.
+
+The exported model is not the final version, but the improvement by the
+training is already obvious from the animations.
+"""
+
 import gym
 from absl import app
 
@@ -13,7 +18,8 @@ from qpylib import logging
 #   https://jaromiru.com/2016/10/03/lets-make-a-dqn-implementation/
 def main(_):
   batch_size = 64  # used in qfunc and runner.
-  env = environment_impl.GymEnvironment(gym.make('CartPole-v0'))
+  env = environment_impl.GymEnvironment(gym.make('LunarLander-v2'))
+  rand_qfunc = qfunc_impl.RandomValueQFunction(env.GetActionSpaceSize())
   qfunc = qfunc_impl.DQN(
     model=qfunc_impl.CreateModel(
       state_shape=env.GetStateShape(),
@@ -22,18 +28,21 @@ def main(_):
     training_batch_size=batch_size,
     discount_factor=0.99,
   )
+  qfunc.LoadWeights(
+    'saved_models/lunarlander_shape_20-20-20_rmsprop_gamma_099.weights')
+  policy = policy_impl.GreedyPolicy()
   runner = runner_impl.ExperienceReplayRunner(
     experience_capacity=100000, experience_sample_batch_size=batch_size)
 
-  # Train 500 episodes.
-  logging.ENV.debug_verbosity = 3
-  policy = policy_impl.GreedyPolicyWithRandomness(epsilon=0.1)
-  runner.Run(env=env, qfunc=qfunc, policy=policy, num_of_episodes=500)
+  env.TurnOnRendering(should_render=True, fps=24)
+  logging.ENV.debug_verbosity = 9
 
-  # Test for 100 episodes.
-  logging.ENV.debug_verbosity = 4
-  policy = policy_impl.GreedyPolicy()
-  runner.Run(env=env, qfunc=qfunc, policy=policy, num_of_episodes=100)
+  env.StartRecording(video_filename='lunarlander_demo.mp4')
+  # First 5 runs with random actions:
+  runner.Run(env=env, qfunc=rand_qfunc, policy=policy, num_of_episodes=5)
+  # Then 10 runs with trained qfunc:
+  runner.Run(env=env, qfunc=qfunc, policy=policy, num_of_episodes=10)
+  env.StopRecording()
 
 
 if __name__ == '__main__':

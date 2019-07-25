@@ -2,7 +2,7 @@
 
 import numpy
 
-from deep_learning.example import circular_world_env
+from deep_learning.examples import circular_world_env
 from qpylib import numpy_util_test
 
 

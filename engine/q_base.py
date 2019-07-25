@@ -410,7 +410,7 @@ class Runner(abc.ABC):
 
     progress_msg = (
         'Episode %d/%d: episode_total_reward = %3.2f, episode_steps=%d' % (
-      episode_idx, num_of_episodes, episode_reward, steps))
+      episode_idx + 1, num_of_episodes, episode_reward, steps))
     if episode_idx % 1000 == 0:
       logging.vlog(2, progress_msg)
     elif episode_idx % 100 == 0:

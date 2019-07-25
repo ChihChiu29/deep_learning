@@ -179,7 +179,7 @@ def CreateModel(
     action_space_size: the size of the action space.
     hidden_layer_sizes: a list of number of nodes in the hidden layers,
       staring with the input layer.
-    activation: the activation, for example "relu".
+    activation: the activation, for examples "relu".
     optimizer: the optimizer to use. Default to the one created by
       _CreateDefaultOptimizer.
   """
