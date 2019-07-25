@@ -16,7 +16,7 @@ For the concept and interfaces see definitions in `engine/q_base.py`.
 ## Usage example
 As an e2e example see: `examples/solve_cartpole.py`.
 
-To run it, you need to clone https://github.com/ChihChiu29/qpylib from the parent directory of this repository, then go to the *parent directory* then runs:
+To run it, clone this repository and https://github.com/ChihChiu29/qpylib so that they are sibling directories under the same "parent" directory, then run the following from the parent directory:
 ```shell
 python3 -m deep_learning.example.solve_cartpole
 ```
@@ -29,7 +29,7 @@ If you don't want to install all required dependencies (there isn't too many), y
 https://github.com/ChihChiu29/paio-docker
 
 Then use the scripts in it to download/update Docker image, run image with Jupyter Notebook, etc.
-Note that the Docker image has PyCharm installed if you use it with a valid X server on host (XQuartz on Mac OS).
+Note that the Docker image has many more tools installed, like PyCharm, OCR, WebDriver, etc. To use a tool with a UI the host that runs Docker needs to have a valid X server -- Linux works, and with Mac OS you can install and run XQuartz first.
 
 
 
