@@ -414,8 +414,8 @@ class Runner(abc.ABC):
     episode_idx += 1  # make it 1-based.
 
     msg_tmpl = (
-        'Episode %d/%d: averaged_episode_reward = %%3.2f, '
-        'averaged_steps=%%3.2f (averaged over %%d episodes)' % (
+        'Episode %d/%d: avg_reward = %%3.2f, '
+        'avg_steps=%%3.2f (over %%d episodes)' % (
           episode_idx, num_of_episodes))
     if episode_idx % 1000 == 0:
       logging.vlog(2, msg_tmpl % (
