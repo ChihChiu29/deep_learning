@@ -65,16 +65,17 @@ class GreedyPolicyWithRandomness(q_base.Policy):
 
 
 class GreedyPolicyWithDecreasingRandomness(q_base.Policy):
-  """A policy that almost always the action that gives the max Q value.
+  """A policy that has decaying of randomness that's not greedy.
 
-  The possibility that it does not perform the best action decreases over steps.
+  The possibility that it does not perform the best action decreases
+  exponentially over episodes.
   """
 
   def __init__(
       self,
       initial_epsilon: float,
       final_epsilon: float,
-      decay_factor: float,
+      decay_by_half_after_num_of_episodes: int,
   ):
     """Constructor.
 
@@ -83,13 +84,12 @@ class GreedyPolicyWithDecreasingRandomness(q_base.Policy):
         random non-greedy action is chosen initially.
       final_epsilon: a number between 0 and 1. It gives the probability that a
         random non-greedy action is chosen eventually.
-      decay_factor: any float number. The epsilon that is actually used
-        is calculated as:
-          e = final_e + (initial_e - final_e) * exp(-decay_factor * episodes)
+      decay_by_half_after_num_of_episodes: e always decays by half from
+        initial_e to final_e after this number of episodes.
     """
-    self._initial_epsilon = initial_epsilon
-    self._final_epsilon = final_epsilon
-    self._decay_factor = decay_factor
+    self._init_e = initial_epsilon
+    self._final_e = final_epsilon
+    self._decay_half_life = decay_by_half_after_num_of_episodes
 
     self._num_of_steps = 0
     self._greedy_policy = GreedyPolicy()
@@ -102,12 +102,9 @@ class GreedyPolicyWithDecreasingRandomness(q_base.Policy):
       episode_idx: int,
       num_of_episodes: int,
   ) -> q_base.Action:
-    # Calculating e using exp instead of calculating it incrementally because
-    # there is no guarantee if the policy is used in a new run.
-    e = (
-        self._final_epsilon +
-        (self._initial_epsilon - self._final_epsilon) * numpy.exp(
-      - self._decay_factor * episode_idx))
+    factor = numpy.log(0.5) / self._decay_half_life
+    e = (self._final_e + (self._init_e - self._final_e) * numpy.exp(
+      factor * episode_idx))
     if numpy.random.uniform(0, 1) < e:
       choice = env.GetRandomChoice()
       logging.vlog(

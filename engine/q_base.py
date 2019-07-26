@@ -331,7 +331,9 @@ class Policy(abc.ABC):
 class Runner(abc.ABC):
 
   def __init__(self):
+    # For creating reports.
     self._episode_rewards = []
+    self._episode_steps = []
 
   @abc.abstractmethod
   def _protected_ProcessTransition(
@@ -407,18 +409,34 @@ class Runner(abc.ABC):
       steps: number of steps in this episode.
     """
     self._episode_rewards.append(episode_reward)
+    self._episode_steps.append(steps)
 
-    progress_msg = (
-        'Episode %d/%d: episode_total_reward = %3.2f, episode_steps=%d' % (
-      episode_idx + 1, num_of_episodes, episode_reward, steps))
+    episode_idx += 1  # make it 1-based.
+
+    msg_tmpl = (
+        'Episode %d/%d: averaged_episode_reward = %%3.2f, '
+        'averaged_steps=%%3.2f (averaged over %%d episodes)' % (
+          episode_idx + 1, num_of_episodes))
     if episode_idx % 1000 == 0:
-      logging.vlog(2, progress_msg)
+      logging.vlog(2, msg_tmpl % (
+        numpy.mean(self._episode_rewards[-1000:]),
+        numpy.mean(self._episode_steps[-1000:]),
+        1000))
     elif episode_idx % 100 == 0:
-      logging.vlog(3, progress_msg)
+      logging.vlog(3, msg_tmpl % (
+        numpy.mean(self._episode_rewards[-100:]),
+        numpy.mean(self._episode_steps[-100:]),
+        100))
     elif episode_idx % 10 == 0:
-      logging.vlog(4, progress_msg)
+      logging.vlog(4, msg_tmpl % (
+        numpy.mean(self._episode_rewards[-10:]),
+        numpy.mean(self._episode_steps[-10:]),
+        10))
     else:
-      logging.vlog(5, progress_msg)
+      logging.vlog(
+        5,
+        'Episode %d/%d: episode_reward = %3.2f, steps=%d' % (
+          episode_idx, num_of_episodes, episode_reward, steps))
 
     if logging.ENV.debug_verbosity >= 4:
       display.clear_output(wait=True)

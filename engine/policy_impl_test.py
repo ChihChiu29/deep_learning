@@ -74,7 +74,7 @@ class PolicyTest(numpy_util_test.NumpyTestCase):
     policy = policy_impl.GreedyPolicyWithDecreasingRandomness(
       initial_epsilon=1.0,
       final_epsilon=0.0,
-      decay_factor=1.0)
+      decay_by_half_after_num_of_episodes=50)
 
     # When episode_idx is 0, the action should be purely random.
     choices = []
@@ -98,7 +98,7 @@ class PolicyTest(numpy_util_test.NumpyTestCase):
         env=env,
         qfunc=mock_qfunc,
         state=numpy.array([[0]]),
-        episode_idx=50000,
+        episode_idx=500,
         num_of_episodes=500)))
 
     # Tests that almost all the time the optimal action 1 is chosen.

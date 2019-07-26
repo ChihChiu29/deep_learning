@@ -20,7 +20,8 @@ class GuidedMountainCar(q_base.Environment):
 
   def __init__(
       self,
-      reward_factor: float = 10.0,
+      position_reward_factor: float = 1.0,
+      speed_reward_factor: float = 1.0,
   ):
     self._original_env = environment_impl.GymEnvironment(
       gym.make('MountainCar-v0'))
@@ -28,7 +29,8 @@ class GuidedMountainCar(q_base.Environment):
       state_shape=self._original_env.GetStateShape(),
       action_space_size=self._original_env.GetActionSpaceSize())
 
-    self._reward_factor = reward_factor
+    self._position_reward_factor = position_reward_factor
+    self._reward_factor = speed_reward_factor
 
   def Reset(self) -> State:
     return self._original_env.Reset()
@@ -38,5 +40,6 @@ class GuidedMountainCar(q_base.Environment):
     if tran.sp is not None:
       # sp[1] is velocity, see:
       # https://github.com/openai/gym/wiki/MountainCarContinuous-v0#observation
-      tran.r += abs(tran.sp[0][1]) * self._reward_factor
+      tran.r += tran.sp[0][0] * self._position_reward_factor
+      tran.r += abs(tran.sp[0][1]) * self._reward_factor  # speed
     return tran
