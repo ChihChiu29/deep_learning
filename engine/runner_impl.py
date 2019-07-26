@@ -14,6 +14,7 @@ from qpylib import t
 class NoOpRunner(q_base.Runner):
   """A runner that doesn't do anything to qfunc."""
 
+  # @Override
   def _protected_ProcessTransition(
       self,
       qfunc: q_base.QFunction,
@@ -26,6 +27,7 @@ class NoOpRunner(q_base.Runner):
 class SimpleRunner(q_base.Runner):
   """A simple runner that updates the QFunction after each step."""
 
+  # @Override
   def _protected_ProcessTransition(
       self,
       qfunc: q_base.QFunction,
@@ -49,6 +51,10 @@ class _Experience:
 
     # Events inserted later are placed at tail.
     self._history = []  # type: t.List[q_base.Transition]
+
+  @property
+  def history(self):
+    return self._history
 
   def AddTransition(
       self,
@@ -80,6 +86,7 @@ class ExperienceReplayRunner(q_base.Runner):
 
     self._experience = _Experience(capacity=self._experience_capacity)
 
+  # @Override
   def _protected_ProcessTransition(
       self,
       qfunc: q_base.QFunction,
@@ -90,3 +97,7 @@ class ExperienceReplayRunner(q_base.Runner):
     if step_idx % self._train_every_n_steps == 0:
       qfunc.UpdateValues(
         self._experience.Sample(self._experience_sample_batch_size))
+
+  def GetHistory(self) -> t.List[q_base.Transition]:
+    """Gets all stored transitions."""
+    return self._experience.history
