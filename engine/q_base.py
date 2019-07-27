@@ -379,6 +379,10 @@ class Runner(abc.ABC):
     """Adds a reporter that can give additional reports."""
     self._reporters.append(reporter)
 
+  def ClearReporters(self):
+    """Removes all registered reporters."""
+    self._reporters = []
+
   # @Final
   def Run(
       self,
@@ -420,7 +424,6 @@ class Runner(abc.ABC):
         step_idx += 1
 
       # Handle reports.
-      display.clear_output(wait=True)
       self._Report(
         episode_idx=episode_idx,
         num_of_episodes=num_of_episodes,
@@ -436,7 +439,6 @@ class Runner(abc.ABC):
           steps=step_idx,
         )
 
-    display.clear_output(wait=True)
     self._FinalReport()
     for reporter in self._reporters:
       reporter.FinalReport(
@@ -446,6 +448,8 @@ class Runner(abc.ABC):
       )
 
   def _PlotRewards(self):
+    display.clear_output(wait=True)
+    pyplot.title('Episode Rewards')
     pyplot.plot(self._episode_rewards)
     pyplot.show(block=False)
 
