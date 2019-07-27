@@ -26,7 +26,8 @@ State = numpy.ndarray
 States = numpy.ndarray
 
 # An action is a 1 x k one-hot vector, where k is the number of possible
-# actions.
+# actions. The index of the position of the 1 in the vector is called a
+# "choice".
 Action = numpy.ndarray
 
 # An m x k numpy array holding m states.
@@ -328,12 +329,41 @@ class Policy(abc.ABC):
     pass
 
 
+class Reporter(abc.ABC):
+  """Used to extend report ability of a Runner."""
+
+  @abc.abstractmethod
+  def EndOfEpisodeReport(
+      self,
+      env: Environment,
+      qfunc: QFunction,
+      episode_idx: int,
+      num_of_episodes: int,
+      episode_reward: float,
+      steps: int,
+  ):
+    """Called at the end of each episode."""
+    pass
+
+  @abc.abstractmethod
+  def FinalReport(
+      self,
+      env: Environment,
+      qfunc: QFunction,
+      num_of_episodes: int,
+  ):
+    """Called at the end of the runner.Run method."""
+    pass
+
+
 class Runner(abc.ABC):
 
   def __init__(self):
     # For creating reports.
     self._episode_rewards = []
     self._episode_steps = []
+    # Additional reporters.
+    self._reporters = []
 
   @abc.abstractmethod
   def _protected_ProcessTransition(
@@ -344,6 +374,10 @@ class Runner(abc.ABC):
   ) -> None:
     """Processes a new transition; e.g. to train the QFunction."""
     pass
+
+  def AddReporter(self, reporter: Reporter):
+    """Adds a reporter that can give additional reports."""
+    self._reporters.append(reporter)
 
   # @Final
   def Run(
@@ -385,13 +419,37 @@ class Runner(abc.ABC):
           break
         step_idx += 1
 
-      self._protected_Report(
+      # Handle reports.
+      display.clear_output(wait=True)
+      self._Report(
         episode_idx=episode_idx,
         num_of_episodes=num_of_episodes,
         episode_reward=episode_reward,
         steps=step_idx)
+      for reporter in self._reporters:
+        reporter.EndOfEpisodeReport(
+          env=env,
+          qfunc=qfunc,
+          episode_idx=episode_idx,
+          num_of_episodes=num_of_episodes,
+          episode_reward=episode_reward,
+          steps=step_idx,
+        )
 
-  def _protected_Report(
+    display.clear_output(wait=True)
+    self._FinalReport()
+    for reporter in self._reporters:
+      reporter.FinalReport(
+        env=env,
+        qfunc=qfunc,
+        num_of_episodes=num_of_episodes,
+      )
+
+  def _PlotRewards(self):
+    pyplot.plot(self._episode_rewards)
+    pyplot.show(block=False)
+
+  def _Report(
       self,
       episode_idx: int,
       num_of_episodes: int,
@@ -439,6 +497,8 @@ class Runner(abc.ABC):
           episode_idx, num_of_episodes, episode_reward, steps))
 
     if logging.ENV.debug_verbosity >= 4:
-      display.clear_output(wait=True)
-      pyplot.plot(self._episode_rewards)
-      pyplot.show(block=False)
+      self._PlotRewards()
+
+  def _FinalReport(self):
+    """Creates a final report."""
+    self._PlotRewards()

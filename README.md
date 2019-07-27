@@ -1,14 +1,14 @@
 # Deep Reinforcement Learning (RL) Beginner Toolkit
 
-This project aims for Deep RL researchers, especially beginners.
+This project aims for building a clean, efficient, and easy-to-use Deep RL frameworks for researchers, especially new researches.
 
-It defines efficient and easy-to-use DL interfaces and provides common implementation, so that the CL concept is clear to beginners, and it's easy for users to jump to experimentation.
+* It has a clean design. The DL running loop is broken into a few key interfaces, each aiming for only one functionality. The structure of data they use to exchange is very well documented.
+ 
+* It's easy to use. Implementations are provided for all interfaces for commonly used tools. For example Gym environment is wrapped into an `Environment` interface, which has APIs to easily show animation and record videos. Some implementations for academic examples are provided as well. 
 
-Extra attention was paid to build a clean component libraries with type annotations instead of scripts that "just work" but hard to be modified over time.
+* It's efficient. Extra attention was given to avoid extra copying in Python, and numpy is used intensively. The interface also forces the usage of numpy data structure to ensure high performance. As a result, training a CartPole environment for 500 episodes on a i5 CPU only takes 2 min.
 
-In addition to providing implementations of famous algorithms and wrappers for Gym environments, several textbook implementations for environments, runners, policies, etc. are implemented as well to help testing new components.
-
-Gym environment wrapper is implemented so that it's easy to show animations, record videos, etc.
+* It's well tested. Unit and integration tests are provided to ensure the integrity of the implementations. Pytype is used everywhere.
 
 
 ## Concept

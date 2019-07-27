@@ -105,3 +105,7 @@ class ExperienceReplayRunner(q_base.Runner):
   def GetHistory(self) -> t.List[q_base.Transition]:
     """Gets all stored transitions."""
     return self._experience.history
+
+  def SampleFromHistory(self, size: int) -> t.Iterable[q_base.Transition]:
+    """Samples a set of transitions from experience history."""
+    return self._experience.Sample(size)
