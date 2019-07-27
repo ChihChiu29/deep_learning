@@ -67,7 +67,11 @@ class _Experience:
 
   def Sample(self, size: int) -> t.Iterable[q_base.Transition]:
     """Samples an event from the history."""
-    return numpy.random.choice(self._history, size=size)
+    # numpy.random.choice converts a list to numpy array first, which is very
+    # inefficient, see:
+    # https://stackoverflow.com/questions/18622781/why-is-random-choice-so-slow
+    for idx in numpy.random.randint(0, len(self._history), size=size):
+      yield self._history[idx]
 
 
 class ExperienceReplayRunner(q_base.Runner):
