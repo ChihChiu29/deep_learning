@@ -1,4 +1,6 @@
 """QFunction implementations."""
+import pickle
+
 import keras
 import numpy
 from keras import layers
@@ -31,11 +33,21 @@ class RandomValueQFunction(q_base.QFunction):
     super().__init__(None, None)
     self._action_space_size = action_space_size
 
+  # @Override
+  def Save(self, filepath: t.Text) -> None:
+    pass
+
+  # @Override
+  def Load(self, filepath: t.Text) -> None:
+    pass
+
+  # @Override
   def _protected_GetValues(self, states: States) -> QValues:
     return numpy.random.randint(
       0, self._action_space_size - 1,
       size=(len(states), self._action_space_size))
 
+  # @Override
   def _protected_SetValues(self, states: States, values: QValues) -> None:
     """Writes has no effect."""
     pass
@@ -54,6 +66,14 @@ class MemoizationQFunction(q_base.QFunction):
     self._action_space_size = action_space_size
 
     self._storage = {}  # {state: value}.
+
+  # @Override
+  def Save(self, filepath: t.Text) -> None:
+    pickle.dump(self._storage, open(filepath, 'wb'))
+
+  # @Override
+  def Load(self, filepath: t.Text) -> None:
+    self._storage = pickle.load(open(filepath, 'rb'))
 
   def _Key(self, state: numpy.ndarray) -> t.Hashable:
     """Gets a key for a "state".
@@ -118,6 +138,21 @@ class DQN(q_base.QFunction):
     self._action_space_size = output_shape[0]
 
   # @Override
+  def Save(self, filepath: t.Text) -> None:
+    """Saves the model's weights to a file.
+
+    Note that in order to load the saved weights, you need to create a model
+    of exactly the same shape. Also the optimizer info is lost during this
+    action.
+    """
+    self._model.save_weights(filepath)
+
+  # @Override
+  def Load(self, filepath: t.Text) -> None:
+    """Loads a model's weights from a file saved by SaveWeights."""
+    self._model.load_weights(filepath)
+
+  # @Override
   def _protected_GetValues(
       self,
       states: q_base.States,
@@ -132,34 +167,6 @@ class DQN(q_base.QFunction):
   ) -> None:
     return self._model.fit(
       states, values, batch_size=self._training_batch_size, verbose=0)
-
-  def SaveWeights(self, file_path: t.Text) -> None:
-    """Saves the model's weights to a file."""
-    self._model.save_weights(file_path)
-
-  def LoadWeights(self, file_path: t.Text) -> None:
-    """Loads a model's weights from a file saved by SaveWeights."""
-    self._model.load_weights(file_path)
-
-  def SaveModel(self, file_path: t.Text) -> None:
-    """Saves the model and other stats to a file.
-
-    See:
-      https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model
-    """
-    self._model.save(file_path)
-
-  def LoadModel(self, file_path: t.Text) -> None:
-    """Loads a model from a file saved by SaveModel.
-
-    Note that arguments to the constructor of this class is not saved. The
-    saved model can only be loaded by an instance whose models has the
-    identical structure.
-
-    See:
-      https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model
-    """
-    self._model = models.load_model(file_path)
 
 
 def CreateModel(

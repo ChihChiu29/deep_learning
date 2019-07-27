@@ -9,7 +9,7 @@ from qpylib import logging
 from qpylib import t
 
 
-class ProgressTracer(q_base.Reporter):
+class ProgressTracer(q_base.RunnerExtension):
   """Prints out info on running progress and rewards.
 
   The average rewards and steps are print out after every certain number of
@@ -32,7 +32,7 @@ class ProgressTracer(q_base.Reporter):
     self._episode_rewards = []
     self._episode_steps = []
 
-  def ReportEpisode(
+  def OnEpisodeFinishedCallback(
       self,
       env: Environment,
       qfunc: QFunction,
@@ -58,7 +58,7 @@ class ProgressTracer(q_base.Reporter):
         self._report_every_num_of_episodes,
       )
 
-  def FinalReport(
+  def OnCompletionCallback(
       self,
       env: Environment,
       qfunc: QFunction,
@@ -81,7 +81,7 @@ class ProgressTracer(q_base.Reporter):
     pyplot.show(block=False)
 
 
-class ValueTracer(q_base.Reporter):
+class ValueTracer(q_base.RunnerExtension):
   """Traces values of certain (s, a)s during a run.
 
   Report is only given after the whole run.
@@ -114,7 +114,7 @@ class ValueTracer(q_base.Reporter):
       self._value_traces[a] = a_values
 
   # @Override
-  def ReportEpisode(
+  def OnEpisodeFinishedCallback(
       self,
       env: Environment,
       qfunc: QFunction,
@@ -128,7 +128,7 @@ class ValueTracer(q_base.Reporter):
         self._value_traces[a][idx].append(v[a])
 
   # @Override
-  def FinalReport(
+  def OnCompletionCallback(
       self,
       env: Environment,
       qfunc: QFunction,
@@ -139,3 +139,60 @@ class ValueTracer(q_base.Reporter):
       for s_values in self._value_traces[a].values():
         pyplot.plot(s_values)
       pyplot.show(block=False)
+
+
+class ModelWeightsSaver(q_base.RunnerExtension):
+  """Saves the best model during the run."""
+
+  def __init__(
+      self,
+      save_filepath: t.Text,
+      use_rewards: bool = True,
+      use_max: bool = True,
+  ):
+    """Ctor.
+
+    Args:
+      save_filepath: model weights are saved to this file.
+      use_rewards: use rewards or steps to identify the best model.
+      use_max: use max or min to identify the best model.
+    """
+    self._save_filepath = save_filepath
+    self._use_rewards = use_rewards
+    self._use_max = use_max
+
+    # The best value; it could be reward or steps, max or min, depending on the
+    # parameters.
+    if self._use_max:
+      self._best_value = -numpy.inf
+    else:
+      self._best_value = numpy.inf
+
+  # @Override
+  def OnEpisodeFinishedCallback(
+      self,
+      env: Environment,
+      qfunc: QFunction,
+      episode_idx: int,
+      num_of_episodes: int,
+      episode_reward: float,
+      steps: int):
+    if self._use_rewards:
+      new_value = episode_reward
+    else:
+      new_value = steps
+
+    if self._use_max and new_value < self._best_value:
+      return
+    elif new_value > self._best_value:
+      return
+
+    qfunc.Save(self._save_filepath)
+
+  # @Override
+  def OnCompletionCallback(
+      self,
+      env: Environment,
+      qfunc: QFunction,
+      num_of_episodes: int):
+    pass

@@ -69,8 +69,8 @@ class RunEnvironment:
     Args:
       num_of_episodes: runs a training run for this number of episodes.
     """
-    self.runner.ClearReporters()
-    self.runner.AddReporter(reporter_impl.ProgressTracer())
+    self.runner.ClearCallbacks()
+    self.runner.AddCallback(reporter_impl.ProgressTracer())
 
     self.runner.Run(
       env=self.env,
@@ -96,10 +96,10 @@ class RunEnvironment:
 
   def SaveWeights(self):
     """Saves weights to a "saved_models" sub-directory."""
-    self.qfunc.SaveWeights(self._GetModelWeightsFilepath())
+    self.qfunc.Save(self._GetModelWeightsFilepath())
 
   def LoadWeights(self):
-    self.qfunc.LoadWeights(self._GetModelWeightsFilepath())
+    self.qfunc.Load(self._GetModelWeightsFilepath())
 
   def _GetModelWeightsFilepath(self):
     return os.path.join(SAVE_SUB_DIRECTORY, '%s_%s.weights' % (

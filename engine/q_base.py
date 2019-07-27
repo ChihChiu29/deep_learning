@@ -165,6 +165,16 @@ class QFunction(abc.ABC):
       learning_rate if learning_rate is not None
       else DEFAULT_LEARNING_RATE)
 
+  @abc.abstractmethod
+  def Save(self, filepath: t.Text) -> None:
+    """Saves (maybe partially) to a file."""
+    pass
+
+  @abc.abstractmethod
+  def Load(self, filepath: t.Text) -> None:
+    """Loads from the file saved by Save."""
+    pass
+
   def GetValues(
       self,
       states: States,
@@ -327,11 +337,11 @@ class Policy(abc.ABC):
     pass
 
 
-class Reporter(abc.ABC):
-  """Used to extend report ability of a Runner."""
+class RunnerExtension(abc.ABC):
+  """Used to extend a Runner."""
 
   @abc.abstractmethod
-  def ReportEpisode(
+  def OnEpisodeFinishedCallback(
       self,
       env: Environment,
       qfunc: QFunction,
@@ -344,7 +354,7 @@ class Reporter(abc.ABC):
     pass
 
   @abc.abstractmethod
-  def FinalReport(
+  def OnCompletionCallback(
       self,
       env: Environment,
       qfunc: QFunction,
@@ -357,8 +367,7 @@ class Reporter(abc.ABC):
 class Runner(abc.ABC):
 
   def __init__(self):
-    # Additional reporters.
-    self._reporters = []
+    self._callbacks = []
 
   @abc.abstractmethod
   def _protected_ProcessTransition(
@@ -370,13 +379,13 @@ class Runner(abc.ABC):
     """Processes a new transition; e.g. to train the QFunction."""
     pass
 
-  def AddReporter(self, reporter: Reporter):
-    """Adds a reporter that can give additional reports."""
-    self._reporters.append(reporter)
+  def AddCallback(self, ext: RunnerExtension):
+    """Adds a callback which extends Runner's ability."""
+    self._callbacks.append(ext)
 
-  def ClearReporters(self):
-    """Removes all registered reporters."""
-    self._reporters = []
+  def ClearCallbacks(self):
+    """Removes all registered callbacks."""
+    self._callbacks = []
 
   # @Final
   def Run(
@@ -418,9 +427,9 @@ class Runner(abc.ABC):
           break
         step_idx += 1
 
-      # Handle reports.
-      for reporter in self._reporters:
-        reporter.ReportEpisode(
+      # Handle callback functions.
+      for reporter in self._callbacks:
+        reporter.OnEpisodeFinishedCallback(
           env=env,
           qfunc=qfunc,
           episode_idx=episode_idx,
@@ -430,8 +439,8 @@ class Runner(abc.ABC):
         )
 
     # All runs finished.
-    for reporter in self._reporters:
-      reporter.FinalReport(
+    for reporter in self._callbacks:
+      reporter.OnCompletionCallback(
         env=env,
         qfunc=qfunc,
         num_of_episodes=num_of_episodes,
