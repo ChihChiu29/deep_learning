@@ -46,7 +46,7 @@ class FullRunPipeline:
     self._model_shape = tuple(model_shape)
 
     self.env = environment_impl.GymEnvironment(gym.make(gym_env_name))
-    self.qfunc = qfunc_impl.DQN(
+    self.qfunc = qfunc_impl.DQN_TargetNetwork(
       model=qfunc_impl.CreateModel(
         state_shape=self.env.GetStateShape(),
         action_space_size=self.env.GetActionSpaceSize(),
