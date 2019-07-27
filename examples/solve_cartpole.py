@@ -38,8 +38,6 @@ def main(_):
   policy = policy_impl.GreedyPolicyWithRandomness(epsilon=0.1)
   runner.Run(env=env, qfunc=qfunc, policy=policy, num_of_episodes=500)
 
-  return
-
   # Test for 100 episodes.
   logging.ENV.debug_verbosity = 4
   policy = policy_impl.GreedyPolicy()

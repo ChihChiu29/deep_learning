@@ -30,8 +30,7 @@ def main(_):
   qfunc.LoadModel(
     'saved_models/acrobot_v1_shape_20-20-20_rmsprop_gamma_0.99.model')
   policy = policy_impl.GreedyPolicy()
-  runner = runner_impl.ExperienceReplayRunner(
-    experience_capacity=100000, experience_sample_batch_size=batch_size)
+  runner = runner_impl.NoOpRunner()
 
   env.TurnOnRendering(should_render=True, fps=10)
   logging.ENV.debug_verbosity = 9
