@@ -9,7 +9,7 @@ import gym
 from deep_learning.engine import environment_impl
 from deep_learning.engine import policy_impl
 from deep_learning.engine import qfunc_impl
-from deep_learning.engine import reporter_impl
+from deep_learning.engine import runner_extension_impl
 from deep_learning.engine import runner_impl
 from qpylib import t
 
@@ -63,8 +63,8 @@ class FullRunPipeline:
       experience_capacity=100000,
       experience_sample_batch_size=DEFAULT_BATCH_SIZE)
 
-    self._progress_tracer = reporter_impl.ProgressTracer()
-    self._model_saver = reporter_impl.ModelSaver(
+    self._progress_tracer = runner_extension_impl.ProgressTracer()
+    self._model_saver = runner_extension_impl.ModelSaver(
       self._GetModelWeightsFilepath())
 
   def Train(self, num_of_episodes: int = 5000):

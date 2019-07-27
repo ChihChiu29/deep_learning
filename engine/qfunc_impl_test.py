@@ -97,8 +97,44 @@ class DQNTest(unittest.TestCase):
       ))
     qfunc.Load(tmp_file)
 
-    weights1 = qfunc._model.get_weights()
-    weights2 = self.qfunc._model.get_weights()
-    self.assertEqual(len(weights1), len(weights2))
-    for idx in range(len(weights1)):
-      numpy_util.TestUtil.AssertArrayEqual(weights1[idx], weights2[idx])
+    numpy_util.TestUtil.AssertModelWeightsEqual(qfunc._model, self.qfunc._model)
+
+
+class DQN_TargetNetwork_Test(unittest.TestCase):
+
+  def setUp(self) -> None:
+    # State space size is 3; Action space size is 2.
+    self.qfunc = qfunc_impl.DQN_TargetNetwork(
+      model=qfunc_impl.CreateModel(
+        state_shape=(3,),
+        action_space_size=2,
+        hidden_layer_sizes=(6, 4),
+      ),
+      update_target_network_every_num_of_steps=2,
+    )
+    self.states = numpy.array([
+      [1, 2, 3],
+      [4, 5, 6],
+    ])
+
+    self.values = numpy.array([
+      [0.5, 0.5],
+      [0.3, 0.7],
+    ])
+
+  def test_copyWeightsToTargetNetwork(self):
+    # Tests that after 1 set values action, target network is different
+    # than Q-function model.
+    self.qfunc._SetValues(self.states, self.values)
+    try:
+      numpy_util.TestUtil.AssertModelWeightsEqual(
+        self.qfunc._model, self.qfunc._target_network)
+      self.fail('model weights should be different after 1 set action')
+    except AssertionError:
+      pass
+
+    # Tests that after 2 set values actions, target network is the same as
+    # the Q-function model.
+    self.qfunc._SetValues(self.states, self.values)
+    numpy_util.TestUtil.AssertModelWeightsEqual(
+      self.qfunc._model, self.qfunc._target_network)

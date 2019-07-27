@@ -11,7 +11,7 @@ from deep_learning.engine import environment_impl
 from deep_learning.engine import policy_impl
 from deep_learning.engine import q_base
 from deep_learning.engine import qfunc_impl
-from deep_learning.engine import reporter_impl
+from deep_learning.engine import runner_extension_impl
 from deep_learning.engine import runner_impl
 from deep_learning.engine import shortcut
 from deep_learning.examples import circular_world_env
@@ -36,7 +36,7 @@ __will_use = (
   environment_impl,
   policy_impl,
   qfunc_impl,
-  reporter_impl,
+  runner_extension_impl,
   runner_impl,
   shortcut,
 

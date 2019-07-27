@@ -104,7 +104,7 @@ class MemoizationQFunction(q_base.QFunction):
 
 
 class DQN(q_base.QFunction):
-  """DQN implemented using Keras model."""
+  """DQN implemented using a Keras model."""
 
   def __init__(
       self,
@@ -149,7 +149,7 @@ class DQN(q_base.QFunction):
 
   # @Override
   def Load(self, filepath: t.Text) -> None:
-    """Loads a model's weights from a file saved by SaveWeights."""
+    """Loads a model's weights from a file saved by Save."""
     self._model.load_weights(filepath)
 
   # @Override
@@ -165,8 +165,79 @@ class DQN(q_base.QFunction):
       states: q_base.States,
       values: q_base.QValues,
   ) -> None:
-    return self._model.fit(
+    self._model.fit(
       states, values, batch_size=self._training_batch_size, verbose=0)
+
+
+class DQN_TargetNetwork(DQN):
+  """DQN implemented using Keras model; target networks is used.
+
+  For target network see:
+  https://jaromiru.com/2016/10/21/lets-make-a-dqn-full-dqn/
+  """
+
+  def __init__(
+      self,
+      model: keras.Model,
+      update_target_network_every_num_of_steps: int = 1000,
+      training_batch_size: object = _DEFAULT_TRAINING_BATCH_SIZE,
+      discount_factor: object = None,
+  ):
+    """Constructor.
+
+    Args:
+      model: a compiled Keras model that powers the DQN interface. Its first
+        layer's input_shape indicates the state shape, and its last layer's
+        shape indicates the action space size. To be consistent with other
+        classes in this package, the action space needs to be 1-dimensional.
+      update_target_network_every_num_of_steps: the target network is updated
+        every this number of steps.
+      training_batch_size: the batch size used in training. When using
+        experience replay runner, this size can be chosen to be the same
+        as the experience sample size.
+      discount_factor: gamma.
+    """
+    # DQN's learning is done via optimizer; no need to use a learning rate
+    # at the Q-value iteration level.
+    super().__init__(model, training_batch_size, discount_factor)
+    self._update_target_network_every_num_of_steps = (
+      update_target_network_every_num_of_steps)
+
+    # Target network is only used for reading.
+    self._target_network = models.clone_model(self._model)
+    self._step_count = 0
+
+  def _CopyWeightsToTargetNetwork(self):
+    self._target_network.set_weights(self._model.get_weights())
+
+  # @Override
+  def Load(self, filepath: t.Text) -> None:
+    """Loads a model's weights from a file saved by Save.
+
+    The weights are immediately set to the target network as well since
+    the weights in the target network is not saved by Save.
+    """
+    super().Load(filepath)
+    self._CopyWeightsToTargetNetwork()
+
+  # @Override
+  def _protected_GetValues(
+      self,
+      states: q_base.States,
+  ) -> q_base.QValues:
+    return self._target_network.predict(states)
+
+  # @Override
+  def _protected_SetValues(
+      self,
+      states: q_base.States,
+      values: q_base.QValues,
+  ) -> None:
+    super()._protected_SetValues(states, values)
+    self._step_count += 1
+    if self._step_count >= self._update_target_network_every_num_of_steps:
+      self._CopyWeightsToTargetNetwork()
+      self._step_count = 0
 
 
 def CreateModel(
