@@ -9,6 +9,14 @@ from deep_learning.engine import runner_impl
 from qpylib import logging
 
 
+# Profiler instruction:
+# 1) Generate profiler file:
+#   $ python -m cProfile -o result.prof deep_learning/examples/solve_cartpole.py
+# 2) Visualize it:
+#   $ snakeviz result.prof
+#   It prints a link that shows the viz.
+
+
 # For parameters see:
 #   https://jaromiru.com/2016/10/03/lets-make-a-dqn-implementation/
 def main(_):
@@ -29,6 +37,8 @@ def main(_):
   logging.ENV.debug_verbosity = 3
   policy = policy_impl.GreedyPolicyWithRandomness(epsilon=0.1)
   runner.Run(env=env, qfunc=qfunc, policy=policy, num_of_episodes=500)
+
+  return
 
   # Test for 100 episodes.
   logging.ENV.debug_verbosity = 4

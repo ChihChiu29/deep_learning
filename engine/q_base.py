@@ -374,7 +374,7 @@ class Runner(abc.ABC):
             episode_idx=episode_idx,
             num_of_episodes=num_of_episodes,
           ))
-        logging.vlog(15, str(tran))
+        logging.vlog(15, '%s', tran)
         self._protected_ProcessTransition(
           qfunc=qfunc,
           transition=tran,
