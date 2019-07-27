@@ -141,32 +141,30 @@ class ValueTracer(q_base.RunnerExtension):
       pyplot.show(block=False)
 
 
-class ModelWeightsSaver(q_base.RunnerExtension):
-  """Saves the best model during the run."""
+class ModelSaver(q_base.RunnerExtension):
+  """Saves the best model during the run.
+
+  Note that most of the QFunction implementations' only save partial info,
+  and assume other parameters passed from users to be the same in order for
+  load to work.
+  """
 
   def __init__(
       self,
       save_filepath: t.Text,
       use_rewards: bool = True,
-      use_max: bool = True,
   ):
     """Ctor.
 
     Args:
       save_filepath: model weights are saved to this file.
       use_rewards: use rewards or steps to identify the best model.
-      use_max: use max or min to identify the best model.
     """
     self._save_filepath = save_filepath
     self._use_rewards = use_rewards
-    self._use_max = use_max
 
-    # The best value; it could be reward or steps, max or min, depending on the
-    # parameters.
-    if self._use_max:
-      self._best_value = -numpy.inf
-    else:
-      self._best_value = numpy.inf
+    # The best value; it could be reward or steps depending on the parameters.
+    self._best_value = -numpy.inf
 
   # @Override
   def OnEpisodeFinishedCallback(
@@ -182,11 +180,10 @@ class ModelWeightsSaver(q_base.RunnerExtension):
     else:
       new_value = steps
 
-    if self._use_max and new_value < self._best_value:
-      return
-    elif new_value > self._best_value:
+    if new_value < self._best_value:
       return
 
+    self._best_value = new_value
     qfunc.Save(self._save_filepath)
 
   # @Override

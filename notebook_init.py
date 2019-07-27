@@ -13,6 +13,7 @@ from deep_learning.engine import q_base
 from deep_learning.engine import qfunc_impl
 from deep_learning.engine import reporter_impl
 from deep_learning.engine import runner_impl
+from deep_learning.engine import shortcut
 from deep_learning.examples import circular_world_env
 from deep_learning.experimental import guided_environments
 from deep_learning.experimental import model_builder
@@ -37,6 +38,7 @@ __will_use = (
   qfunc_impl,
   reporter_impl,
   runner_impl,
+  shortcut,
 
   circular_world_env,
   model_builder,

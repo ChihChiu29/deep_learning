@@ -1,4 +1,9 @@
-"""Solves Cartpole-v0."""
+"""Solves Cartpole-v0.
+
+This version shows how the different pieces involved in a running pipeline
+are created and how they interact. For a super concise version see
+solve_cartpole_concise.py.
+"""
 import gym
 from absl import app
 
@@ -11,7 +16,8 @@ from qpylib import logging
 
 # Profiler instruction:
 # 1) Generate profiler file:
-#   $ python -m cProfile -o result.prof deep_learning/examples/solve_cartpole.py
+#   $ python -m cProfile -o result.prof
+#   deep_learning/examples/solve_cartpole.py
 # 2) Visualize it:
 #   $ snakeviz result.prof
 #   It prints a link that shows the viz.

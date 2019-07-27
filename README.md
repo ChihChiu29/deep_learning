@@ -30,15 +30,17 @@ The interfaces are defined in `engine/q_base.py`, and the implementations for th
 
 ## Usage example
 
-As an e2e example see: `examples/solve_cartpole.py`.
+As an e2e example see: `examples/solve_cartpole_concise.py`.
 
 To run it, clone this repository and https://github.com/ChihChiu29/qpylib so that they are sibling directories under the same "parent" directory, then run the following from the parent directory:
 ```shell
-python3 -m deep_learning.example.solve_cartpole
+python3 -m deep_learning.example.solve_cartpole_concise
 ```
 It will print out convergence info (it converges in about 300 episodes, which takes about 5 min on an i5 CPU).
 
-Note that by simply changing which gym environment to use, you can already use it to train agent for other environments! However there are many parameters, including models, that can be turned. It's more fun to tweak them by your understanding/intuition. 
+Note that by simply changing which gym environment to use, you can already use it to train agent for other environments!
+
+Once you start tweaking parameters and models, the "full" version of this example is more clear demonstrating different pieces in a run, with more parameters that can be tweaked (it's still short): `examples/solve_cartpole_concise.py`
 
 
 ## Run environment

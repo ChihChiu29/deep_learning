@@ -17,7 +17,7 @@ DEFAULT_BATCH_SIZE = 64  # type: int
 SAVE_SUB_DIRECTORY = 'saved_models'
 
 
-class RunEnvironment:
+class FullRunPipeline:
   """Helps to quickly generate objects required for a full run.
 
   When created, default implementations are used to create environment,
@@ -32,7 +32,7 @@ class RunEnvironment:
   def __init__(
       self,
       gym_env_name: t.Text,
-      model_shape: t.Tuple[int] = (20, 20, 20),
+      model_shape: t.Iterable[int] = (20, 20, 20),
   ):
     """Ctor.
 
@@ -43,7 +43,7 @@ class RunEnvironment:
       model_shape: a list of number of nodes per hidden layer.
     """
     self._gym_env_name = gym_env_name
-    self._model_shape = model_shape
+    self._model_shape = tuple(model_shape)
 
     self.env = environment_impl.GymEnvironment(gym.make(gym_env_name))
     self.qfunc = qfunc_impl.DQN(
@@ -63,6 +63,10 @@ class RunEnvironment:
       experience_capacity=100000,
       experience_sample_batch_size=DEFAULT_BATCH_SIZE)
 
+    self._progress_tracer = reporter_impl.ProgressTracer()
+    self._model_saver = reporter_impl.ModelSaver(
+      self._GetModelWeightsFilepath())
+
   def Train(self, num_of_episodes: int = 5000):
     """Starts a training run.
 
@@ -70,7 +74,8 @@ class RunEnvironment:
       num_of_episodes: runs a training run for this number of episodes.
     """
     self.runner.ClearCallbacks()
-    self.runner.AddCallback(reporter_impl.ProgressTracer())
+    self.runner.AddCallback(self._progress_tracer)
+    self.runner.AddCallback(self._model_saver)
 
     self.runner.Run(
       env=self.env,
@@ -99,6 +104,7 @@ class RunEnvironment:
     self.qfunc.Save(self._GetModelWeightsFilepath())
 
   def LoadWeights(self):
+    """Loads weights from a "saved_models" sub-directory."""
     self.qfunc.Load(self._GetModelWeightsFilepath())
 
   def _GetModelWeightsFilepath(self):
