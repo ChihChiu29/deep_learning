@@ -9,8 +9,6 @@ which is more CPU friendly.
 import abc
 
 import numpy
-from IPython import display
-from matplotlib import pyplot
 
 from qpylib import logging
 from qpylib import numpy_util
@@ -333,7 +331,7 @@ class Reporter(abc.ABC):
   """Used to extend report ability of a Runner."""
 
   @abc.abstractmethod
-  def EndOfEpisodeReport(
+  def ReportEpisode(
       self,
       env: Environment,
       qfunc: QFunction,
@@ -359,9 +357,6 @@ class Reporter(abc.ABC):
 class Runner(abc.ABC):
 
   def __init__(self):
-    # For creating reports.
-    self._episode_rewards = []
-    self._episode_steps = []
     # Additional reporters.
     self._reporters = []
 
@@ -424,13 +419,8 @@ class Runner(abc.ABC):
         step_idx += 1
 
       # Handle reports.
-      self._Report(
-        episode_idx=episode_idx,
-        num_of_episodes=num_of_episodes,
-        episode_reward=episode_reward,
-        steps=step_idx)
       for reporter in self._reporters:
-        reporter.EndOfEpisodeReport(
+        reporter.ReportEpisode(
           env=env,
           qfunc=qfunc,
           episode_idx=episode_idx,
@@ -439,70 +429,10 @@ class Runner(abc.ABC):
           steps=step_idx,
         )
 
-    self._FinalReport()
+    # All runs finished.
     for reporter in self._reporters:
       reporter.FinalReport(
         env=env,
         qfunc=qfunc,
         num_of_episodes=num_of_episodes,
       )
-
-  def _PlotRewards(self):
-    display.clear_output(wait=True)
-    pyplot.title('Episode Rewards')
-    pyplot.plot(self._episode_rewards)
-    pyplot.show(block=False)
-
-  def _Report(
-      self,
-      episode_idx: int,
-      num_of_episodes: int,
-      episode_reward: float,
-      steps: int,
-  ):
-    """Creates a report after an episode.
-
-    Subclass can override this function to provide custom reports.
-
-    Args:
-      episode_idx: the index of the episode.
-      num_of_episodes: the total number of episodes to run.
-      episode_reward: reward for this episode.
-      steps: number of steps in this episode.
-    """
-    self._episode_rewards.append(episode_reward)
-    self._episode_steps.append(steps)
-
-    episode_idx += 1  # make it 1-based.
-
-    msg_tmpl = (
-        'Episode %d/%d: avg_reward = %%3.2f, '
-        'avg_steps=%%3.2f (over %%d episodes)' % (
-          episode_idx, num_of_episodes))
-    if episode_idx % 1000 == 0:
-      logging.vlog(2, msg_tmpl % (
-        numpy.mean(self._episode_rewards[-1000:]),
-        numpy.mean(self._episode_steps[-1000:]),
-        1000))
-    elif episode_idx % 100 == 0:
-      logging.vlog(3, msg_tmpl % (
-        numpy.mean(self._episode_rewards[-100:]),
-        numpy.mean(self._episode_steps[-100:]),
-        100))
-    elif episode_idx % 10 == 0:
-      logging.vlog(4, msg_tmpl % (
-        numpy.mean(self._episode_rewards[-10:]),
-        numpy.mean(self._episode_steps[-10:]),
-        10))
-    else:
-      logging.vlog(
-        5,
-        'Episode %d/%d: episode_reward = %3.2f, steps=%d' % (
-          episode_idx, num_of_episodes, episode_reward, steps))
-
-    if logging.ENV.debug_verbosity >= 4:
-      self._PlotRewards()
-
-  def _FinalReport(self):
-    """Creates a final report."""
-    self._PlotRewards()

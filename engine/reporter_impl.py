@@ -5,11 +5,87 @@ from matplotlib import pyplot
 from deep_learning.engine import q_base
 from deep_learning.engine.q_base import Environment
 from deep_learning.engine.q_base import QFunction
+from qpylib import logging
 from qpylib import t
 
 
+class ProgressTracer(q_base.Reporter):
+  """Prints out info on running progress and rewards.
+
+  The average rewards and steps are print out after every certain number of
+  episodes specified by the user. The overall reward and step charts are
+  generated at the end of a run, which can include previous runs as well.
+  """
+
+  def __init__(
+      self,
+      report_every_num_of_episodes: int = 100,
+  ):
+    """Ctor.
+
+    Args:
+      report_every_num_of_episodes: prints a report every this number of
+        episodes.
+    """
+    self._report_every_num_of_episodes = report_every_num_of_episodes
+
+    self._episode_rewards = []
+    self._episode_steps = []
+
+  def ReportEpisode(
+      self,
+      env: Environment,
+      qfunc: QFunction,
+      episode_idx: int,
+      num_of_episodes: int,
+      episode_reward: float,
+      steps: int):
+    """Reports episode progress and rewards."""
+    self._episode_rewards.append(episode_reward)
+    self._episode_steps.append(steps)
+
+    episode_idx += 1  # make it 1-based.
+    if episode_idx % self._report_every_num_of_episodes == 0:
+      logging.printf(
+        'Episode %d/%d: avg_reward = %3.2f, '
+        'avg_steps=%3.2f (over %d episodes)',
+        episode_idx,
+        num_of_episodes,
+        float(numpy.mean(
+          self._episode_rewards[-self._report_every_num_of_episodes:])),
+        float(numpy.mean(
+          self._episode_steps[-self._report_every_num_of_episodes:])),
+        self._report_every_num_of_episodes,
+      )
+
+  def FinalReport(
+      self,
+      env: Environment,
+      qfunc: QFunction,
+      num_of_episodes: int):
+    logging.printf(
+      'Total: run %d episodes, avg_reward = %3.2f, avg_steps=%3.2f',
+      num_of_episodes,
+      float(numpy.mean(
+        self._episode_rewards[-num_of_episodes:])),
+      float(numpy.mean(
+        self._episode_steps[-num_of_episodes:])),
+    )
+
+    pyplot.title('Episode Rewards')
+    pyplot.plot(self._episode_rewards)
+    pyplot.show(block=False)
+
+    pyplot.title('Episode Steps')
+    pyplot.plot(self._episode_steps)
+    pyplot.show(block=False)
+
+
 class ValueTracer(q_base.Reporter):
-  """Traces values of certain (s, a)s during a run."""
+  """Traces values of certain (s, a)s during a run.
+
+  Report is only given after the whole run.
+  """
 
   def __init__(
       self,
@@ -38,7 +114,7 @@ class ValueTracer(q_base.Reporter):
       self._value_traces[a] = a_values
 
   # @Override
-  def EndOfEpisodeReport(
+  def ReportEpisode(
       self,
       env: Environment,
       qfunc: QFunction,
@@ -51,9 +127,6 @@ class ValueTracer(q_base.Reporter):
       for a in self._actions:
         self._value_traces[a][idx].append(v[a])
 
-    if (episode_idx + 1) % self._plot_every_num_of_episodes == 0:
-      self._PlotValueTraces()
-
   # @Override
   def FinalReport(
       self,
@@ -61,9 +134,6 @@ class ValueTracer(q_base.Reporter):
       qfunc: QFunction,
       num_of_episodes: int,
   ):
-    self._PlotValueTraces()
-
-  def _PlotValueTraces(self):
     for a in self._actions:
       pyplot.title('Action: %d' % a)
       for s_values in self._value_traces[a].values():
