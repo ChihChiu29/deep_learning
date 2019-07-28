@@ -6,7 +6,7 @@ from deep_learning.examples import shortcut
 
 
 def main(_):
-  pipeline = shortcut.FullRunPipeline(
+  pipeline = shortcut.StateLearningPipeline(
     gym_env_name='LunarLander-v2', model_shape=(20, 20, 20))
   pipeline.LoadWeights()
   pipeline.Demo()

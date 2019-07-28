@@ -11,6 +11,7 @@ from deep_learning.engine import policy_impl
 from deep_learning.engine import qfunc_impl
 from deep_learning.engine import runner_extension_impl
 from deep_learning.engine import runner_impl
+from deep_learning.engine import screen_learning
 from qpylib import logging
 from qpylib import string
 from qpylib import t
@@ -39,6 +40,7 @@ class StateLearningPipeline:
     """Ctor.
 
     Default implementations are provided for all objects. They can be changed
+    by directly setting the public properties after the creation.
 
     Args:
       gym_env_name: name of the gym environment, like "LunarLander-v2".
@@ -128,44 +130,27 @@ class StateLearningPipeline:
 
 
 class ScreenLearningPipeline:
-  """Quickly generates objects required for a full screen based learning.
-
-  When created, default implementations are used to create environment,
-  Q-function, policy, and runner, and only the most commonly changed parameters
-  are exposed for quick modification.
-
-  If you need full flexibility, either modify the attributes on the created
-  instance (this is less efficient) or create those objects directly using
-  <type>_impl modules.
-  """
+  """Quickly generates objects required for a full screen based learning."""
 
   def __init__(
       self,
       gym_env_name: t.Text,
-      model_shape: t.Iterable[int] = (20, 20, 20),
   ):
     """Ctor.
 
-    Default implementations are provided for all objects. They can be changed
-
     Args:
-      gym_env_name: name of the gym environment, like "LunarLander-v2".
-      model_shape: a list of number of nodes per hidden layer.
+      gym_env_name: name of the gym environment that use screen pixels as
+          states.
     """
     self._gym_env_name = gym_env_name
-    self._model_shape = tuple(model_shape)
 
-    self.env = environment_impl.GymEnvironment(gym.make(gym_env_name))
+    self.env = screen_learning.ScreenGymEnvironment(gym.make(gym_env_name))
     self.qfunc = qfunc_impl.DDQN(
       model_pair=(
-        qfunc_impl.CreateModel(
-          state_shape=self.env.GetStateShape(),
-          action_space_size=self.env.GetActionSpaceSize(),
-          hidden_layer_sizes=model_shape),
-        qfunc_impl.CreateModel(
-          state_shape=self.env.GetStateShape(),
-          action_space_size=self.env.GetActionSpaceSize(),
-          hidden_layer_sizes=model_shape)),
+        screen_learning.CreateConvolutionModel(
+          action_space_size=self.env.GetActionSpaceSize()),
+        screen_learning.CreateConvolutionModel(
+          action_space_size=self.env.GetActionSpaceSize())),
       training_batch_size=DEFAULT_BATCH_SIZE,
       discount_factor=0.99,
     )
@@ -229,7 +214,5 @@ class ScreenLearningPipeline:
     self.qfunc.Load(self._GetModelWeightsFilepath())
 
   def _GetModelWeightsFilepath(self):
-    return os.path.join(SAVE_SUB_DIRECTORY, '%s_%s_%s.weights' % (
-      self._gym_env_name,
-      string.GetClassName(self.qfunc),
-      '-'.join(str(n) for n in self._model_shape)))
+    return os.path.join(SAVE_SUB_DIRECTORY, '%s_%s.weights' % (
+      self._gym_env_name, string.GetClassName(self.qfunc)))

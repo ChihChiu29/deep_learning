@@ -10,7 +10,7 @@ from deep_learning.examples import shortcut
 
 
 def main(_):
-  pipeline = shortcut.FullRunPipeline(
+  pipeline = shortcut.StateLearningPipeline(
     gym_env_name='CartPole-v0', model_shape=(20, 20, 20))
   # First train it for 500 episodes.
   pipeline.Train(num_of_episodes=500)
