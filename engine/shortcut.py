@@ -11,6 +11,7 @@ from deep_learning.engine import policy_impl
 from deep_learning.engine import qfunc_impl
 from deep_learning.engine import runner_extension_impl
 from deep_learning.engine import runner_impl
+from qpylib import logging
 from qpylib import string
 from qpylib import t
 
@@ -60,14 +61,20 @@ class FullRunPipeline:
       training_batch_size=DEFAULT_BATCH_SIZE,
       discount_factor=0.99,
     )
+    logging.printf(
+      'Using qfunc implementation: %s', string.GetClassName(self.qfunc))
     self.policy = policy_impl.GreedyPolicyWithDecreasingRandomness(
       initial_epsilon=1.0,
       final_epsilon=0.1,
       decay_by_half_after_num_of_episodes=500)
+    logging.printf(
+      'Using policy implementation: %s', string.GetClassName(self.policy))
 
-    self.runner = runner_impl.ExperienceReplayRunner(
+    self.runner = runner_impl.PrioritizedExperienceReplayRunner(
       experience_capacity=100000,
       experience_sample_batch_size=DEFAULT_BATCH_SIZE)
+    logging.printf(
+      'Using runner implementation: %s', string.GetClassName(self.runner))
 
     self._progress_tracer = runner_extension_impl.ProgressTracer()
     self._model_saver = runner_extension_impl.ModelSaver(
