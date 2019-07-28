@@ -3,6 +3,7 @@ import unittest
 
 import numpy
 
+from deep_learning.engine import q_base
 from deep_learning.engine import qfunc_impl
 from qpylib import numpy_util
 
@@ -144,13 +145,18 @@ class DDQNTest(unittest.TestCase):
 
   def setUp(self) -> None:
     # State space size is 3; Action space size is 2.
-    self.qfunc = qfunc_impl.DQN_TargetNetwork(
-      model=qfunc_impl.CreateModel(
-        state_shape=(3,),
-        action_space_size=2,
-        hidden_layer_sizes=(6, 4),
-      ),
-      update_target_network_every_num_of_steps=2,
+    self.qfunc = qfunc_impl.DDQN(
+      model_pair=(
+        qfunc_impl.CreateModel(
+          state_shape=(3,),
+          action_space_size=2,
+          hidden_layer_sizes=(3,),
+        ),
+        qfunc_impl.CreateModel(
+          state_shape=(3,),
+          action_space_size=2,
+          hidden_layer_sizes=(3,),
+        )),
     )
     self.states = numpy.array([
       [1, 2, 3],
@@ -162,15 +168,44 @@ class DDQNTest(unittest.TestCase):
       [0.3, 0.7],
     ])
 
-  def test_getSetValues_convergence(self):
+  def test_updateValues_swapModels(self):
+    q1 = self.qfunc._q1
+    q2 = self.qfunc._q2
+    self.qfunc.UpdateValues([q_base.Transition(
+      s=numpy.array([[1, 2, 3]]),
+      a=numpy.array([[1, 0]]),
+      r=1.0,
+      sp=numpy.array([[4, 5, 6]])
+    )])
+
+    self.assertEqual(q1, self.qfunc._q2)
+    self.assertEqual(q2, self.qfunc._q1)
+
+  def test_convergence(self):
+    states, actions, target_action_values = None, None, None
     for _ in range(100):
-      self.qfunc._SetValues(self.states, self.values)
-    diff1 = numpy.sum(
-      numpy.abs(self.values - self.qfunc.GetValues(self.states)))
+      states, actions, target_action_values = self.qfunc.UpdateValues(
+        [q_base.Transition(
+          s=numpy.array([[1, 2, 3]]),
+          a=numpy.array([[1, 0]]),
+          r=1.0,
+          sp=numpy.array([[4, 5, 6]])
+        )])
+    diff1 = numpy.sum(numpy.abs(
+      self.qfunc.GetActionValues(
+        self.qfunc.GetActionValues(states), actions) - target_action_values))
+
     for _ in range(100):
-      self.qfunc._SetValues(self.states, self.values)
-    diff2 = numpy.sum(
-      numpy.abs(self.values - self.qfunc.GetValues(self.states)))
+      states, actions, target_action_values = self.qfunc.UpdateValues(
+        [q_base.Transition(
+          s=numpy.array([[1, 2, 3]]),
+          a=numpy.array([[1, 0]]),
+          r=1.0,
+          sp=numpy.array([[4, 5, 6]])
+        )])
+    diff2 = numpy.sum(numpy.abs(
+      self.qfunc.GetActionValues(
+        self.qfunc.GetActionValues(states), actions) - target_action_values))
 
     self.assertLess(diff2, diff1)
 
@@ -179,11 +214,18 @@ class DDQNTest(unittest.TestCase):
     self.qfunc._SetValues(self.states, self.values)
     self.qfunc.Save(tmp_file)
     qfunc = qfunc_impl.DDQN(
-      model=qfunc_impl.CreateModel(
-        state_shape=(3,),
-        action_space_size=2,
-        hidden_layer_sizes=(6, 4),
-      ))
+      model_pair=(
+        qfunc_impl.CreateModel(
+          state_shape=(3,),
+          action_space_size=2,
+          hidden_layer_sizes=(3,),
+        ),
+        qfunc_impl.CreateModel(
+          state_shape=(3,),
+          action_space_size=2,
+          hidden_layer_sizes=(3,),
+        )),
+    )
     qfunc.Load(tmp_file)
 
     numpy_util.TestUtil.AssertModelWeightsEqual(qfunc._q1, self.qfunc._model)

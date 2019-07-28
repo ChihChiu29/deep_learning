@@ -249,16 +249,25 @@ class DDQN(q_base.QFunction):
 
   def __init__(
       self,
-      model: keras.Model,
+      model_pair: t.Tuple[keras.Model, keras.Model],
       training_batch_size: object = _DEFAULT_TRAINING_BATCH_SIZE,
       discount_factor: object = None,
   ):
+    """Ctor.
+
+    Args:
+      model_pair: two compiled models that have identical shape.
+      training_batch_size: the batch size used in training.
+      discount_factor: gamma
+    """
     # The Q-value iteration from q_base.QFunction will not be called at all.
     super().__init__(None, None)
 
-    self._model = model
+    self._model, self._secondary_model = model_pair
     self._training_batch_size = training_batch_size
-    self._discount_factor = discount_factor
+    self._gamma = (
+      discount_factor if discount_factor is not None else
+      q_base.DEFAULT_DISCOUNT_FACTOR)
 
     self._state_shape = self._model.layers[0].input_shape[1:]
     output_shape = self._model.layers[-1].output_shape[1:]  # type: t.Tuple[int]
@@ -266,8 +275,6 @@ class DDQN(q_base.QFunction):
       raise NotImplementedError(
         'Only supports 1D action space; got: %s' % str(output_shape))
     self._action_space_size = output_shape[0]
-
-    self._secondary_model = models.clone_model(self._model)
 
     # These will swap during the iterations. All value manipulations use these
     # indirect references.
@@ -296,11 +303,17 @@ class DDQN(q_base.QFunction):
   def UpdateValues(
       self,
       transitions: t.Iterable[q_base.Transition],
-  ) -> None:
+  ) -> t.Tuple[q_base.States, q_base.Actions, q_base.QActionValues]:
     """Update Q-values using the given set of transitions.
 
     The iteration equation only calls interface methods to get values from
     self._q1. Reading from self._q2 is done directly.
+
+    Args:
+      transitions: an iterable of transitions to update values from.
+
+    Returns:
+      The target action values to update to.
     """
     s_list = []  # type: t.List[q_base.State]
     a_list = []  # type: t.List[q_base.Action]
@@ -333,9 +346,12 @@ class DDQN(q_base.QFunction):
     for idx in done_sp_indices:
       new_action_values[idx] = 0.0
     learn_new_action_values = rewards + self._gamma * new_action_values
-    self._SetActionValues(states, actions, learn_new_action_values)
+    target_action_values = self._SetActionValues(
+      states, actions, learn_new_action_values)
 
     self._SwapModels()
+
+    return target_action_values
 
   def _SwapModels(self):
     tmp = self._q1
@@ -349,7 +365,7 @@ def CreateModel(
     hidden_layer_sizes: t.Iterable[int],
     activation: t.Text = _DEFAULT_ACTIVATION,
     optimizer: optimizers.Optimizer = None,
-):
+) -> keras.Model:
   """Creates a single head model.
 
   Following reference:

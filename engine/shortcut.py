@@ -11,6 +11,7 @@ from deep_learning.engine import policy_impl
 from deep_learning.engine import qfunc_impl
 from deep_learning.engine import runner_extension_impl
 from deep_learning.engine import runner_impl
+from qpylib import string
 from qpylib import t
 
 DEFAULT_BATCH_SIZE = 64  # type: int
@@ -46,8 +47,12 @@ class FullRunPipeline:
     self._model_shape = tuple(model_shape)
 
     self.env = environment_impl.GymEnvironment(gym.make(gym_env_name))
-    self.qfunc = qfunc_impl.DQN_TargetNetwork(
-      model=qfunc_impl.CreateModel(
+    self.qfunc = qfunc_impl.DDQN(
+      model1=qfunc_impl.CreateModel(
+        state_shape=self.env.GetStateShape(),
+        action_space_size=self.env.GetActionSpaceSize(),
+        hidden_layer_sizes=model_shape),
+      model2=qfunc_impl.CreateModel(
         state_shape=self.env.GetStateShape(),
         action_space_size=self.env.GetActionSpaceSize(),
         hidden_layer_sizes=model_shape),
@@ -108,5 +113,7 @@ class FullRunPipeline:
     self.qfunc.Load(self._GetModelWeightsFilepath())
 
   def _GetModelWeightsFilepath(self):
-    return os.path.join(SAVE_SUB_DIRECTORY, '%s_%s.weights' % (
-      self._gym_env_name, '-'.join(str(n) for n in self._model_shape)))
+    return os.path.join(SAVE_SUB_DIRECTORY, '%s_%s_%s.weights' % (
+      self._gym_env_name,
+      string.GetClassName(self.qfunc),
+      '-'.join(str(n) for n in self._model_shape)))

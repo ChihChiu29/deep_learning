@@ -14,7 +14,7 @@ from qpylib import logging
 from qpylib import numpy_util
 from qpylib import t
 
-DEFAULT_DISCOUNT_FACTOR = 0.9  # "gamma"
+DEFAULT_DISCOUNT_FACTOR = 0.99  # "gamma"
 DEFAULT_LEARNING_RATE = 0.9  # "alpha"
 
 # A state is a 1 x (state.shape) numpy array.
@@ -219,7 +219,7 @@ class QFunction(abc.ABC):
     set at the same time.
     """
     logging.vlog(10, 'SET: (%s) <- %s', states, values)
-    return self._protected_SetValues(states, values)
+    self._protected_SetValues(states, values)
 
   @abc.abstractmethod
   def _protected_SetValues(
@@ -243,7 +243,7 @@ class QFunction(abc.ABC):
       actions: Actions,
       action_values: QActionValues,
       values: QValues = None,
-  ) -> None:
+  ) -> t.Tuple[States, Actions, QActionValues]:
     """Sets/trains the Q values for (s, a) pairs.
 
     For each state, only one action is taken (the one with the same index in
@@ -259,23 +259,32 @@ class QFunction(abc.ABC):
       values: if set, use this as the Q values instead of reading it using
         GetValues(states). This parameter is introduced in case Q values is
         already known, in which case passing it in is more efficient.
+
+    Returns:
+      The tuple of (states, actions, target_action_values).
     """
     if values is None:
       values = self.GetValues(states)
 
-    self._SetValues(
-      states,
-      numpy_util.Replace(values, actions, action_values))
+    target_action_values = numpy_util.Replace(values, actions, action_values)
+    self._SetValues(states, target_action_values)
+    return states, actions, target_action_values
 
   def UpdateValues(
       self,
       transitions: t.Iterable[Transition],
-  ) -> None:
+  ) -> t.Tuple[States, Actions, QActionValues]:
     """Update Q-values using the given set of transitions.
 
     Notes when there are multiple transitions from the same state
     (different actions), there is a conflict since the values for other actions
     for each transition is read from the current QFunction before update.
+
+    Args:
+      transitions: an iterable of transitions to update values from.
+
+    Returns:
+      The tuple of (states, actions, target_action_values).
     """
     s_list = []  # type: t.List[State]
     a_list = []  # type: t.List[Action]
@@ -308,13 +317,13 @@ class QFunction(abc.ABC):
     if self._alpha < 0.9999999:
       values = self.GetValues(states)
       old_action_values = self.GetActionValues(values, actions)
-      self._SetActionValues(
+      return self._SetActionValues(
         states, actions,
         ((1.0 - self._alpha) * old_action_values
          + self._alpha * learn_new_action_values),
         values=values)
     else:
-      self._SetActionValues(states, actions, learn_new_action_values)
+      return self._SetActionValues(states, actions, learn_new_action_values)
 
 
 class Policy(abc.ABC):
