@@ -2,6 +2,7 @@
 
 import unittest
 
+import deep_learning.experimental.other_runners
 from deep_learning.engine import environment_impl
 from deep_learning.engine import policy_impl
 from deep_learning.engine import qfunc_impl
@@ -33,7 +34,7 @@ class RunnerTest(unittest.TestCase):
       num_of_episodes=1)
 
   def test_priorityExperienceReplayRunner(self):
-    runner_impl.PrioritizedExperienceReplayRunner(
+    deep_learning.experimental.other_runners.PrioritizedExperienceReplayRunner(
       experience_capacity=100,
       experience_sample_batch_size=10).Run(
       env=self.env, qfunc=self.qfunc, policy=self.policy,

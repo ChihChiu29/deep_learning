@@ -7,6 +7,7 @@ from deep_learning.engine import environment_impl
 from deep_learning.engine import policy_impl
 from deep_learning.engine import qfunc_impl
 from deep_learning.engine import runner_impl
+from deep_learning.engine import screen_learning
 
 
 class RunGymTest(unittest.TestCase):
@@ -54,6 +55,27 @@ class RunGymWithFullSetupTest(unittest.TestCase):
 
   def test_Acrobot(self):
     self._RunEnv(gym.make('Acrobot-v1'))
+
+  def test_MsPacman(self):
+    self._RunEnv(gym.make('MsPacman-v4'))
+
+
+class RunScreenGymWithFullSetupTest(unittest.TestCase):
+  _multiprocess_can_split_ = True
+
+  @staticmethod
+  def _RunEnv(gym_env):
+    env = screen_learning.ScreenGymEnvironment(gym_env)
+    qfunc = qfunc_impl.DQN_TargetNetwork(
+      model=screen_learning.CreateConvolutionModel(
+        action_space_size=env.GetActionSpaceSize()))
+    policy = policy_impl.GreedyPolicyWithRandomness(epsilon=1.0)
+
+    runner_impl.SimpleRunner().Run(
+      env=env, qfunc=qfunc, policy=policy, num_of_episodes=10)
+
+  def test_Seaquest(self):
+    self._RunEnv(gym.make('Seaquest-v0'))
 
   def test_MsPacman(self):
     self._RunEnv(gym.make('MsPacman-v4'))

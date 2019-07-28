@@ -5,9 +5,10 @@ Ref:
   -prioritized-experience-replay/
   https://github.com/jaromiru/AI-blog/blob/master/Seaquest-DDQN-PER.py
 """
+import PIL
 import keras
 import numpy
-import scipy
+from PIL import Image
 from keras import layers
 from keras import models
 from keras import optimizers
@@ -64,8 +65,11 @@ class ScreenGymEnvironment(environment_impl.GymEnvironment):
   def _ProcessStateImage(self, img_state: q_base.State):
     """Processes a image state to an image of fixed size."""
     img = img_state[0]
-    rgb = scipy.misc.imresize(
-      img, (IMAGE_WIDTH, IMAGE_HEIGHT), interp='bilinear')
+    rgb = numpy.array(
+      PIL.Image.fromarray(img).resize(
+        (IMAGE_WIDTH, IMAGE_HEIGHT), resample=PIL.Image.BILINEAR))
+    # rgb = scipy.misc.imresize(
+    #   img, (IMAGE_WIDTH, IMAGE_HEIGHT), interp='bilinear')
 
     r, g, b = rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2]
     gray = 0.2989 * r + 0.5870 * g + 0.1140 * b  # extract luminance

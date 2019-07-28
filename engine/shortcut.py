@@ -6,6 +6,7 @@ import os
 
 import gym
 
+import deep_learning.experimental.other_runners
 from deep_learning.engine import environment_impl
 from deep_learning.engine import policy_impl
 from deep_learning.engine import qfunc_impl
@@ -70,7 +71,8 @@ class FullRunPipeline:
     logging.printf(
       'Using policy implementation: %s', string.GetClassName(self.policy))
 
-    self.runner = runner_impl.PrioritizedExperienceReplayRunner(
+    self.runner = deep_learning.experimental.other_runners \
+      .PrioritizedExperienceReplayRunner(
       experience_capacity=100000,
       experience_sample_batch_size=DEFAULT_BATCH_SIZE)
     logging.printf(
