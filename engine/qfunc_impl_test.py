@@ -55,6 +55,7 @@ class MemoizationQFunctionTest(unittest.TestCase):
 
 
 class DQNTest(unittest.TestCase):
+  _multiprocess_can_split_ = True
 
   def setUp(self) -> None:
     # State space size is 3; Action space size is 2.
@@ -102,6 +103,7 @@ class DQNTest(unittest.TestCase):
 
 
 class DQN_TargetNetwork_Test(unittest.TestCase):
+  _multiprocess_can_split_ = True
 
   def setUp(self) -> None:
     # State space size is 3; Action space size is 2.
@@ -142,6 +144,7 @@ class DQN_TargetNetwork_Test(unittest.TestCase):
 
 
 class DDQNTest(unittest.TestCase):
+  _multiprocess_can_split_ = True
 
   def setUp(self) -> None:
     # State space size is 3; Action space size is 2.
@@ -157,6 +160,7 @@ class DDQNTest(unittest.TestCase):
           action_space_size=2,
           hidden_layer_sizes=(3,),
         )),
+      discount_factor=0.9,
     )
     self.states = numpy.array([
       [1, 2, 3],
@@ -182,32 +186,39 @@ class DDQNTest(unittest.TestCase):
     self.assertEqual(q2, self.qfunc._q1)
 
   def test_convergence(self):
+    trans = [q_base.Transition(
+      s=numpy.array([[1, 2, 3]]),
+      a=numpy.array([[1, 0]]),
+      r=1.0,
+      sp=None,
+    )]
     states, actions, target_action_values = None, None, None
     for _ in range(100):
-      states, actions, target_action_values = self.qfunc.UpdateValues(
-        [q_base.Transition(
-          s=numpy.array([[1, 2, 3]]),
-          a=numpy.array([[1, 0]]),
-          r=1.0,
-          sp=numpy.array([[4, 5, 6]])
-        )])
-    diff1 = numpy.sum(numpy.abs(
-      self.qfunc.GetActionValues(
-        self.qfunc.GetActionValues(states), actions) - target_action_values))
+      states, actions, target_action_values = self.qfunc.UpdateValues(trans)
+    error1_1 = numpy.sum(numpy.abs(
+      self.qfunc.GetActionValues(self.qfunc.GetValues(states), actions) -
+      target_action_values))
+    states, actions, target_action_values = self.qfunc.UpdateValues(trans)
+    error1_2 = numpy.sum(numpy.abs(
+      self.qfunc.GetActionValues(self.qfunc.GetValues(states), actions) -
+      target_action_values))
 
-    for _ in range(100):
-      states, actions, target_action_values = self.qfunc.UpdateValues(
-        [q_base.Transition(
-          s=numpy.array([[1, 2, 3]]),
-          a=numpy.array([[1, 0]]),
-          r=1.0,
-          sp=numpy.array([[4, 5, 6]])
-        )])
-    diff2 = numpy.sum(numpy.abs(
-      self.qfunc.GetActionValues(
-        self.qfunc.GetActionValues(states), actions) - target_action_values))
+    # Since an even number of iterations was used in the first loop, an even
+    # number must be used here as well to make sure it's the same model that's
+    # being compared.
+    for _ in range(1000):
+      states, actions, target_action_values = self.qfunc.UpdateValues(trans)
+    error2_1 = numpy.sum(numpy.abs(
+      self.qfunc.GetActionValues(self.qfunc.GetValues(states), actions) -
+      target_action_values))
+    states, actions, target_action_values = self.qfunc.UpdateValues(trans)
+    error2_2 = numpy.sum(numpy.abs(
+      self.qfunc.GetActionValues(self.qfunc.GetValues(states), actions) -
+      target_action_values))
 
-    self.assertLess(diff2, diff1)
+    # Only compare errors from the same model.
+    self.assertLess(error2_1, error1_1)
+    self.assertLess(error2_2, error1_2)
 
   def test_saveLoad(self):
     tmp_file = '/tmp/DDQNTest_savedata.tmp'

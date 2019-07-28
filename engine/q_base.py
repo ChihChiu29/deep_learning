@@ -266,9 +266,8 @@ class QFunction(abc.ABC):
     if values is None:
       values = self.GetValues(states)
 
-    target_action_values = numpy_util.Replace(values, actions, action_values)
-    self._SetValues(states, target_action_values)
-    return states, actions, target_action_values
+    self._SetValues(states, numpy_util.Replace(values, actions, action_values))
+    return states, actions, action_values
 
   def UpdateValues(
       self,
