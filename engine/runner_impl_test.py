@@ -32,6 +32,6 @@ class ExperienceReplayRunnerTest(unittest.TestCase):
     runner._protected_ProcessTransition(qfunc, tran1, 0)
     runner._protected_ProcessTransition(qfunc, tran2, 1)
 
-    hist = runner.GetHistory()
+    hist = runner._experience._history
     self.assertEqual(1, len(hist))
     self.assertEqual(tran2, hist[0])

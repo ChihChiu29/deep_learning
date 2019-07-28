@@ -48,14 +48,15 @@ class FullRunPipeline:
 
     self.env = environment_impl.GymEnvironment(gym.make(gym_env_name))
     self.qfunc = qfunc_impl.DDQN(
-      model1=qfunc_impl.CreateModel(
-        state_shape=self.env.GetStateShape(),
-        action_space_size=self.env.GetActionSpaceSize(),
-        hidden_layer_sizes=model_shape),
-      model2=qfunc_impl.CreateModel(
-        state_shape=self.env.GetStateShape(),
-        action_space_size=self.env.GetActionSpaceSize(),
-        hidden_layer_sizes=model_shape),
+      model_pair=(
+        qfunc_impl.CreateModel(
+          state_shape=self.env.GetStateShape(),
+          action_space_size=self.env.GetActionSpaceSize(),
+          hidden_layer_sizes=model_shape),
+        qfunc_impl.CreateModel(
+          state_shape=self.env.GetStateShape(),
+          action_space_size=self.env.GetActionSpaceSize(),
+          hidden_layer_sizes=model_shape)),
       training_batch_size=DEFAULT_BATCH_SIZE,
       discount_factor=0.99,
     )

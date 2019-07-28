@@ -195,6 +195,7 @@ class DDQNTest(unittest.TestCase):
     states, actions, target_action_values = None, None, None
     for _ in range(100):
       states, actions, target_action_values = self.qfunc.UpdateValues(trans)
+
     error1_1 = numpy.sum(numpy.abs(
       self.qfunc.GetActionValues(self.qfunc.GetValues(states), actions) -
       target_action_values))
@@ -202,12 +203,15 @@ class DDQNTest(unittest.TestCase):
     error1_2 = numpy.sum(numpy.abs(
       self.qfunc.GetActionValues(self.qfunc.GetValues(states), actions) -
       target_action_values))
+    # Needs this to swap back q1 and q2.
+    states, actions, target_action_values = self.qfunc.UpdateValues(trans)
 
     # Since an even number of iterations was used in the first loop, an even
     # number must be used here as well to make sure it's the same model that's
     # being compared.
-    for _ in range(1000):
+    for _ in range(100):
       states, actions, target_action_values = self.qfunc.UpdateValues(trans)
+
     error2_1 = numpy.sum(numpy.abs(
       self.qfunc.GetActionValues(self.qfunc.GetValues(states), actions) -
       target_action_values))
@@ -217,8 +221,8 @@ class DDQNTest(unittest.TestCase):
       target_action_values))
 
     # Only compare errors from the same model.
-    self.assertLess(error2_1, error1_1)
-    self.assertLess(error2_2, error1_2)
+    self.assertLessEqual(error2_1, error1_1)
+    self.assertLessEqual(error2_2, error1_2)
 
   def test_saveLoad(self):
     tmp_file = '/tmp/DDQNTest_savedata.tmp'
