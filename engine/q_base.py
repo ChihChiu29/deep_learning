@@ -85,19 +85,19 @@ class Environment(abc.ABC):
 
   def __init__(
       self,
-      state_shape: t.Tuple[int],
+      state_shape: t.Sequence[int],
       action_space_size: int,
   ):
     """Constructor.
 
     Args:
-      state_shape: the shape of the numpy.ndarray state.
+      state_shape: tuple of int, the shape of the numpy.ndarray state.
       action_space_size: the size of the discrete action space.
     """
     self._state_shape = state_shape
     self._action_space_size = action_space_size
 
-  def GetStateShape(self) -> t.Tuple[int]:
+  def GetStateShape(self) -> t.Sequence[int]:
     return self._state_shape
 
   def GetActionSpaceSize(self) -> int:

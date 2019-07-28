@@ -25,7 +25,7 @@ class SingleStateEnvironment(q_base.Environment):
       step_limit: the number of actions allowed to take before environment
         is "done".
     """
-    super().__init__(state_shape=1, action_space_size=action_space_size)
+    super().__init__(state_shape=(1,), action_space_size=action_space_size)
     self._step_limit = step_limit
 
     self._action_count = None

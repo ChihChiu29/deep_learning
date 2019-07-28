@@ -360,7 +360,7 @@ class DDQN(q_base.QFunction):
 
 
 def CreateModel(
-    state_shape: t.Tuple[int],
+    state_shape: t.Sequence[int],
     action_space_size: int,
     hidden_layer_sizes: t.Iterable[int],
     activation: t.Text = _DEFAULT_ACTIVATION,
@@ -381,7 +381,7 @@ def CreateModel(
       _CreateDefaultOptimizer.
   """
   if optimizer is None:
-    optimizer = _CreateDefaultOptimizer()
+    optimizer = CreateDefaultOptimizer()
 
   hidden_layer_sizes = tuple(hidden_layer_sizes)
   model = models.Sequential()
@@ -405,7 +405,7 @@ def CreateModel(
   return model
 
 
-def _CreateDefaultOptimizer() -> optimizers.Optimizer:
+def CreateDefaultOptimizer() -> optimizers.Optimizer:
   """Creates a default optimizer."""
   # Ref:
   #   https://jaromiru.com/2016/10/03/lets-make-a-dqn-implementation/

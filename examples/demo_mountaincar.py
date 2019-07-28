@@ -26,8 +26,7 @@ def main(_):
     training_batch_size=batch_size,
     discount_factor=0.99,
   )
-  qfunc.LoadWeights(
-    'saved_models/mountaincar_shape_64_rmsprop_gamma_099.weights')
+  qfunc.Load('saved_models/mountaincar_shape_64_rmsprop_gamma_099.weights')
   policy = policy_impl.GreedyPolicy()
   runner = runner_impl.NoOpRunner()
 
