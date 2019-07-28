@@ -6,7 +6,7 @@ fun of CL. For a "full" version see solve_cartpole.py.
 """
 from absl import app
 
-from deep_learning.engine import shortcut
+from deep_learning.examples import shortcut
 
 
 def main(_):

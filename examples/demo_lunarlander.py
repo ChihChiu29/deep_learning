@@ -2,7 +2,7 @@
 
 from absl import app
 
-from deep_learning.engine import shortcut
+from deep_learning.examples import shortcut
 
 
 def main(_):
