@@ -173,6 +173,9 @@ class DQN(q_base.QFunction):
 class DQN_TargetNetwork(DQN):
   """DQN implemented using Keras model; target networks is used.
 
+  Note that it's slower than DQN to process each step, and in terms of
+  getting to convergence, but it's more stable than DQN.
+
   For target network see:
   https://jaromiru.com/2016/10/21/lets-make-a-dqn-full-dqn/
   """
@@ -241,6 +244,9 @@ class DQN_TargetNetwork(DQN):
 
 class DDQN(q_base.QFunction):
   """Double DQN.
+
+  It's slower than DQN_TargetNetwork to process each step, and in terms
+  of getting to convergence, but it's more stable than DQN_TargetNetwork.
 
   Reference:
     https://jaromiru.com/2016/11/07/lets-make-a-dqn-double-learning-and

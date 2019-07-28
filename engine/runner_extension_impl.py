@@ -71,7 +71,9 @@ class ProgressTracer(q_base.RunnerExtension):
       float(numpy.mean(
         self._episode_steps[-num_of_episodes:])),
     )
-
+    # Note that since "block=False", if you run it on CLI the image will be
+    # shown then disappear immediately. The result will persist if you run it
+    # in notebooks.
     pyplot.title('Episode Rewards')
     pyplot.plot(self._episode_rewards)
     pyplot.show(block=False)

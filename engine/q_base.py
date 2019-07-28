@@ -181,7 +181,7 @@ class QFunction(abc.ABC):
   ) -> QValues:
     """Gets the Q values for states, for all actions."""
     values = self._protected_GetValues(states)
-    logging.vlog(10, 'GET: (%s) -> %s', states, values)
+    logging.vlog(20, 'GET: (%s) -> %s', states, values)
     return values
 
   @abc.abstractmethod
@@ -218,7 +218,7 @@ class QFunction(abc.ABC):
     The number of states and values must equal. Values for all actions are
     set at the same time.
     """
-    logging.vlog(10, 'SET: (%s) <- %s', states, values)
+    logging.vlog(20, 'SET: (%s) <- %s', states, values)
     self._protected_SetValues(states, values)
 
   @abc.abstractmethod
@@ -415,7 +415,7 @@ class Runner(abc.ABC):
       step_idx = 0
       episode_reward = 0.0
       while True:
-        logging.vlog(20, 'Running episode: %d, step: %d', episode_idx, step_idx)
+        logging.vlog(15, 'Running episode: %d, step: %d', episode_idx, step_idx)
         tran = env.TakeAction(
           policy.Decide(
             env=env,
@@ -424,7 +424,7 @@ class Runner(abc.ABC):
             episode_idx=episode_idx,
             num_of_episodes=num_of_episodes,
           ))
-        logging.vlog(15, '%s', tran)
+        logging.vlog(18, '%s', tran)
         self._protected_ProcessTransition(
           qfunc=qfunc,
           transition=tran,

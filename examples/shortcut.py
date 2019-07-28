@@ -36,6 +36,7 @@ class StateLearningPipeline:
       self,
       gym_env_name: t.Text,
       model_shape: t.Iterable[int] = (20, 20, 20),
+      report_every_num_of_episodes: int = 100,
   ):
     """Ctor.
 
@@ -45,6 +46,8 @@ class StateLearningPipeline:
     Args:
       gym_env_name: name of the gym environment, like "LunarLander-v2".
       model_shape: a list of number of nodes per hidden layer.
+      report_every_num_of_episodes: do progress report every this number of
+        episodes.
     """
     self._gym_env_name = gym_env_name
     self._model_shape = tuple(model_shape)
@@ -78,7 +81,8 @@ class StateLearningPipeline:
     logging.printf(
       'Using runner implementation: %s', string.GetClassName(self.runner))
 
-    self._progress_tracer = runner_extension_impl.ProgressTracer()
+    self._progress_tracer = runner_extension_impl.ProgressTracer(
+      report_every_num_of_episodes=report_every_num_of_episodes)
     self._model_saver = runner_extension_impl.ModelSaver(
       self._GetModelWeightsFilepath())
 
@@ -135,12 +139,15 @@ class ScreenLearningPipeline:
   def __init__(
       self,
       gym_env_name: t.Text,
+      report_every_num_of_episodes: int = 1,
   ):
     """Ctor.
 
     Args:
       gym_env_name: name of the gym environment that use screen pixels as
-          states.
+        states.
+      report_every_num_of_episodes: do progress report every this number of
+        episodes.
     """
     self._gym_env_name = gym_env_name
 
@@ -169,7 +176,8 @@ class ScreenLearningPipeline:
     logging.printf(
       'Using runner implementation: %s', string.GetClassName(self.runner))
 
-    self._progress_tracer = runner_extension_impl.ProgressTracer()
+    self._progress_tracer = runner_extension_impl.ProgressTracer(
+      report_every_num_of_episodes=report_every_num_of_episodes)
     self._model_saver = runner_extension_impl.ModelSaver(
       self._GetModelWeightsFilepath())
 

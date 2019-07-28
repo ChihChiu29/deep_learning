@@ -1,4 +1,4 @@
-"""An example of training using screen.
+"""An example of training using ram states.
 
 Mainly used for performance analysis.
 """
@@ -10,17 +10,18 @@ from deep_learning.examples import shortcut
 # Profiler instruction:
 # 1) Generate profiler file:
 #   $ python -m cProfile -o result.prof \
-#     deep_learning/examples/train_screen_learning.py
+#     deep_learning/examples/train_ram_learning.py
 # 2) Visualize it:
 #   $ snakeviz result.prof
 #   It prints a link that shows the viz.
 
 def main(_):
-  pipeline = shortcut.ScreenLearningPipeline(
-    gym_env_name='Seaquest-v0',
-    report_every_num_of_episodes=1,
+  pipline = shortcut.StateLearningPipeline(
+    'Seaquest-ram-v0',
+    model_shape=(64, 32, 20),
+    report_every_num_of_episodes=100,
   )
-  pipeline.Train(num_of_episodes=10)
+  pipline.Train(num_of_episodes=500)
 
 
 if __name__ == '__main__':

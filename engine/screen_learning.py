@@ -89,22 +89,24 @@ def CreateConvolutionModel(
 
   model = models.Sequential()
   model.add(layers.Conv2D(
-    32, (8, 8),
+    16, (8, 8),
     strides=(4, 4),
     activation=activation,
     input_shape=(IMAGE_STACK, IMAGE_WIDTH, IMAGE_HEIGHT),
     data_format='channels_first'))
   model.add(layers.Conv2D(
-    64,
+    16,  # original: 64
     (4, 4),
     strides=(2, 2),
     activation=activation))
   model.add(layers.Conv2D(
-    64,
+    16,  # original: 64
     (3, 3),
     activation=activation))
   model.add(layers.Flatten())
-  model.add(layers.Dense(units=512, activation=activation))
+  model.add(layers.Dense(
+    units=32,  # original: 512
+    activation=activation))
 
   model.add(layers.Dense(units=action_space_size))
 
