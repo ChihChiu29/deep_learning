@@ -10,6 +10,7 @@ from keras import optimizers
 from deep_learning.engine import q_base
 from deep_learning.engine.q_base import QValues
 from deep_learning.engine.q_base import States
+from qpylib import numpy_util
 from qpylib import t
 
 _DEFAULT_ACTIVATION = 'relu'
@@ -197,8 +198,6 @@ class DQN_TargetNetwork(DQN):
         as the experience sample size.
       discount_factor: gamma.
     """
-    # DQN's learning is done via optimizer; no need to use a learning rate
-    # at the Q-value iteration level.
     super().__init__(model, training_batch_size, discount_factor)
     self._update_target_network_every_num_of_steps = (
       update_target_network_every_num_of_steps)
@@ -238,6 +237,110 @@ class DQN_TargetNetwork(DQN):
     if self._step_count >= self._update_target_network_every_num_of_steps:
       self._CopyWeightsToTargetNetwork()
       self._step_count = 0
+
+
+class DDQN(q_base.QFunction):
+  """Double DQN.
+
+  Reference:
+    https://jaromiru.com/2016/11/07/lets-make-a-dqn-double-learning-and
+    -prioritized-experience-replay/
+  """
+
+  def __init__(
+      self,
+      model: keras.Model,
+      training_batch_size: object = _DEFAULT_TRAINING_BATCH_SIZE,
+      discount_factor: object = None,
+  ):
+    # The Q-value iteration from q_base.QFunction will not be called at all.
+    super().__init__(None, None)
+
+    self._model = model
+    self._training_batch_size = training_batch_size
+    self._discount_factor = discount_factor
+
+    self._state_shape = self._model.layers[0].input_shape[1:]
+    output_shape = self._model.layers[-1].output_shape[1:]  # type: t.Tuple[int]
+    if len(output_shape) != 1:
+      raise NotImplementedError(
+        'Only supports 1D action space; got: %s' % str(output_shape))
+    self._action_space_size = output_shape[0]
+
+    self._secondary_model = models.clone_model(self._model)
+
+    # These will swap during the iterations. All value manipulations use these
+    # indirect references.
+    self._q1 = self._model
+    self._q2 = self._secondary_model
+
+  # @Override
+  def Save(self, filepath: t.Text) -> None:
+    self._q1.save_weights(filepath)
+
+  # @Override
+  def Load(self, filepath: t.Text) -> None:
+    self._q1.load_weights(filepath)
+    self._q2.load_weights(filepath)
+
+  # @Override
+  def _protected_GetValues(self, states: States) -> QValues:
+    return self._q1.predict(states)
+
+  # @Override
+  def _protected_SetValues(self, states: States, values: QValues) -> None:
+    self._q1.fit(
+      states, values, batch_size=self._training_batch_size, verbose=0)
+
+  # @Override
+  def UpdateValues(
+      self,
+      transitions: t.Iterable[q_base.Transition],
+  ) -> None:
+    """Update Q-values using the given set of transitions.
+
+    The iteration equation only calls interface methods to get values from
+    self._q1. Reading from self._q2 is done directly.
+    """
+    s_list = []  # type: t.List[q_base.State]
+    a_list = []  # type: t.List[q_base.Action]
+    r_list = []  # type: t.List[q_base.Reward]
+    sp_list = []  # type: t.List[q_base.State]
+    done_sp_indices = []
+    for idx, transition in enumerate(transitions):
+      s_list.append(transition.s)
+      a_list.append(transition.a)
+      r_list.append(transition.r)
+      if transition.sp is not None:
+        sp_list.append(transition.sp)
+      else:
+        # If environment is done, max(Q*(sp,a)) is replaced by 0.
+        sp_list.append(transition.s)
+        done_sp_indices.append(idx)
+    states, actions, rewards, new_states = (
+      numpy.concatenate(s_list),
+      numpy.concatenate(a_list),
+      numpy.array(r_list),
+      numpy.concatenate(sp_list),
+    )
+
+    q1_values = self.GetValues(new_states)
+    q1_action_choices = numpy.argmax(q1_values, axis=1)
+    q1_actions = numpy_util.EncodePositionsToOneHotArray(
+      q1_action_choices, self._action_space_size)
+    q2_values = self._q2.predict(new_states)
+    new_action_values = self.GetActionValues(q2_values, q1_actions)
+    for idx in done_sp_indices:
+      new_action_values[idx] = 0.0
+    learn_new_action_values = rewards + self._gamma * new_action_values
+    self._SetActionValues(states, actions, learn_new_action_values)
+
+    self._SwapModels()
+
+  def _SwapModels(self):
+    tmp = self._q1
+    self._q1 = self._q2
+    self._q2 = tmp
 
 
 def CreateModel(
