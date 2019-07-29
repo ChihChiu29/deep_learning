@@ -78,6 +78,44 @@ class ScreenGymEnvironment(environment_impl.GymEnvironment):
     return o
 
 
+def CreateOriginalConvolutionModel(
+    action_space_size: int,
+    activation: t.Text = 'relu',
+    optimizer: optimizers.Optimizer = None,
+) -> keras.Model:
+  """Creates a convolution model suitable for screen based learning.
+
+  This model uses parameters reported in:
+    https://jaromiru.com/2016/11/07/lets-make-a-dqn-double-learning-and-prioritized-experience-replay/
+  """
+  if optimizer is None:
+    optimizer = qfunc_impl.CreateDefaultOptimizer()
+
+  model = models.Sequential()
+  model.add(layers.Conv2D(
+    32, (8, 8),
+    strides=(4, 4),
+    activation=activation,
+    input_shape=(IMAGE_STACK, IMAGE_WIDTH, IMAGE_HEIGHT),
+    data_format='channels_first'))
+  model.add(layers.Conv2D(
+    64,
+    (4, 4),
+    strides=(2, 2),
+    activation=activation))
+  model.add(layers.Conv2D(
+    64,
+    (3, 3),
+    activation=activation))
+  model.add(layers.Flatten())
+  model.add(layers.Dense(units=512, activation=activation))
+  model.add(layers.Dense(units=action_space_size))
+
+  model.compile(loss='mse', optimizer=optimizer)
+
+  return model
+
+
 def CreateConvolutionModel(
     action_space_size: int,
     activation: t.Text = 'relu',
@@ -95,19 +133,12 @@ def CreateConvolutionModel(
     input_shape=(IMAGE_STACK, IMAGE_WIDTH, IMAGE_HEIGHT),
     data_format='channels_first'))
   model.add(layers.Conv2D(
-    16,  # original: 64
+    16,
     (4, 4),
     strides=(2, 2),
     activation=activation))
-  model.add(layers.Conv2D(
-    16,  # original: 64
-    (3, 3),
-    activation=activation))
   model.add(layers.Flatten())
-  model.add(layers.Dense(
-    units=32,  # original: 512
-    activation=activation))
-
+  model.add(layers.Dense(units=32, activation=activation))
   model.add(layers.Dense(units=action_space_size))
 
   model.compile(loss='mse', optimizer=optimizer)

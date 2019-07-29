@@ -152,12 +152,9 @@ class ScreenLearningPipeline:
     self._gym_env_name = gym_env_name
 
     self.env = screen_learning.ScreenGymEnvironment(gym.make(gym_env_name))
-    self.qfunc = qfunc_impl.DDQN(
-      model_pair=(
-        screen_learning.CreateConvolutionModel(
-          action_space_size=self.env.GetActionSpaceSize()),
-        screen_learning.CreateConvolutionModel(
-          action_space_size=self.env.GetActionSpaceSize())),
+    self.qfunc = qfunc_impl.DQN_TargetNetwork(
+      model=screen_learning.CreateConvolutionModel(
+        action_space_size=self.env.GetActionSpaceSize()),
       training_batch_size=DEFAULT_BATCH_SIZE,
       discount_factor=0.99,
     )
@@ -166,7 +163,7 @@ class ScreenLearningPipeline:
     self.policy = policy_impl.GreedyPolicyWithDecreasingRandomness(
       initial_epsilon=1.0,
       final_epsilon=0.1,
-      decay_by_half_after_num_of_episodes=500)
+      decay_by_half_after_num_of_episodes=50)
     logging.printf(
       'Using policy implementation: %s', string.GetClassName(self.policy))
 
