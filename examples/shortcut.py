@@ -110,13 +110,18 @@ class StateLearningPipeline:
       save_video_to: saves the demo video for the run to a file of this
         name. It must ends with mp4.
     """
+    self.env.TurnOnRendering(should_render=True)
     self.env.StartRecording(video_filename=save_video_to)
-    runner_impl.NoOpRunner().Run(
+    runner = runner_impl.NoOpRunner()
+    runner.AddCallback(runner_extension_impl.ProgressTracer(
+      report_every_num_of_episodes=1))
+    runner.Run(
       env=self.env,
       qfunc=self.qfunc,
       policy=policy_impl.GreedyPolicy(),
       num_of_episodes=num_of_episodes)
     self.env.StopRecording()
+    self.env.TurnOnRendering(should_render=False)
 
   def SaveWeights(self):
     """Saves weights to a "saved_models" sub-directory."""
