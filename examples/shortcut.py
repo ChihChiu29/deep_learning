@@ -145,24 +145,29 @@ class ScreenLearningPipeline:
   def __init__(
       self,
       gym_env_name: t.Text,
+      gym_env=None,
       report_every_num_of_episodes: int = 1,
   ):
     """Ctor.
 
     Args:
-      gym_env_name: name of the gym environment that use screen pixels as
-        states.
+      gym_env_name: name of the gym environment that will be created.
+      gym_env: Gym environment. If set, use the provided Gym environment and
+        gym_env_name is only used as a tag.
       report_every_num_of_episodes: do progress report every this number of
         episodes.
     """
     self._gym_env_name = gym_env_name
-
-    self.env = screen_learning.ScreenGymEnvironment(gym.make(gym_env_name))
+    if gym_env:
+      env = gym_env
+    else:
+      env = gym.make(gym_env_name)
+    self.env = screen_learning.ScreenGymEnvironment(env)
     if running_environment.CheckAndForceGpuForTheRun():
       model = screen_learning.CreateOriginalConvolutionModel(
         action_space_size=self.env.GetActionSpaceSize())
     else:
-      screen_learning.CreateConvolutionModel(
+      model = screen_learning.CreateConvolutionModel(
         action_space_size=self.env.GetActionSpaceSize())
     self.qfunc = qfunc_impl.DQN_TargetNetwork(
       model=model,
