@@ -13,6 +13,7 @@ from deep_learning.engine import runner_extension_impl
 from deep_learning.engine import runner_impl
 from deep_learning.engine import screen_learning
 from qpylib import logging
+from qpylib import running_environment
 from qpylib import string
 from qpylib import t
 
@@ -157,9 +158,14 @@ class ScreenLearningPipeline:
     self._gym_env_name = gym_env_name
 
     self.env = screen_learning.ScreenGymEnvironment(gym.make(gym_env_name))
+    if running_environment.CheckAndForceGpuForTheRun():
+      model = screen_learning.CreateOriginalConvolutionModel(
+        action_space_size=self.env.GetActionSpaceSize())
+    else:
+      screen_learning.CreateConvolutionModel(
+        action_space_size=self.env.GetActionSpaceSize())
     self.qfunc = qfunc_impl.DQN_TargetNetwork(
-      model=screen_learning.CreateConvolutionModel(
-        action_space_size=self.env.GetActionSpaceSize()),
+      model=model,
       training_batch_size=DEFAULT_BATCH_SIZE,
       discount_factor=0.99,
     )
@@ -207,6 +213,7 @@ class ScreenLearningPipeline:
       save_video_to: saves the demo video for the run to a file of this
         name. It must ends with mp4.
     """
+    self.env.TurnOnRendering(should_render=True, fps=24)
     self.env.StartRecording(video_filename=save_video_to)
     runner_impl.NoOpRunner().Run(
       env=self.env,
@@ -214,6 +221,7 @@ class ScreenLearningPipeline:
       policy=policy_impl.GreedyPolicy(),
       num_of_episodes=num_of_episodes)
     self.env.StopRecording()
+    self.env.TurnOnRendering(should_render=False)
 
   def SaveWeights(self):
     """Saves weights to a "saved_models" sub-directory."""

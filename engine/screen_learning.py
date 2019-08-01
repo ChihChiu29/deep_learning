@@ -85,6 +85,8 @@ def CreateOriginalConvolutionModel(
 ) -> keras.Model:
   """Creates a convolution model suitable for screen based learning.
 
+  The model created by this function is very heavy for CPU training.
+
   This model uses parameters reported in:
     https://jaromiru.com/2016/11/07/lets-make-a-dqn-double-learning-and-prioritized-experience-replay/
   """
