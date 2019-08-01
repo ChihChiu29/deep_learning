@@ -14,6 +14,18 @@ from qpylib import logging
 from qpylib import numpy_util
 from qpylib import t
 
+# vlog convention (frequency is estimated over 1000 episodes):
+# 1: logs once per 1000 episodes.
+# 2: logs once per 500 episodes.
+# 3: logs once per 200 episodes.
+# 4: logs once per 200 episodes.
+# 5: logs once per 100 episodes.
+# 6: logs once per 50 episodes.
+# 7: logs once per 10 episodes.
+# 10: logs every episode.
+# 20: logs 1 line per step.
+# 25: logs <5 lines per step.
+
 DEFAULT_DISCOUNT_FACTOR = 0.99  # "gamma"
 DEFAULT_LEARNING_RATE = 0.9  # "alpha"
 
@@ -181,7 +193,7 @@ class QFunction(abc.ABC):
   ) -> QValues:
     """Gets the Q values for states, for all actions."""
     values = self._protected_GetValues(states)
-    logging.vlog(20, 'GET: (%s) -> %s', states, values)
+    logging.vlog(26, 'GET: (%s) -> %s', states, values)
     return values
 
   @abc.abstractmethod
@@ -218,7 +230,7 @@ class QFunction(abc.ABC):
     The number of states and values must equal. Values for all actions are
     set at the same time.
     """
-    logging.vlog(20, 'SET: (%s) <- %s', states, values)
+    logging.vlog(26, 'SET: (%s) <- %s', states, values)
     self._protected_SetValues(states, values)
 
   @abc.abstractmethod
@@ -415,7 +427,7 @@ class Runner(abc.ABC):
       step_idx = 0
       episode_reward = 0.0
       while True:
-        logging.vlog(15, 'Running episode: %d, step: %d', episode_idx, step_idx)
+        logging.vlog(20, 'Running episode: %d, step: %d', episode_idx, step_idx)
         tran = env.TakeAction(
           policy.Decide(
             env=env,
@@ -424,7 +436,7 @@ class Runner(abc.ABC):
             episode_idx=episode_idx,
             num_of_episodes=num_of_episodes,
           ))
-        logging.vlog(18, '%s', tran)
+        logging.vlog(26, '%s', tran)
         self._protected_ProcessTransition(
           qfunc=qfunc,
           transition=tran,
