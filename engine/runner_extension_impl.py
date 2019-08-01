@@ -185,6 +185,7 @@ class ModelSaver(q_base.RunnerExtension):
     if new_value < self._best_value:
       return
 
+    logging.vlog(6, 'saving model for new best value: %s', new_value)
     self._best_value = new_value
     qfunc.Save(self._save_filepath)
 
