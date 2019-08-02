@@ -8,7 +8,11 @@ from qpylib import running_environment
 
 def main(_):
   running_environment.ForceCpuForTheRun()
-  pipeline = shortcut.ScreenLearningPipeline(gym_env_name='MsPacman-v0')
+  pipeline = shortcut.ScreenLearningPipeline(
+    gym_env_name='MsPacman-v0',
+    use_ddqn=False,
+    use_large_model=True,
+  )
   pipeline.LoadWeights()
   pipeline.Demo()
 

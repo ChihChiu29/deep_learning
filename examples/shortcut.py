@@ -13,7 +13,6 @@ from deep_learning.engine import runner_extension_impl
 from deep_learning.engine import runner_impl
 from deep_learning.engine import screen_learning
 from qpylib import logging
-from qpylib import running_environment
 from qpylib import string
 from qpylib import t
 
@@ -147,6 +146,8 @@ class ScreenLearningPipeline:
       gym_env_name: t.Text,
       gym_env=None,
       report_every_num_of_episodes: int = 1,
+      use_ddqn: bool = True,
+      use_large_model: bool = True,
   ):
     """Ctor.
 
@@ -156,6 +157,9 @@ class ScreenLearningPipeline:
         gym_env_name is only used as a tag.
       report_every_num_of_episodes: do progress report every this number of
         episodes.
+      use_ddqn: whether to use DDQN or DQN_TargetNetwork.
+      use_large_model: whether to use the larger model. Without GPU it's very
+        slow to use it.
     """
     self._gym_env_name = gym_env_name
     if gym_env:
@@ -163,17 +167,29 @@ class ScreenLearningPipeline:
     else:
       env = gym.make(gym_env_name)
     self.env = screen_learning.ScreenGymEnvironment(env)
-    if running_environment.CheckAndForceGpuForTheRun():
-      model = screen_learning.CreateOriginalConvolutionModel(
-        action_space_size=self.env.GetActionSpaceSize())
+    if use_large_model:
+      model_pair = (
+        screen_learning.CreateOriginalConvolutionModel(
+          action_space_size=self.env.GetActionSpaceSize()),
+        screen_learning.CreateOriginalConvolutionModel(
+          action_space_size=self.env.GetActionSpaceSize()))
     else:
-      model = screen_learning.CreateConvolutionModel(
-        action_space_size=self.env.GetActionSpaceSize())
-    self.qfunc = qfunc_impl.DQN_TargetNetwork(
-      model=model,
-      training_batch_size=DEFAULT_BATCH_SIZE,
-      discount_factor=0.99,
-    )
+      model_pair = (
+        screen_learning.CreateConvolutionModel(
+          action_space_size=self.env.GetActionSpaceSize()),
+        screen_learning.CreateConvolutionModel(
+          action_space_size=self.env.GetActionSpaceSize()))
+    if use_ddqn:
+      self.qfunc = qfunc_impl.DDQN(
+        model_pair=model_pair,
+        training_batch_size=DEFAULT_BATCH_SIZE,
+        discount_factor=0.99,
+      )
+    else:
+      self.qfunc = qfunc_impl.DQN_TargetNetwork(
+        model=model_pair[0],
+        training_batch_size=DEFAULT_BATCH_SIZE,
+        discount_factor=0.99)
     logging.printf(
       'Using qfunc implementation: %s', string.GetClassName(self.qfunc))
     self.policy = policy_impl.GreedyPolicyWithDecreasingRandomness(
