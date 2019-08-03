@@ -154,18 +154,24 @@ class ModelSaver(q_base.RunnerExtension):
   def __init__(
       self,
       save_filepath: t.Text,
+      use_averaged_value_over_num_of_episodes: int = 10,
       use_rewards: bool = True,
   ):
     """Ctor.
 
     Args:
       save_filepath: model weights are saved to this file.
+      use_averaged_value_over_num_of_episodes: use value averaged over this
+        number of episodes as the criteria.
       use_rewards: use rewards or steps to identify the best model.
     """
     self._save_filepath = save_filepath
+    self._average_over_num_of_episodes = use_averaged_value_over_num_of_episodes
     self._use_rewards = use_rewards
 
-    # The best value; it could be reward or steps depending on the parameters.
+    # The value history and best value; they can be reward or steps
+    # depending on the parameters.
+    self._values = []
     self._best_value = -numpy.inf
 
   # @Override
@@ -178,10 +184,11 @@ class ModelSaver(q_base.RunnerExtension):
       episode_reward: float,
       steps: int):
     if self._use_rewards:
-      new_value = episode_reward
+      self._values.append(episode_reward)
     else:
-      new_value = steps
+      self._values.append(steps)
 
+    new_value = numpy.mean(self._values[-self._average_over_num_of_episodes:])
     if new_value < self._best_value:
       return
 

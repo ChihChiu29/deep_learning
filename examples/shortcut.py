@@ -208,7 +208,8 @@ class ScreenLearningPipeline:
     self._progress_tracer = runner_extension_impl.ProgressTracer(
       report_every_num_of_episodes=report_every_num_of_episodes)
     self._model_saver = runner_extension_impl.ModelSaver(
-      self._GetModelWeightsFilepath())
+      self._GetModelWeightsFilepath(),
+      use_averaged_value_over_num_of_episodes=report_every_num_of_episodes)
 
   def Train(self, num_of_episodes: int = 5000):
     """Starts a training run.

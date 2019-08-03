@@ -421,7 +421,7 @@ class Runner(abc.ABC):
     done. Between episodes, Report function is called to give user feedback.
     """
     for episode_idx in range(num_of_episodes):
-      logging.vlog(5, 'Running episode: %d', episode_idx)
+      logging.vlog(10, 'Running episode: %d', episode_idx)
 
       s = env.Reset()
       step_idx = 0
