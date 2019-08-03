@@ -19,6 +19,7 @@ from deep_learning.experimental import guided_environments
 from deep_learning.experimental import model_builder
 from qpylib import logging
 from qpylib import numpy_util
+from qpylib import running_environment
 
 __will_use = (
   gym,
@@ -31,6 +32,7 @@ __will_use = (
 
   logging,
   numpy_util,
+  running_environment,
 
   q_base,
   environment_impl,
