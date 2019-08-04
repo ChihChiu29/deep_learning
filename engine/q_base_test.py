@@ -4,8 +4,8 @@ from unittest import mock
 
 import numpy
 
+from deep_learning.engine import brain_impl
 from deep_learning.engine import q_base
-from deep_learning.engine import qfunc_impl
 from deep_learning.engine import runner_impl
 from qpylib import logging
 from qpylib import numpy_util
@@ -55,7 +55,7 @@ class QFunctionTest(unittest.TestCase):
   def setUp(self) -> None:
     # State space size is 3; Action space size is 2.
     # Learning from old values is disabled in the majority of tests.
-    self.qfunc = qfunc_impl.MemoizationQFunction(
+    self.qfunc = brain_impl.MemoizationQFunction(
       action_space_size=2,
       discount_factor=0.5,
       learning_rate=1.0,
@@ -183,7 +183,7 @@ class QFunctionTest(unittest.TestCase):
 
   def test_learningRate(self):
     # Disables learning from Q* to simplifies testing.
-    qfunc = qfunc_impl.MemoizationQFunction(
+    qfunc = brain_impl.MemoizationQFunction(
       action_space_size=2,
       discount_factor=0.0,
       learning_rate=0.9,

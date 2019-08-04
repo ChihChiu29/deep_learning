@@ -7,9 +7,9 @@ it's clear from the animation that the agent is learning.
 import gym
 from absl import app
 
+from deep_learning.engine import brain_impl
 from deep_learning.engine import environment_impl
 from deep_learning.engine import policy_impl
-from deep_learning.engine import qfunc_impl
 from deep_learning.engine import runner_impl
 from qpylib import logging
 
@@ -19,8 +19,8 @@ from qpylib import logging
 def main(_):
   batch_size = 64  # used in qfunc and runner.
   env = environment_impl.GymEnvironment(gym.make('Acrobot-v1'))
-  qfunc = qfunc_impl.DQN(
-    model=qfunc_impl.CreateModel(
+  qfunc = brain_impl.DQN(
+    model=brain_impl.CreateModel(
       state_shape=env.GetStateShape(),
       action_space_size=env.GetActionSpaceSize(),
       hidden_layer_sizes=(20, 20, 20)),

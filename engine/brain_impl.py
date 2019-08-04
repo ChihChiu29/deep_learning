@@ -371,6 +371,7 @@ def CreateModel(
 
   hidden_layer_sizes = tuple(hidden_layer_sizes)
   model = models.Sequential()
+
   if len(state_shape) > 1:
     model.add(layers.Flatten(input_shape=state_shape))
     for num_nodes in hidden_layer_sizes:
@@ -383,6 +384,7 @@ def CreateModel(
         input_dim=state_shape[0]))
     for num_nodes in hidden_layer_sizes[1:]:
       model.add(layers.Dense(units=num_nodes, activation=activation))
+
   model.add(layers.Dense(
     units=action_space_size, activation='linear'))
 

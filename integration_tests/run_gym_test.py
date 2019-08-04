@@ -3,11 +3,14 @@ import unittest
 
 import gym
 
+from deep_learning.engine import brain_impl
 from deep_learning.engine import environment_impl
 from deep_learning.engine import policy_impl
-from deep_learning.engine import qfunc_impl
 from deep_learning.engine import runner_impl
 from deep_learning.engine import screen_learning
+from qpylib import running_environment
+
+running_environment.ForceCpuForTheRun()
 
 
 class RunGymTest(unittest.TestCase):
@@ -39,7 +42,7 @@ class RunGymWithFullSetupTest(unittest.TestCase):
   @staticmethod
   def _RunEnv(gym_env):
     env = environment_impl.GymEnvironment(gym_env)
-    qfunc = qfunc_impl.RandomValueQFunction(
+    qfunc = brain_impl.RandomValueQFunction(
       action_space_size=env.GetActionSpaceSize())
     env.Reset()
     policy = policy_impl.GreedyPolicyWithRandomness(epsilon=1.0)
@@ -66,7 +69,7 @@ class RunScreenGymWithFullSetupTest(unittest.TestCase):
   @staticmethod
   def _RunEnv(gym_env):
     env = screen_learning.ScreenGymEnvironment(gym_env)
-    qfunc = qfunc_impl.DQN_TargetNetwork(
+    qfunc = brain_impl.DQN_TargetNetwork(
       model=screen_learning.CreateConvolutionModel(
         action_space_size=env.GetActionSpaceSize()))
     policy = policy_impl.GreedyPolicyWithRandomness(epsilon=1.0)

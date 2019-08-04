@@ -3,10 +3,13 @@ import unittest
 
 import gym
 
+from deep_learning.engine import brain_impl
 from deep_learning.engine import environment_impl
 from deep_learning.engine import policy_impl
-from deep_learning.engine import qfunc_impl
 from deep_learning.engine import runner_impl
+from qpylib import running_environment
+
+running_environment.ForceCpuForTheRun()
 
 
 class E2E_MemoizationQFunctionTest(unittest.TestCase):
@@ -16,7 +19,7 @@ class E2E_MemoizationQFunctionTest(unittest.TestCase):
   def _RunEnv(gym_env):
     env = environment_impl.GymEnvironment(gym_env)
     env.SetGymEnvMaxEpisodeSteps(10)
-    qfunc = qfunc_impl.MemoizationQFunction(
+    qfunc = brain_impl.MemoizationQFunction(
       action_space_size=env.GetActionSpaceSize())
     env.Reset()
     policy = policy_impl.GreedyPolicyWithRandomness(epsilon=1.0)
@@ -47,8 +50,8 @@ class E2E_DQNTest(unittest.TestCase):
   def _RunEnv(gym_env):
     env = environment_impl.GymEnvironment(gym_env)
     env.SetGymEnvMaxEpisodeSteps(10)
-    qfunc = qfunc_impl.DQN(
-      model=qfunc_impl.CreateModel(
+    qfunc = brain_impl.DQN(
+      model=brain_impl.CreateModel(
         state_shape=env.GetStateShape(),
         action_space_size=env.GetActionSpaceSize(),
         hidden_layer_sizes=(4,),

@@ -3,15 +3,15 @@ import unittest
 
 import numpy
 
+from deep_learning.engine import brain_impl
 from deep_learning.engine import q_base
-from deep_learning.engine import qfunc_impl
 from deep_learning.engine import runner_impl
 
 
 class ExperienceReplayRunnerTest(unittest.TestCase):
 
   def test_memoryManagement(self):
-    qfunc = qfunc_impl.RandomValueQFunction(action_space_size=2)
+    qfunc = brain_impl.RandomValueQFunction(action_space_size=2)
     runner = runner_impl.ExperienceReplayRunner(
       experience_capacity=1,
       experience_sample_batch_size=1,
