@@ -1,9 +1,9 @@
 """Tests that implementations in engine package are runnable."""
 import unittest
 
-from deep_learning.engine import brain_impl
 from deep_learning.engine import environment_impl
 from deep_learning.engine import policy_impl
+from deep_learning.engine import qfunc_impl
 from deep_learning.engine import runner_impl
 from qpylib import running_environment
 
@@ -15,7 +15,7 @@ class RunnerTest(unittest.TestCase):
   def setUp(self) -> None:
     self.env = environment_impl.SingleStateEnvironment(
       action_space_size=1, step_limit=10)
-    self.qfunc = brain_impl.MemoizationBrain(
+    self.qfunc = qfunc_impl.MemoizationQFunction(
       action_space_size=3,
       discount_factor=0.9,
       learning_rate=0.9)
@@ -40,7 +40,7 @@ class PolicyTest(unittest.TestCase):
   def setUp(self) -> None:
     self.env = environment_impl.SingleStateEnvironment(
       action_space_size=1, step_limit=10)
-    self.qfunc = brain_impl.MemoizationBrain(
+    self.qfunc = qfunc_impl.MemoizationQFunction(
       action_space_size=3,
       discount_factor=0.9,
       learning_rate=0.9)

@@ -6,9 +6,9 @@ import os
 
 import gym
 
-from deep_learning.engine import brain_impl
 from deep_learning.engine import environment_impl
 from deep_learning.engine import policy_impl
+from deep_learning.engine import qfunc_impl
 from deep_learning.engine import runner_extension_impl
 from deep_learning.engine import runner_impl
 from deep_learning.engine import screen_learning
@@ -53,13 +53,13 @@ class StateLearningPipeline:
     self._model_shape = tuple(model_shape)
 
     self.env = environment_impl.GymEnvironment(gym.make(gym_env_name))
-    self.qfunc = brain_impl.DDQN(
+    self.qfunc = qfunc_impl.DDQN(
       model_pair=(
-        brain_impl.CreateModel(
+        qfunc_impl.CreateModel(
           state_shape=self.env.GetStateShape(),
           action_space_size=self.env.GetActionSpaceSize(),
           hidden_layer_sizes=model_shape),
-        brain_impl.CreateModel(
+        qfunc_impl.CreateModel(
           state_shape=self.env.GetStateShape(),
           action_space_size=self.env.GetActionSpaceSize(),
           hidden_layer_sizes=model_shape)),
@@ -180,13 +180,13 @@ class ScreenLearningPipeline:
         screen_learning.CreateConvolutionModel(
           action_space_size=self.env.GetActionSpaceSize()))
     if use_ddqn:
-      self.qfunc = brain_impl.DDQN(
+      self.qfunc = qfunc_impl.DDQN(
         model_pair=model_pair,
         training_batch_size=DEFAULT_BATCH_SIZE,
         discount_factor=0.99,
       )
     else:
-      self.qfunc = brain_impl.DQN_TargetNetwork(
+      self.qfunc = qfunc_impl.DQN_TargetNetwork(
         model=model_pair[0],
         training_batch_size=DEFAULT_BATCH_SIZE,
         discount_factor=0.99)

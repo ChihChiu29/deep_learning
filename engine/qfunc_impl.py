@@ -17,7 +17,7 @@ _DEFAULT_ACTIVATION = 'relu'
 _DEFAULT_TRAINING_BATCH_SIZE = 64
 
 
-class RandomBrain(q_base.QFunction):
+class RandomQFunction(q_base.QFunction):
   """QFunction that returns random value upon read, and write is no-op."""
 
   def __init__(
@@ -53,7 +53,7 @@ class RandomBrain(q_base.QFunction):
     pass
 
 
-class MemoizationBrain(q_base.QFunction):
+class MemoizationQFunction(q_base.QFunction):
   """Brain that uses memoization."""
 
   def __init__(

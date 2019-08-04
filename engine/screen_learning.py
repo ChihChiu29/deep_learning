@@ -13,9 +13,9 @@ from keras import layers
 from keras import models
 from keras import optimizers
 
-from deep_learning.engine import brain_impl
 from deep_learning.engine import environment_impl
 from deep_learning.engine import q_base
+from deep_learning.engine import qfunc_impl
 from qpylib import t
 
 IMAGE_STACK = 2
@@ -91,7 +91,7 @@ def CreateOriginalConvolutionModel(
     https://jaromiru.com/2016/11/07/lets-make-a-dqn-double-learning-and-prioritized-experience-replay/
   """
   if optimizer is None:
-    optimizer = brain_impl.CreateDefaultOptimizer()
+    optimizer = qfunc_impl.CreateDefaultOptimizer()
 
   model = models.Sequential()
   model.add(layers.Conv2D(
@@ -125,7 +125,7 @@ def CreateConvolutionModel(
 ) -> keras.Model:
   """Creates a convolution model suitable for screen based learning."""
   if optimizer is None:
-    optimizer = brain_impl.CreateDefaultOptimizer()
+    optimizer = qfunc_impl.CreateDefaultOptimizer()
 
   model = models.Sequential()
   model.add(layers.Conv2D(

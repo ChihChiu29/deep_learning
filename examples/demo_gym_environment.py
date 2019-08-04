@@ -2,16 +2,16 @@
 import gym
 from absl import app
 
-from deep_learning.engine import brain_impl
 from deep_learning.engine import environment_impl
 from deep_learning.engine import policy_impl
+from deep_learning.engine import qfunc_impl
 from deep_learning.engine import runner_impl
 
 
 def main(_):
   env = environment_impl.GymEnvironment(gym.make('Seaquest-v0'))
   env.TurnOnRendering(should_render=True, fps=24)
-  qfunc = brain_impl.RandomBrain(
+  qfunc = qfunc_impl.RandomQFunction(
     action_space_size=env.GetActionSpaceSize())
   policy = policy_impl.GreedyPolicyWithRandomness(epsilon=1.0)
   runner = runner_impl.NoOpRunner()

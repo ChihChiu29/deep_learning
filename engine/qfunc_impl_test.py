@@ -1,18 +1,18 @@
-"""Unit tests for brain_impl.py."""
+"""Unit tests for qfunc_impl.py."""
 import tempfile
 import unittest
 
 import numpy
 
-from deep_learning.engine import brain_impl
 from deep_learning.engine import q_base
+from deep_learning.engine import qfunc_impl
 from qpylib import numpy_util
 
 
 class RandomValueQFunctionTest(unittest.TestCase):
 
   def test_getValues(self):
-    qfunc = brain_impl.RandomBrain(action_space_size=3)
+    qfunc = qfunc_impl.RandomQFunction(action_space_size=3)
 
     self.assertEqual(
       (2, 3), qfunc.GetValues(numpy.array([[1, 2, 3], [4, 5, 6]])).shape)
@@ -25,7 +25,7 @@ class MemoizationQFunctionTest(unittest.TestCase):
 
   def setUp(self) -> None:
     # State space size is 3; Action space size is 2.
-    self.qfunc = brain_impl.MemoizationBrain(action_space_size=2)
+    self.qfunc = qfunc_impl.MemoizationQFunction(action_space_size=2)
 
     self.states = numpy.array([
       [1, 2, 3],
@@ -46,7 +46,7 @@ class MemoizationQFunctionTest(unittest.TestCase):
     tmp_file = tempfile.NamedTemporaryFile().name
     self.qfunc._SetValues(self.states, self.values)
     self.qfunc.Save(tmp_file)
-    qfunc = brain_impl.MemoizationBrain(action_space_size=2)
+    qfunc = qfunc_impl.MemoizationQFunction(action_space_size=2)
     qfunc.Load(tmp_file)
 
     self.assertCountEqual(qfunc._storage.keys(), self.qfunc._storage.keys())
@@ -60,8 +60,8 @@ class DQNTest(unittest.TestCase):
 
   def setUp(self) -> None:
     # State space size is 3; Action space size is 2.
-    self.qfunc = brain_impl.DQN(
-      model=brain_impl.CreateModel(
+    self.qfunc = qfunc_impl.DQN(
+      model=qfunc_impl.CreateModel(
         state_shape=(3,),
         action_space_size=2,
         hidden_layer_sizes=(6, 4),
@@ -92,8 +92,8 @@ class DQNTest(unittest.TestCase):
     tmp_file = tempfile.NamedTemporaryFile().name
     self.qfunc._SetValues(self.states, self.values)
     self.qfunc.Save(tmp_file)
-    qfunc = brain_impl.DQN(
-      model=brain_impl.CreateModel(
+    qfunc = qfunc_impl.DQN(
+      model=qfunc_impl.CreateModel(
         state_shape=(3,),
         action_space_size=2,
         hidden_layer_sizes=(6, 4),
@@ -108,8 +108,8 @@ class DQN_TargetNetwork_Test(unittest.TestCase):
 
   def setUp(self) -> None:
     # State space size is 3; Action space size is 2.
-    self.qfunc = brain_impl.DQN_TargetNetwork(
-      model=brain_impl.CreateModel(
+    self.qfunc = qfunc_impl.DQN_TargetNetwork(
+      model=qfunc_impl.CreateModel(
         state_shape=(3,),
         action_space_size=2,
         hidden_layer_sizes=(6, 4),
@@ -149,14 +149,14 @@ class DDQNTest(unittest.TestCase):
 
   def setUp(self) -> None:
     # State space size is 3; Action space size is 2.
-    self.qfunc = brain_impl.DDQN(
+    self.qfunc = qfunc_impl.DDQN(
       model_pair=(
-        brain_impl.CreateModel(
+        qfunc_impl.CreateModel(
           state_shape=(3,),
           action_space_size=2,
           hidden_layer_sizes=(3,),
         ),
-        brain_impl.CreateModel(
+        qfunc_impl.CreateModel(
           state_shape=(3,),
           action_space_size=2,
           hidden_layer_sizes=(3,),
@@ -234,14 +234,14 @@ class DDQNTest(unittest.TestCase):
     tmp_file = tempfile.NamedTemporaryFile().name
     self.qfunc._SetValues(self.states, self.values)
     self.qfunc.Save(tmp_file)
-    qfunc = brain_impl.DDQN(
+    qfunc = qfunc_impl.DDQN(
       model_pair=(
-        brain_impl.CreateModel(
+        qfunc_impl.CreateModel(
           state_shape=(3,),
           action_space_size=2,
           hidden_layer_sizes=(3,),
         ),
-        brain_impl.CreateModel(
+        qfunc_impl.CreateModel(
           state_shape=(3,),
           action_space_size=2,
           hidden_layer_sizes=(3,),
