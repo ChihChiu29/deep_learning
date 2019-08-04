@@ -175,7 +175,7 @@ class DDQNTest(unittest.TestCase):
   def test_updateValues_swapModels(self):
     q1 = self.qfunc._q1
     q2 = self.qfunc._q2
-    self.qfunc.UpdateValues([q_base.Transition(
+    self.qfunc.UpdateFromTransitions([q_base.Transition(
       s=numpy.array([[1, 2, 3]]),
       a=numpy.array([[1, 0]]),
       r=1.0,
@@ -194,28 +194,33 @@ class DDQNTest(unittest.TestCase):
     )]
     states, actions, target_action_values = None, None, None
     for _ in range(100):
-      states, actions, target_action_values = self.qfunc.UpdateValues(trans)
+      states, actions, target_action_values = self.qfunc.UpdateFromTransitions(
+        trans)
 
     error1_1 = numpy.sum(numpy.abs(
       self.qfunc.GetActionValues(self.qfunc.GetValues(states), actions) -
       target_action_values))
-    states, actions, target_action_values = self.qfunc.UpdateValues(trans)
+    states, actions, target_action_values = self.qfunc.UpdateFromTransitions(
+      trans)
     error1_2 = numpy.sum(numpy.abs(
       self.qfunc.GetActionValues(self.qfunc.GetValues(states), actions) -
       target_action_values))
     # Needs this to swap back q1 and q2.
-    states, actions, target_action_values = self.qfunc.UpdateValues(trans)
+    states, actions, target_action_values = self.qfunc.UpdateFromTransitions(
+      trans)
 
     # Since an even number of iterations was used in the first loop, an even
     # number must be used here as well to make sure it's the same model that's
     # being compared.
     for _ in range(100):
-      states, actions, target_action_values = self.qfunc.UpdateValues(trans)
+      states, actions, target_action_values = self.qfunc.UpdateFromTransitions(
+        trans)
 
     error2_1 = numpy.sum(numpy.abs(
       self.qfunc.GetActionValues(self.qfunc.GetValues(states), actions) -
       target_action_values))
-    states, actions, target_action_values = self.qfunc.UpdateValues(trans)
+    states, actions, target_action_values = self.qfunc.UpdateFromTransitions(
+      trans)
     error2_2 = numpy.sum(numpy.abs(
       self.qfunc.GetActionValues(self.qfunc.GetValues(states), actions) -
       target_action_values))

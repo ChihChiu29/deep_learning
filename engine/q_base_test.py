@@ -65,7 +65,7 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
         [0.8, 0.9],
       ]))
 
-    self.qfunc.UpdateValues([q_base.Transition(
+    self.qfunc.UpdateFromTransitions([q_base.Transition(
       s=numpy.array([[1, 2, 3]]),
       a=numpy.array([[0, 1]]),
       r=1.0,
@@ -92,7 +92,7 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
         [0.8, 0.9],
       ]))
 
-    self.qfunc.UpdateValues([
+    self.qfunc.UpdateFromTransitions([
       q_base.Transition(
         s=numpy.array([[1, 2, 3]]),
         a=numpy.array([[0, 1]]),
@@ -127,7 +127,7 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
         [0.3, 0.7],
       ]))
 
-    self.qfunc.UpdateValues([q_base.Transition(
+    self.qfunc.UpdateFromTransitions([q_base.Transition(
       s=numpy.array([[1, 2, 3]]),
       a=numpy.array([[0, 1]]),
       r=1.0,
@@ -157,7 +157,7 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
         [0.5, 0.6],
         [0.3, 0.7],
       ]))
-    qfunc.UpdateValues([q_base.Transition(
+    qfunc.UpdateFromTransitions([q_base.Transition(
       s=numpy.array([[1, 2, 3]]),
       a=numpy.array([[0, 1]]),
       r=1.0,

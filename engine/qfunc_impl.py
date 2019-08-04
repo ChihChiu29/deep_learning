@@ -306,7 +306,7 @@ class DDQN(q_base.QFunction):
       states, values, batch_size=self._training_batch_size, verbose=0)
 
   # @Override
-  def UpdateValues(
+  def UpdateFromTransitions(
       self,
       transitions: t.Iterable[q_base.Transition],
   ) -> t.Tuple[q_base.States, q_base.Actions, q_base.ActionValues]:

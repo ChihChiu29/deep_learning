@@ -45,7 +45,7 @@ Actions = numpy.ndarray
 
 # A value is a 1 x k vector, and the i-th component is the value for
 # the i-th action (all values are for the same state). An example of value is
-# the value of a Q-function.
+# the value of a Q-function for a given state.
 Value = numpy.ndarray
 
 # An m x k numpy array holding m values.
@@ -163,8 +163,89 @@ class Brain(abc.ABC):
       self,
       states: States,
   ) -> Values:
-    """Gets the Q values for states, for all actions."""
+    """Gets the values for states, for all actions.
+
+    For a given value, the index that has the largest value is the choice of
+    the best action.
+    """
     pass
+
+  def GetActionValues(
+      self,
+      values: Values,
+      actions: Actions,
+  ) -> ActionValues:
+    """Gets values for (state, action) pairs from values.
+
+    The numbers of states and actions must equal. You should call GetValues
+    to get the Q values. It is not done here automatically so that GetValues
+    calls can be grouped for efficiency.
+    """
+    return numpy_util.SelectReduce(values, actions)
+
+  @abc.abstractmethod
+  def UpdateFromTransitions(
+      self,
+      transitions: t.Iterable[Transition],
+  ) -> t.Tuple[States, Actions, ActionValues]:
+    """Updates brain from a set of transitions.
+
+    Notes when there are multiple transitions from the same state
+    (different actions), there is a conflict since the values for other actions
+    for each transition is read from the current QFunction before update.
+
+    Args:
+      transitions: an iterable of transitions to update values from.
+
+    Returns:
+      A tuple of (states, actions, target_action_values).
+    """
+    pass
+
+  def CombineTransitions(
+      self,
+      transitions: t.Iterable[Transition],
+  ) -> t.Tuple[States, Actions, Rewards, States, numpy.ndarray]:
+    """Groups properties in transitions into arrays.
+
+    State, action, reward, and new_state are all grouped into numpy arrays.
+    A new numpy array that has the same shape of rewards is also generated
+
+    Args:
+      transitions: an iterable of transitions.
+
+    Returns:
+      A tuple of (states, actions, rewards, new_states, reward_mask).
+      states: stacked states from all transitions.
+      actions: stacked actions from all transitions.
+      rewards: stacked rewards from all transitions.
+      new_states: stacked new_states from all transitions. If a new_state is
+        None, state from the same transition is used.
+      reward_mask: an array having the same shape of rewards. Its i-th
+        component is 1 if the corresponding new_state is not None, otherwise 0.
+    """
+    s_list = []  # type: t.List[State]
+    a_list = []  # type: t.List[Action]
+    r_list = []  # type: t.List[Reward]
+    sp_list = []  # type: t.List[State]
+    r_mask_list = []  # type: t.List[int]
+    for idx, transition in enumerate(transitions):
+      s_list.append(transition.s)
+      a_list.append(transition.a)
+      r_list.append(transition.r)
+      if transition.sp is not None:
+        sp_list.append(transition.sp)
+        r_mask_list.append(0)
+      else:
+        sp_list.append(transition.s)
+        r_mask_list.append(1)
+    return (
+      numpy.concatenate(s_list),
+      numpy.concatenate(a_list),
+      numpy.array(r_list),
+      numpy.concatenate(sp_list),
+      numpy.array(r_mask_list),
+    )
 
   @abc.abstractmethod
   def Save(self, filepath: t.Text) -> None:
@@ -205,6 +286,7 @@ class QFunction(Brain, abc.ABC):
       learning_rate if learning_rate is not None
       else DEFAULT_LEARNING_RATE)
 
+  # @ Override
   def GetValues(
       self,
       states: States,
@@ -221,19 +303,6 @@ class QFunction(Brain, abc.ABC):
   ) -> Values:
     """Gets the Q values for states, for all actions."""
     pass
-
-  def GetActionValues(
-      self,
-      values: Values,
-      actions: Actions,
-  ) -> ActionValues:
-    """Gets Q values for (state, action) pairs from Q values.
-
-    The numbers of states and actions must equal. You should call GetValues
-    to get the Q values. It is not done here automatically so that GetValues
-    calls can be grouped for efficiency.
-    """
-    return numpy_util.SelectReduce(values, actions)
 
   def _SetValues(
       self,
@@ -299,7 +368,8 @@ class QFunction(Brain, abc.ABC):
     self._SetValues(states, numpy_util.Replace(values, actions, action_values))
     return states, actions, action_values
 
-  def UpdateValues(
+  # @Override
+  def UpdateFromTransitions(
       self,
       transitions: t.Iterable[Transition],
   ) -> t.Tuple[States, Actions, ActionValues]:
