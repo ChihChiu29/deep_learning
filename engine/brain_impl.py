@@ -14,7 +14,6 @@ from qpylib import numpy_util
 from qpylib import t
 
 _DEFAULT_ACTIVATION = 'relu'
-
 _DEFAULT_TRAINING_BATCH_SIZE = 64
 
 
@@ -309,17 +308,11 @@ class DDQN(q_base.QFunction):
   def UpdateFromTransitions(
       self,
       transitions: t.Iterable[q_base.Transition],
-  ) -> t.Tuple[q_base.States, q_base.Actions, q_base.ActionValues]:
+  ) -> None:
     """Update Q-values using the given set of transitions.
 
     The iteration equation only calls interface methods to get values from
     self._q1. Reading from self._q2 is done directly.
-
-    Args:
-      transitions: an iterable of transitions to update values from.
-
-    Returns:
-      The target action values to update to.
     """
     states, actions, rewards, new_states, reward_mask = (
       self.CombineTransitions(transitions))
@@ -336,8 +329,6 @@ class DDQN(q_base.QFunction):
       states, actions, learn_new_action_values)
 
     self._SwapModels()
-
-    return target_action_values
 
   def _SwapModels(self):
     tmp = self._q1

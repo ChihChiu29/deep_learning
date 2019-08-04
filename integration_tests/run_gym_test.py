@@ -48,7 +48,7 @@ class RunGymWithFullSetupTest(unittest.TestCase):
     policy = policy_impl.GreedyPolicyWithRandomness(epsilon=1.0)
 
     runner_impl.SimpleRunner().Run(
-      env=env, qfunc=qfunc, policy=policy, num_of_episodes=10)
+      env=env, qfunc=qfunc, policy=policy, num_of_episodes=2)
 
   def test_CartPole(self):
     self._RunEnv(gym.make('CartPole-v0'))
@@ -75,7 +75,7 @@ class RunScreenGymWithFullSetupTest(unittest.TestCase):
     policy = policy_impl.GreedyPolicyWithRandomness(epsilon=1.0)
 
     runner_impl.SimpleRunner().Run(
-      env=env, qfunc=qfunc, policy=policy, num_of_episodes=10)
+      env=env, qfunc=qfunc, policy=policy, num_of_episodes=2)
 
   def test_Seaquest(self):
     self._RunEnv(gym.make('Seaquest-v0'))

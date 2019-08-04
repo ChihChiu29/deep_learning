@@ -187,18 +187,12 @@ class Brain(abc.ABC):
   def UpdateFromTransitions(
       self,
       transitions: t.Iterable[Transition],
-  ) -> t.Tuple[States, Actions, ActionValues]:
+  ) -> None:
     """Updates brain from a set of transitions.
 
     Notes when there are multiple transitions from the same state
     (different actions), there is a conflict since the values for other actions
     for each transition is read from the current QFunction before update.
-
-    Args:
-      transitions: an iterable of transitions to update values from.
-
-    Returns:
-      A tuple of (states, actions, target_action_values).
     """
     pass
 
@@ -372,18 +366,12 @@ class QFunction(Brain, abc.ABC):
   def UpdateFromTransitions(
       self,
       transitions: t.Iterable[Transition],
-  ) -> t.Tuple[States, Actions, ActionValues]:
+  ) -> None:
     """Update Q-values using the given set of transitions.
 
     Notes when there are multiple transitions from the same state
     (different actions), there is a conflict since the values for other actions
     for each transition is read from the current QFunction before update.
-
-    Args:
-      transitions: an iterable of transitions to update values from.
-
-    Returns:
-      The tuple of (states, actions, target_action_values).
     """
     states, actions, rewards, new_states, reward_mask = (
       self.CombineTransitions(transitions))
@@ -396,13 +384,13 @@ class QFunction(Brain, abc.ABC):
     if self._alpha < 0.9999999:
       values = self.GetValues(states)
       old_action_values = self.GetActionValues(values, actions)
-      return self._SetActionValues(
+      self._SetActionValues(
         states, actions,
         ((1.0 - self._alpha) * old_action_values
          + self._alpha * learn_new_action_values),
         values=values)
     else:
-      return self._SetActionValues(states, actions, learn_new_action_values)
+      self._SetActionValues(states, actions, learn_new_action_values)
 
 
 class Policy(abc.ABC):

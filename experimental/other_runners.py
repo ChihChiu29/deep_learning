@@ -30,14 +30,15 @@ class PrioritizedExperienceReplayRunner(q_base.Runner):
       transition: q_base.Transition,
       step_idx: int,
   ) -> None:
-    states, actions, action_values = brain.UpdateValues([transition])
-    err = numpy.sum(numpy.abs(
-      brain.GetActionValues(brain.GetValues(states), actions) - action_values))
-    self._experience.AddTransition(transition, float(err))
-
-    if step_idx % self._train_every_n_steps == 0:
-      brain.UpdateValues(
-        self._experience.Sample(self._experience_sample_batch_size))
+    # states, actions, action_values = brain.UpdateValues([transition])
+    # err = numpy.sum(numpy.abs(
+    #   brain.GetActionValues(brain.GetValues(states), actions) - action_values))
+    # self._experience.AddTransition(transition, float(err))
+    #
+    # if step_idx % self._train_every_n_steps == 0:
+    #   brain.UpdateValues(
+    #     self._experience.Sample(self._experience_sample_batch_size))
+    pass
 
   def SampleFromHistory(self, size: int) -> t.Iterable[q_base.Transition]:
     """Samples a set of transitions from experience history."""

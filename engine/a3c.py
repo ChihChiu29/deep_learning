@@ -13,6 +13,10 @@ from deep_learning.engine import q_base
 from deep_learning.engine.q_base import Values
 from qpylib import t
 
+_DEFAULT_DISCOUNT_FACTOR = 0.99
+_DEFAULT_LOSS_V = .5  # v loss coefficient
+_DEFAULT_LOSS_ENTROPY = .01  # entropy coefficient
+
 
 class A3C(q_base.Brain):
   """A A3C brain."""
@@ -20,7 +24,10 @@ class A3C(q_base.Brain):
   def __init__(
       self,
       model: keras.Model,
-
+      optimizer: tensorflow.train.Optimizer = None,
+      discount_factor: float = _DEFAULT_DISCOUNT_FACTOR,
+      loss_v: float = _DEFAULT_LOSS_V,
+      loss_entropy: float = _DEFAULT_LOSS_ENTROPY,
   ):
     """Ctor.
 
@@ -28,6 +35,10 @@ class A3C(q_base.Brain):
       model: a model that
     """
     self._model = model
+    self._optimizer = optimizer if optimizer else CreateDefaultOptimizer()
+    self._gamma = discount_factor
+    self._loss_v = loss_v
+    self._loss_entropy = loss_entropy
 
     self._state_shape = self._model.layers[0].input_shape[1:]
     output_shape = self._model.layers[-2].output_shape[1:]  # type: t.Tuple[int]
@@ -50,79 +61,59 @@ class A3C(q_base.Brain):
       self,
       states: q_base.States,
   ) -> Values:
-    pass
+    pi_values, v = self._model.predict(states)
+    return pi_values
 
   # @Override
   def UpdateFromTransitions(
       self,
       transitions: t.Iterable[q_base.Transition],
-  ) -> t.Tuple[q_base.States, q_base.Actions, q_base.ActionValues]:
-    pass
+  ) -> None:
+    states, actions, rewards, new_states, reward_mask = (
+      self.CombineTransitions(transitions))
+
+    pi_values, values = self._model.predict(states)
+    rewards = rewards + self._gamma * values * reward_mask
+
+    s_input, a_input, r_input, minimize = self._graph
+    self.session.run(
+      minimize, feed_dict={s_input: states, a_input: actions, r_input: rewards})
 
   # @Override
   def Save(self, filepath: t.Text) -> None:
-    pass
+    self._model.save_weights(filepath)
 
   # @Override
   def Load(self, filepath: t.Text) -> None:
-    pass
+    self._model.load_weights(filepath)
 
   def _BuildGraph(self, model):
-    s_t = tensorflow.placeholder(tensorflow.float32, shape=self._state_shape)
-    a_t = tensorflow.placeholder(
+    s = tensorflow.placeholder(tensorflow.float32, shape=self._state_shape)
+    a = tensorflow.placeholder(
       tensorflow.float32, shape=(None, self._action_space_size))
-    r_t = tensorflow.placeholder(tensorflow.float32, shape=(None, 1))
+    r = tensorflow.placeholder(tensorflow.float32, shape=(None, 1))
 
-    p, v = model(s_t)
+    pi_values, v = model(s)
 
     log_prob = tensorflow.log(
-      tensorflow.reduce_sum(p * a_t, axis=1, keep_dims=True) + 1e-10)
-    advantage = r_t - v
+      tensorflow.reduce_sum(pi_values * a, axis=1, keep_dims=True) + 1e-10)
+    advantage = r - v
 
-    loss_policy = - log_prob * tensorflow.stop_gradient(
-      advantage)  # maximize policy
-    loss_value = LOSS_V * tensorflow.square(advantage)  # minimize value error
-    entropy = LOSS_ENTROPY * tensorflow.reduce_sum(
-      p * tensorflow.log(p + 1e-10), axis=1,
-      keep_dims=True)  # maximize entropy (regularization)
+    # maximize policy
+    loss_policy = - log_prob * tensorflow.stop_gradient(advantage)
+    # minimize value error
+    loss_value = self._loss_v * tensorflow.square(advantage)
+    # maximize entropy (regularization)
+    entropy = self._loss_entropy * tensorflow.reduce_sum(
+      pi_values * tensorflow.log(pi_values + 1e-10), axis=1,
+      keep_dims=True)
 
     loss_total = tensorflow.reduce_mean(loss_policy + loss_value + entropy)
-
-    optimizer = tensorflow.train.RMSPropOptimizer(LEARNING_RATE, decay=.99)
-    minimize = optimizer.minimize(loss_total)
-
-    return s_t, a_t, r_t, minimize
-
-  def optimize(self):
-    if len(self.train_queue[0]) < MIN_BATCH:
-      time.sleep(0)  # yield
-      return
-
-    with self.lock_queue:
-      if len(self.train_queue[
-               0]) < MIN_BATCH:  # more thread could have passed without lock
-        return  # we can't yield inside lock
-
-      s, a, r, s_, s_mask = self.train_queue
-      self.train_queue = [[], [], [], [], []]
-
-    s = np.vstack(s)
-    a = np.vstack(a)
-    r = np.vstack(r)
-    s_ = np.vstack(s_)
-    s_mask = np.vstack(s_mask)
-
-    if len(s) > 5 * MIN_BATCH: print(
-      "Optimizer alert! Minimizing batch of %d" % len(s))
-
-    v = self.predict_v(s_)
-    r = r + GAMMA_N * v * s_mask  # set v to 0 where s_ is terminal state
-
-    s_t, a_t, r_t, minimize = self.graph
-    self.session.run(minimize, feed_dict={s_t: s, a_t: a, r_t: r})
+    minimize = self._optimizer.minimize(loss_total)
+    return s, a, r, minimize
 
 
-def BuildModel(
+def CreateModel(
     state_shape: t.Sequence[int],
     action_space_size: int,
     hidden_layer_sizes: t.Iterable[int],
@@ -159,3 +150,8 @@ def BuildModel(
   model = keras.Model(inputs=[l_input], outputs=[out_pi, out_v])
 
   return model
+
+
+def CreateDefaultOptimizer() -> tensorflow.train.Optimizer:
+  """Creates a default optimizer."""
+  return tensorflow.train.RMSPropOptimizer(5e-3, decay=.99)
