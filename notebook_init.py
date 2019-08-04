@@ -7,9 +7,9 @@ from keras import layers
 from keras import models
 from keras import optimizers
 
+from deep_learning.engine import base
 from deep_learning.engine import environment_impl
 from deep_learning.engine import policy_impl
-from deep_learning.engine import q_base
 from deep_learning.engine import qfunc_impl
 from deep_learning.engine import runner_extension_impl
 from deep_learning.engine import runner_impl
@@ -34,7 +34,7 @@ __will_use = (
   numpy_util,
   running_environment,
 
-  q_base,
+  base,
   environment_impl,
   policy_impl,
   qfunc_impl,

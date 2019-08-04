@@ -1,14 +1,14 @@
 """A collection of modified environments that give the agent more guidance."""
 import gym
 
+from deep_learning.engine import base
 from deep_learning.engine import environment_impl
-from deep_learning.engine import q_base
-from deep_learning.engine.q_base import Action
-from deep_learning.engine.q_base import State
-from deep_learning.engine.q_base import Transition
+from deep_learning.engine.base import Action
+from deep_learning.engine.base import State
+from deep_learning.engine.base import Transition
 
 
-class GuidedMountainCar(q_base.Environment):
+class GuidedMountainCar(base.Environment):
   """A modified environment that have more ways to give rewards.
 
   The Gym environment does not give positive reward when the car is at the

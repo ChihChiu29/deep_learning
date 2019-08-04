@@ -13,8 +13,8 @@ from keras import layers
 from keras import models
 from keras import optimizers
 
+from deep_learning.engine import base
 from deep_learning.engine import environment_impl
-from deep_learning.engine import q_base
 from deep_learning.engine import qfunc_impl
 from qpylib import t
 
@@ -42,13 +42,13 @@ class ScreenGymEnvironment(environment_impl.GymEnvironment):
     return IMAGE_STACK, IMAGE_WIDTH, IMAGE_HEIGHT
 
   # @Override
-  def Reset(self) -> q_base.State:
+  def Reset(self) -> base.State:
     img = self._ProcessStateImage(super().Reset())
     self._current_stacked_img = numpy.array([img, img])
     return self._StackedImg2State(self._current_stacked_img)
 
   # @Override
-  def TakeAction(self, action: q_base.Action) -> q_base.Transition:
+  def TakeAction(self, action: base.Action) -> base.Transition:
     tran = super().TakeAction(action)
     tran.s = self._StackedImg2State(self._current_stacked_img)
     if tran.sp is not None:
@@ -62,7 +62,7 @@ class ScreenGymEnvironment(environment_impl.GymEnvironment):
     return img[numpy.newaxis, :]
 
   # From: https://github.com/jaromiru/AI-blog/blob/master/Seaquest-DDQN-PER.py
-  def _ProcessStateImage(self, img_state: q_base.State):
+  def _ProcessStateImage(self, img_state: base.State):
     """Processes a image state to an image of fixed size."""
     img = img_state[0]
     rgb = numpy.array(

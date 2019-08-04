@@ -3,14 +3,14 @@
 import numpy
 from gym.wrappers.monitoring import video_recorder
 
-from deep_learning.engine import q_base
-from deep_learning.engine.q_base import Action
-from deep_learning.engine.q_base import Transition
+from deep_learning.engine import base
+from deep_learning.engine.base import Action
+from deep_learning.engine.base import Transition
 from qpylib import t
 from qpylib.date_n_time import timing
 
 
-class SingleStateEnvironment(q_base.Environment):
+class SingleStateEnvironment(base.Environment):
   """An environment of a single state."""
 
   def __init__(
@@ -33,7 +33,7 @@ class SingleStateEnvironment(q_base.Environment):
     self.Reset()
 
   # @Override
-  def Reset(self) -> q_base.State:
+  def Reset(self) -> base.State:
     self._action_count = 0
     return self._state
 
@@ -45,10 +45,10 @@ class SingleStateEnvironment(q_base.Environment):
       sp = self._state
 
     self._action_count += 1
-    return q_base.Transition(s=self._state, a=action, r=0.0, sp=sp)
+    return base.Transition(s=self._state, a=action, r=0.0, sp=sp)
 
 
-class GymEnvironment(q_base.Environment):
+class GymEnvironment(base.Environment):
   """Wraps a OpenAI Gym environment.
 
   For a list of environments see:
@@ -110,7 +110,7 @@ class GymEnvironment(q_base.Environment):
     return state[numpy.newaxis, :]
 
   # @Override
-  def Reset(self) -> q_base.State:
+  def Reset(self) -> base.State:
     self._current_state = self._ConvertState(self._gym_env.reset())
     return self._current_state
 
@@ -132,7 +132,7 @@ class GymEnvironment(q_base.Environment):
     else:
       sp = self._ConvertState(observation)
 
-    transition = q_base.Transition(
+    transition = base.Transition(
       s=self._current_state, a=action, r=reward, sp=sp)
     self._current_state = sp
     return transition

@@ -1,12 +1,12 @@
 """A circular world environment."""
 import numpy
 
-from deep_learning.engine import q_base
+from deep_learning.engine import base
 
 STEP_LIMIT = 500
 
 
-class CircularWorld(q_base.Environment):
+class CircularWorld(base.Environment):
   """A circular world consists of integers between -n and n.
 
   Possible actions are go left (0), right (2), or stay (1). Going left from -n
@@ -28,12 +28,12 @@ class CircularWorld(q_base.Environment):
     self._num_actions_taken = None
     self.Reset()
 
-  def Reset(self) -> q_base.State:
+  def Reset(self) -> base.State:
     self._current_state = 0
     self._num_actions_taken = 0
     return numpy.array([[self._current_state]])
 
-  def TakeAction(self, action: q_base.Action) -> q_base.Transition:
+  def TakeAction(self, action: base.Action) -> base.Transition:
     current_state = self._current_state
     move = self.GetChoiceFromAction(action) - 1  # -1, 0, 1
     new_state = current_state + move
@@ -64,7 +64,7 @@ class CircularWorld(q_base.Environment):
     self._current_state = new_state
     self._num_actions_taken += 1
 
-    return q_base.Transition(s, a, r, sp)
+    return base.Transition(s, a, r, sp)
 
   def GetAllStates(self):
     return numpy.vstack(

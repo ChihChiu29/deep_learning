@@ -9,8 +9,8 @@ import tensorflow
 from keras import backend
 from keras import layers
 
-from deep_learning.engine import q_base
-from deep_learning.engine.q_base import Values
+from deep_learning.engine import base
+from deep_learning.engine.base import Values
 from qpylib import t
 
 _DEFAULT_DISCOUNT_FACTOR = 0.99
@@ -18,7 +18,7 @@ _DEFAULT_LOSS_V = .5  # v loss coefficient
 _DEFAULT_LOSS_ENTROPY = .01  # entropy coefficient
 
 
-class A3C(q_base.Brain):
+class A3C(base.Brain):
   """A A3C brain."""
 
   def __init__(
@@ -59,7 +59,7 @@ class A3C(q_base.Brain):
   # @Override
   def GetValues(
       self,
-      states: q_base.States,
+      states: base.States,
   ) -> Values:
     pi_values, v = self._model.predict(states)
     return pi_values
@@ -67,7 +67,7 @@ class A3C(q_base.Brain):
   # @Override
   def UpdateFromTransitions(
       self,
-      transitions: t.Iterable[q_base.Transition],
+      transitions: t.Iterable[base.Transition],
   ) -> None:
     states, actions, rewards, new_states, reward_mask = (
       self.CombineTransitions(transitions))

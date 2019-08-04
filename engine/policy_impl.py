@@ -1,21 +1,21 @@
 """Provides some policy implementations."""
 import numpy
 
-from deep_learning.engine import q_base
+from deep_learning.engine import base
 from qpylib import logging
 
 
-class GreedyPolicy(q_base.Policy):
+class GreedyPolicy(base.Policy):
   """A policy that always picks the action that gives the max Q value."""
 
   def Decide(
       self,
-      env: q_base.Environment,
-      brain: q_base.Brain,
-      state: q_base.State,
+      env: base.Environment,
+      brain: base.Brain,
+      state: base.State,
       episode_idx: int,
       num_of_episodes: int,
-  ) -> q_base.Action:
+  ) -> base.Action:
     values = brain.GetValues(state)
     choice = int(numpy.argmax(values))
     logging.vlog(
@@ -24,7 +24,7 @@ class GreedyPolicy(q_base.Policy):
     return env.GetActionFromChoice(choice)
 
 
-class GreedyPolicyWithRandomness(q_base.Policy):
+class GreedyPolicyWithRandomness(base.Policy):
   """A policy that almost always the action that gives the max Q value."""
 
   def __init__(
@@ -43,12 +43,12 @@ class GreedyPolicyWithRandomness(q_base.Policy):
 
   def Decide(
       self,
-      env: q_base.Environment,
-      brain: q_base.Brain,
-      state: q_base.State,
+      env: base.Environment,
+      brain: base.Brain,
+      state: base.State,
       episode_idx: int,
       num_of_episodes: int,
-  ) -> q_base.Action:
+  ) -> base.Action:
     if numpy.random.uniform(0, 1) < self._e:
       choice = env.GetRandomChoice()
       logging.vlog(
@@ -64,7 +64,7 @@ class GreedyPolicyWithRandomness(q_base.Policy):
       )
 
 
-class GreedyPolicyWithDecreasingRandomness(q_base.Policy):
+class GreedyPolicyWithDecreasingRandomness(base.Policy):
   """A policy that has decaying of randomness that's not greedy.
 
   The possibility that it does not perform the best action decreases
@@ -96,12 +96,12 @@ class GreedyPolicyWithDecreasingRandomness(q_base.Policy):
 
   def Decide(
       self,
-      env: q_base.Environment,
-      brain: q_base.Brain,
-      state: q_base.State,
+      env: base.Environment,
+      brain: base.Brain,
+      state: base.State,
       episode_idx: int,
       num_of_episodes: int,
-  ) -> q_base.Action:
+  ) -> base.Action:
     factor = numpy.log(0.5) / self._decay_half_life
     e = (self._final_e + (self._init_e - self._final_e) * numpy.exp(
       factor * episode_idx))

@@ -7,31 +7,31 @@ Ref:
 
 import numpy
 
-from deep_learning.engine import q_base
+from deep_learning.engine import base
 from qpylib import t
 
 
-class NoOpRunner(q_base.Runner):
+class NoOpRunner(base.Runner):
   """A runner that doesn't do anything to qfunc."""
 
   # @Override
   def _protected_ProcessTransition(
       self,
-      brain: q_base.Brain,
-      transition: q_base.Transition,
+      brain: base.Brain,
+      transition: base.Transition,
       step_idx: int,
   ) -> None:
     pass
 
 
-class SimpleRunner(q_base.Runner):
+class SimpleRunner(base.Runner):
   """A simple runner that updates the QFunction after each step."""
 
   # @Override
   def _protected_ProcessTransition(
       self,
-      brain: q_base.Brain,
-      transition: q_base.Transition,
+      brain: base.Brain,
+      transition: base.Transition,
       step_idx: int,
   ) -> None:
     brain.UpdateFromTransitions([transition])
@@ -50,18 +50,18 @@ class _Experience:
     self._capacity = capacity
 
     # Events inserted later are placed at tail.
-    self._history = []  # type: t.List[q_base.Transition]
+    self._history = []  # type: t.List[base.Transition]
 
   def AddTransition(
       self,
-      transition: q_base.Transition,
+      transition: base.Transition,
   ) -> None:
     """Adds an event to history."""
     self._history.append(transition)
     if len(self._history) > self._capacity:
       self._history.pop(0)
 
-  def Sample(self, size: int) -> t.Iterable[q_base.Transition]:
+  def Sample(self, size: int) -> t.Iterable[base.Transition]:
     """Samples an event from the history."""
     # numpy.random.choice converts a list to numpy array first, which is very
     # inefficient, see:
@@ -70,7 +70,7 @@ class _Experience:
       yield self._history[idx]
 
 
-class ExperienceReplayRunner(q_base.Runner):
+class ExperienceReplayRunner(base.Runner):
   """A runner that implements experience replay."""
 
   def __init__(
@@ -89,8 +89,8 @@ class ExperienceReplayRunner(q_base.Runner):
   # @Override
   def _protected_ProcessTransition(
       self,
-      brain: q_base.Brain,
-      transition: q_base.Transition,
+      brain: base.Brain,
+      transition: base.Transition,
       step_idx: int,
   ) -> None:
     self._experience.AddTransition(transition)
@@ -98,6 +98,6 @@ class ExperienceReplayRunner(q_base.Runner):
       brain.UpdateFromTransitions(
         self._experience.Sample(self._experience_sample_batch_size))
 
-  def SampleFromHistory(self, size: int) -> t.Iterable[q_base.Transition]:
+  def SampleFromHistory(self, size: int) -> t.Iterable[base.Transition]:
     """Samples a set of transitions from experience history."""
     return self._experience.Sample(size)

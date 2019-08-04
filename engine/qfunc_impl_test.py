@@ -4,7 +4,7 @@ import unittest
 
 import numpy
 
-from deep_learning.engine import q_base
+from deep_learning.engine import base
 from deep_learning.engine import qfunc_impl
 from qpylib import numpy_util
 
@@ -176,7 +176,7 @@ class DDQNTest(unittest.TestCase):
   def test_updateValues_swapModels(self):
     q1 = self.qfunc._q1
     q2 = self.qfunc._q2
-    self.qfunc.UpdateFromTransitions([q_base.Transition(
+    self.qfunc.UpdateFromTransitions([base.Transition(
       s=numpy.array([[1, 2, 3]]),
       a=numpy.array([[1, 0]]),
       r=1.0,
@@ -187,7 +187,7 @@ class DDQNTest(unittest.TestCase):
     self.assertEqual(q2, self.qfunc._q1)
 
   def test_convergence(self):
-    trans = [q_base.Transition(
+    trans = [base.Transition(
       s=numpy.array([[1, 2, 3]]),
       a=numpy.array([[1, 0]]),
       r=1.0,

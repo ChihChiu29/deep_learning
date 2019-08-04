@@ -2,14 +2,14 @@
 import numpy
 from matplotlib import pyplot
 
-from deep_learning.engine import q_base
-from deep_learning.engine.q_base import Brain
-from deep_learning.engine.q_base import Environment
+from deep_learning.engine import base
+from deep_learning.engine.base import Brain
+from deep_learning.engine.base import Environment
 from qpylib import logging
 from qpylib import t
 
 
-class ProgressTracer(q_base.RunnerExtension):
+class ProgressTracer(base.RunnerExtension):
   """Prints out info on running progress and rewards.
 
   The average rewards and steps are print out after every certain number of
@@ -83,7 +83,7 @@ class ProgressTracer(q_base.RunnerExtension):
     pyplot.show(block=False)
 
 
-class ValueTracer(q_base.RunnerExtension):
+class ValueTracer(base.RunnerExtension):
   """Traces values of certain (s, a)s during a run.
 
   Report is only given after the whole run.
@@ -91,7 +91,7 @@ class ValueTracer(q_base.RunnerExtension):
 
   def __init__(
       self,
-      trace_states: t.Iterable[q_base.State],
+      trace_states: t.Iterable[base.State],
       trace_actions: t.Iterable[int],
       plot_every_num_of_episodes: int = 50,
   ):
@@ -102,7 +102,7 @@ class ValueTracer(q_base.RunnerExtension):
       trace_actions: the action choices to trace.
       plot_every_num_of_episodes: plot every this number of episodes.
     """
-    self._states = numpy.concatenate(list(trace_states))  # type: q_base.States
+    self._states = numpy.concatenate(list(trace_states))  # type: base.States
     self._actions = list(trace_actions)
     self._plot_every_num_of_episodes = plot_every_num_of_episodes
 
@@ -143,7 +143,7 @@ class ValueTracer(q_base.RunnerExtension):
       pyplot.show(block=False)
 
 
-class ModelSaver(q_base.RunnerExtension):
+class ModelSaver(base.RunnerExtension):
   """Saves the best model during the run.
 
   Note that most of the QFunction implementations' only save partial info,

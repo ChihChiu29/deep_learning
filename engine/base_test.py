@@ -1,10 +1,10 @@
-"""Unit tests for q_base.py."""
+"""Unit tests for base.py."""
 import unittest
 from unittest import mock
 
 import numpy
 
-from deep_learning.engine import q_base
+from deep_learning.engine import base
 from deep_learning.engine import qfunc_impl
 from deep_learning.engine import runner_impl
 from qpylib import logging
@@ -17,21 +17,21 @@ class BrainTest(unittest.TestCase):
   def testGetActionValues(self):
     numpy_util.TestUtil.AssertArrayEqual(
       numpy.array([2, 6]),
-      q_base.Brain.GetActionValues(
+      base.Brain.GetActionValues(
         numpy.array([[1, 2, 3], [4, 5, 6]]),
         numpy.array([[0, 1, 0], [0, 0, 1]]),
       ))
 
   def testCombineTransitions(self):
     states, actions, rewards, new_states, reward_mask = (
-      q_base.Brain.CombineTransitions([
-        q_base.Transition(
+      base.Brain.CombineTransitions([
+        base.Transition(
           s=numpy.array([[1, 2, 3]]),
           a=numpy.array([[0, 1, 0]]),
           r=1.0,
           sp=numpy.array([[4, 5, 6]]),
         ),
-        q_base.Transition(
+        base.Transition(
           s=numpy.array([[4, 5, 6]]),
           a=numpy.array([[0, 0, 1]]),
           r=-1.0,
@@ -105,7 +105,7 @@ class QFunctionTest(unittest.TestCase):
         [0.8, 0.9],
       ]))
 
-    self.qfunc.UpdateFromTransitions([q_base.Transition(
+    self.qfunc.UpdateFromTransitions([base.Transition(
       s=numpy.array([[1, 2, 3]]),
       a=numpy.array([[0, 1]]),
       r=1.0,
@@ -133,13 +133,13 @@ class QFunctionTest(unittest.TestCase):
       ]))
 
     self.qfunc.UpdateFromTransitions([
-      q_base.Transition(
+      base.Transition(
         s=numpy.array([[1, 2, 3]]),
         a=numpy.array([[0, 1]]),
         r=1.0,
         sp=numpy.array([[2, 2, 2]]),
       ),
-      q_base.Transition(
+      base.Transition(
         s=numpy.array([[4, 5, 6]]),
         a=numpy.array([[0, 1]]),
         r=0.7,
@@ -167,7 +167,7 @@ class QFunctionTest(unittest.TestCase):
         [0.3, 0.7],
       ]))
 
-    self.qfunc.UpdateFromTransitions([q_base.Transition(
+    self.qfunc.UpdateFromTransitions([base.Transition(
       s=numpy.array([[1, 2, 3]]),
       a=numpy.array([[0, 1]]),
       r=1.0,
@@ -197,7 +197,7 @@ class QFunctionTest(unittest.TestCase):
         [0.5, 0.6],
         [0.3, 0.7],
       ]))
-    qfunc.UpdateFromTransitions([q_base.Transition(
+    qfunc.UpdateFromTransitions([base.Transition(
       s=numpy.array([[1, 2, 3]]),
       a=numpy.array([[0, 1]]),
       r=1.0,
@@ -223,13 +223,13 @@ class RunnerTest(numpy_util_test.NumpyTestCase):
 
   def test_runUsesNewStateAfterIteration(self):
     self.env.TakeAction.side_effect = [
-      q_base.Transition(
+      base.Transition(
         s=numpy.array([[0]]),
         a=numpy.array([[0]]),
         r=1.0,
         sp=numpy.array([[1]]),
       ),
-      q_base.Transition(
+      base.Transition(
         s=numpy.array([[1]]),
         a=numpy.array([[0]]),
         r=1.0,

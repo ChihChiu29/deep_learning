@@ -1,12 +1,12 @@
 import numpy
 
-from deep_learning.engine import q_base
+from deep_learning.engine import base
 from qpylib import t
 from qpylib.data_structure import sum_tree
 
 
 # Doesn't seem to work (tried with DDQN). Keep in experimental for now.
-class PrioritizedExperienceReplayRunner(q_base.Runner):
+class PrioritizedExperienceReplayRunner(base.Runner):
   """A runner that implements prioritized experience replay."""
 
   def __init__(
@@ -26,8 +26,8 @@ class PrioritizedExperienceReplayRunner(q_base.Runner):
   # @Override
   def _protected_ProcessTransition(
       self,
-      brain: q_base.Brain,
-      transition: q_base.Transition,
+      brain: base.Brain,
+      transition: base.Transition,
       step_idx: int,
   ) -> None:
     # states, actions, action_values = brain.UpdateValues([transition])
@@ -40,7 +40,7 @@ class PrioritizedExperienceReplayRunner(q_base.Runner):
     #     self._experience.Sample(self._experience_sample_batch_size))
     pass
 
-  def SampleFromHistory(self, size: int) -> t.Iterable[q_base.Transition]:
+  def SampleFromHistory(self, size: int) -> t.Iterable[base.Transition]:
     """Samples a set of transitions from experience history."""
     return self._experience.Sample(size)
 
@@ -80,14 +80,14 @@ class _PrioritizedExperience:
 
   def AddTransition(
       self,
-      transition: q_base.Transition,
+      transition: base.Transition,
       error: float,
   ) -> None:
     """Adds an event to history."""
     p = self._CalculatePriority(error)
     self._history.add(p, transition)
 
-  def Sample(self, size: int) -> t.Iterable[q_base.Transition]:
+  def Sample(self, size: int) -> t.Iterable[base.Transition]:
     """Samples an event from the history."""
     # Gets a random number between 0 and total sum, then get the transition
     # corresponding to it.
