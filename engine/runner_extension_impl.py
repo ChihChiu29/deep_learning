@@ -3,8 +3,8 @@ import numpy
 from matplotlib import pyplot
 
 from deep_learning.engine import q_base
+from deep_learning.engine.q_base import Brain
 from deep_learning.engine.q_base import Environment
-from deep_learning.engine.q_base import QFunction
 from qpylib import logging
 from qpylib import t
 
@@ -35,7 +35,7 @@ class ProgressTracer(q_base.RunnerExtension):
   def OnEpisodeFinishedCallback(
       self,
       env: Environment,
-      qfunc: QFunction,
+      qfunc: Brain,
       episode_idx: int,
       num_of_episodes: int,
       episode_reward: float,
@@ -61,7 +61,7 @@ class ProgressTracer(q_base.RunnerExtension):
   def OnCompletionCallback(
       self,
       env: Environment,
-      qfunc: QFunction,
+      qfunc: Brain,
       num_of_episodes: int):
     logging.printf(
       'Total: run %d episodes, avg_reward = %3.2f, avg_steps=%3.2f',
@@ -119,7 +119,7 @@ class ValueTracer(q_base.RunnerExtension):
   def OnEpisodeFinishedCallback(
       self,
       env: Environment,
-      qfunc: QFunction,
+      qfunc: Brain,
       episode_idx: int,
       num_of_episodes: int,
       episode_reward: float,
@@ -133,7 +133,7 @@ class ValueTracer(q_base.RunnerExtension):
   def OnCompletionCallback(
       self,
       env: Environment,
-      qfunc: QFunction,
+      qfunc: Brain,
       num_of_episodes: int,
   ):
     for a in self._actions:
@@ -178,7 +178,7 @@ class ModelSaver(q_base.RunnerExtension):
   def OnEpisodeFinishedCallback(
       self,
       env: Environment,
-      qfunc: QFunction,
+      qfunc: Brain,
       episode_idx: int,
       num_of_episodes: int,
       episode_reward: float,
@@ -200,6 +200,6 @@ class ModelSaver(q_base.RunnerExtension):
   def OnCompletionCallback(
       self,
       env: Environment,
-      qfunc: QFunction,
+      qfunc: Brain,
       num_of_episodes: int):
     pass

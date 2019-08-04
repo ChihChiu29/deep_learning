@@ -154,7 +154,7 @@ class Environment(abc.ABC):
     return self.TakeAction(self.GetActionFromChoice(self.GetRandomChoice()))
 
 
-class QFunction(abc.ABC):
+class Brain(abc.ABC):
   """A generic Q-function."""
 
   def __init__(
@@ -344,7 +344,7 @@ class Policy(abc.ABC):
   def Decide(
       self,
       env: Environment,
-      qfunc: QFunction,
+      qfunc: Brain,
       state: State,
       episode_idx: int,
       num_of_episodes: int,
@@ -364,7 +364,7 @@ class RunnerExtension(abc.ABC):
   def OnEpisodeFinishedCallback(
       self,
       env: Environment,
-      qfunc: QFunction,
+      qfunc: Brain,
       episode_idx: int,
       num_of_episodes: int,
       episode_reward: float,
@@ -377,7 +377,7 @@ class RunnerExtension(abc.ABC):
   def OnCompletionCallback(
       self,
       env: Environment,
-      qfunc: QFunction,
+      qfunc: Brain,
       num_of_episodes: int,
   ):
     """Called at the end of the runner.Run method."""
@@ -392,7 +392,7 @@ class Runner(abc.ABC):
   @abc.abstractmethod
   def _protected_ProcessTransition(
       self,
-      qfunc: QFunction,
+      qfunc: Brain,
       transition: Transition,
       step_idx: int,
   ) -> None:
@@ -411,7 +411,7 @@ class Runner(abc.ABC):
   def Run(
       self,
       env: Environment,
-      qfunc: QFunction,
+      qfunc: Brain,
       policy: Policy,
       num_of_episodes: int,
   ):

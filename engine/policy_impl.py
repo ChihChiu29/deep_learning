@@ -11,7 +11,7 @@ class GreedyPolicy(q_base.Policy):
   def Decide(
       self,
       env: q_base.Environment,
-      qfunc: q_base.QFunction,
+      qfunc: q_base.Brain,
       state: q_base.State,
       episode_idx: int,
       num_of_episodes: int,
@@ -44,7 +44,7 @@ class GreedyPolicyWithRandomness(q_base.Policy):
   def Decide(
       self,
       env: q_base.Environment,
-      qfunc: q_base.QFunction,
+      qfunc: q_base.Brain,
       state: q_base.State,
       episode_idx: int,
       num_of_episodes: int,
@@ -97,7 +97,7 @@ class GreedyPolicyWithDecreasingRandomness(q_base.Policy):
   def Decide(
       self,
       env: q_base.Environment,
-      qfunc: q_base.QFunction,
+      qfunc: q_base.Brain,
       state: q_base.State,
       episode_idx: int,
       num_of_episodes: int,

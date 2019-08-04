@@ -26,7 +26,7 @@ class PrioritizedExperienceReplayRunner(q_base.Runner):
   # @Override
   def _protected_ProcessTransition(
       self,
-      qfunc: q_base.QFunction,
+      qfunc: q_base.Brain,
       transition: q_base.Transition,
       step_idx: int,
   ) -> None:
