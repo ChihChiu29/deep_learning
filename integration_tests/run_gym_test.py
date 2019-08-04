@@ -42,7 +42,7 @@ class RunGymWithFullSetupTest(unittest.TestCase):
   @staticmethod
   def _RunEnv(gym_env):
     env = environment_impl.GymEnvironment(gym_env)
-    qfunc = brain_impl.RandomValueQFunction(
+    qfunc = brain_impl.RandomBrain(
       action_space_size=env.GetActionSpaceSize())
     env.Reset()
     policy = policy_impl.GreedyPolicyWithRandomness(epsilon=1.0)

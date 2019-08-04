@@ -12,7 +12,7 @@ from qpylib import numpy_util
 class RandomValueQFunctionTest(unittest.TestCase):
 
   def test_getValues(self):
-    qfunc = brain_impl.RandomValueQFunction(action_space_size=3)
+    qfunc = brain_impl.RandomBrain(action_space_size=3)
 
     self.assertEqual(
       (2, 3), qfunc.GetValues(numpy.array([[1, 2, 3], [4, 5, 6]])).shape)
@@ -25,7 +25,7 @@ class MemoizationQFunctionTest(unittest.TestCase):
 
   def setUp(self) -> None:
     # State space size is 3; Action space size is 2.
-    self.qfunc = brain_impl.MemoizationQFunction(action_space_size=2)
+    self.qfunc = brain_impl.MemoizationBrain(action_space_size=2)
 
     self.states = numpy.array([
       [1, 2, 3],
@@ -46,7 +46,7 @@ class MemoizationQFunctionTest(unittest.TestCase):
     tmp_file = tempfile.NamedTemporaryFile().name
     self.qfunc._SetValues(self.states, self.values)
     self.qfunc.Save(tmp_file)
-    qfunc = brain_impl.MemoizationQFunction(action_space_size=2)
+    qfunc = brain_impl.MemoizationBrain(action_space_size=2)
     qfunc.Load(tmp_file)
 
     self.assertCountEqual(qfunc._storage.keys(), self.qfunc._storage.keys())

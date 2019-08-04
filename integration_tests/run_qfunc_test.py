@@ -19,7 +19,7 @@ class E2E_MemoizationQFunctionTest(unittest.TestCase):
   def _RunEnv(gym_env):
     env = environment_impl.GymEnvironment(gym_env)
     env.SetGymEnvMaxEpisodeSteps(10)
-    qfunc = brain_impl.MemoizationQFunction(
+    qfunc = brain_impl.MemoizationBrain(
       action_space_size=env.GetActionSpaceSize())
     env.Reset()
     policy = policy_impl.GreedyPolicyWithRandomness(epsilon=1.0)

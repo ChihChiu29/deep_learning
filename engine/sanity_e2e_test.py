@@ -15,7 +15,7 @@ class RunnerTest(unittest.TestCase):
   def setUp(self) -> None:
     self.env = environment_impl.SingleStateEnvironment(
       action_space_size=1, step_limit=10)
-    self.qfunc = brain_impl.MemoizationQFunction(
+    self.qfunc = brain_impl.MemoizationBrain(
       action_space_size=3,
       discount_factor=0.9,
       learning_rate=0.9)
@@ -40,7 +40,7 @@ class PolicyTest(unittest.TestCase):
   def setUp(self) -> None:
     self.env = environment_impl.SingleStateEnvironment(
       action_space_size=1, step_limit=10)
-    self.qfunc = brain_impl.MemoizationQFunction(
+    self.qfunc = brain_impl.MemoizationBrain(
       action_space_size=3,
       discount_factor=0.9,
       learning_rate=0.9)

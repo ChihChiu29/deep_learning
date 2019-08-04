@@ -55,7 +55,7 @@ def main(_):
   # First 5 runs with random actions:
   runner.Run(
     env=env,
-    qfunc=brain_impl.RandomValueQFunction(env.GetActionSpaceSize()),
+    qfunc=brain_impl.RandomBrain(env.GetActionSpaceSize()),
     policy=policy,
     num_of_episodes=5)
   # Then 10 runs with trained qfunc:

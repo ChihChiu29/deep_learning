@@ -11,7 +11,7 @@ from deep_learning.engine import runner_impl
 def main(_):
   env = environment_impl.GymEnvironment(gym.make('Seaquest-v0'))
   env.TurnOnRendering(should_render=True, fps=24)
-  qfunc = brain_impl.RandomValueQFunction(
+  qfunc = brain_impl.RandomBrain(
     action_space_size=env.GetActionSpaceSize())
   policy = policy_impl.GreedyPolicyWithRandomness(epsilon=1.0)
   runner = runner_impl.NoOpRunner()
