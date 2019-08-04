@@ -155,6 +155,11 @@ class Environment(abc.ABC):
 
 
 class Brain(abc.ABC):
+  """A generic brain that learns from environment."""
+  pass
+
+
+class QFunction(Brain, abc.ABC):
   """A generic Q-function."""
 
   def __init__(

@@ -18,7 +18,7 @@ _DEFAULT_ACTIVATION = 'relu'
 _DEFAULT_TRAINING_BATCH_SIZE = 64
 
 
-class RandomValueQFunction(q_base.Brain):
+class RandomValueQFunction(q_base.QFunction):
   """QFunction that returns random value upon read, and write is no-op."""
 
   def __init__(
@@ -54,7 +54,7 @@ class RandomValueQFunction(q_base.Brain):
     pass
 
 
-class MemoizationQFunction(q_base.Brain):
+class MemoizationQFunction(q_base.QFunction):
   """QFunction that uses memoization."""
 
   def __init__(
@@ -104,7 +104,7 @@ class MemoizationQFunction(q_base.Brain):
       self._storage[self._Key(s)] = v
 
 
-class DQN(q_base.Brain):
+class DQN(q_base.QFunction):
   """DQN implemented using a Keras model."""
 
   def __init__(
@@ -242,7 +242,7 @@ class DQN_TargetNetwork(DQN):
       self._step_count = 0
 
 
-class DDQN(q_base.Brain):
+class DDQN(q_base.QFunction):
   """Double DQN.
 
   It's slower than DQN_TargetNetwork to process each step, and in terms
