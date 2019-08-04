@@ -1,4 +1,5 @@
 """Unit tests for qfunc_impl.py."""
+import tempfile
 import unittest
 
 import numpy
@@ -42,7 +43,7 @@ class MemoizationQFunctionTest(unittest.TestCase):
       self.values, self.qfunc.GetValues(self.states))
 
   def test_saveLoad(self):
-    tmp_file = '/tmp/MemoizationQFunctionTest_savedata.tmp'
+    tmp_file = tempfile.NamedTemporaryFile().name
     self.qfunc._SetValues(self.states, self.values)
     self.qfunc.Save(tmp_file)
     qfunc = qfunc_impl.MemoizationQFunction(action_space_size=2)
@@ -88,7 +89,7 @@ class DQNTest(unittest.TestCase):
     self.assertLess(diff2, diff1)
 
   def test_saveLoad(self):
-    tmp_file = '/tmp/DQNTest_savedata.tmp'
+    tmp_file = tempfile.NamedTemporaryFile().name
     self.qfunc._SetValues(self.states, self.values)
     self.qfunc.Save(tmp_file)
     qfunc = qfunc_impl.DQN(
@@ -230,7 +231,7 @@ class DDQNTest(unittest.TestCase):
     self.assertLessEqual(error2_2, error1_2)
 
   def test_saveLoad(self):
-    tmp_file = '/tmp/DDQNTest_savedata.tmp'
+    tmp_file = tempfile.NamedTemporaryFile().name
     self.qfunc._SetValues(self.states, self.values)
     self.qfunc.Save(tmp_file)
     qfunc = qfunc_impl.DDQN(

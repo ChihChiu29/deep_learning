@@ -34,7 +34,7 @@ class SimpleRunner(q_base.Runner):
       transition: q_base.Transition,
       step_idx: int,
   ) -> None:
-    brain.UpdateValues([transition])
+    brain.UpdateFromTransitions([transition])
 
 
 class _Experience:
@@ -95,7 +95,7 @@ class ExperienceReplayRunner(q_base.Runner):
   ) -> None:
     self._experience.AddTransition(transition)
     if step_idx % self._train_every_n_steps == 0:
-      brain.UpdateValues(
+      brain.UpdateFromTransitions(
         self._experience.Sample(self._experience_sample_batch_size))
 
   def SampleFromHistory(self, size: int) -> t.Iterable[q_base.Transition]:

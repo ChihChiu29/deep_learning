@@ -1,12 +1,13 @@
 """Tests that implementations in engine package are runnable."""
-
 import unittest
 
-import deep_learning.experimental.other_runners
 from deep_learning.engine import environment_impl
 from deep_learning.engine import policy_impl
 from deep_learning.engine import qfunc_impl
 from deep_learning.engine import runner_impl
+from qpylib import running_environment
+
+running_environment.ForceCpuForTheRun()
 
 
 class RunnerTest(unittest.TestCase):
@@ -28,13 +29,6 @@ class RunnerTest(unittest.TestCase):
   def test_experienceReplayRunner(self):
     # Tests that it can run; quality if not important for this test.
     runner_impl.ExperienceReplayRunner(
-      experience_capacity=100,
-      experience_sample_batch_size=10).Run(
-      env=self.env, qfunc=self.qfunc, policy=self.policy,
-      num_of_episodes=1)
-
-  def test_priorityExperienceReplayRunner(self):
-    deep_learning.experimental.other_runners.PrioritizedExperienceReplayRunner(
       experience_capacity=100,
       experience_sample_batch_size=10).Run(
       env=self.env, qfunc=self.qfunc, policy=self.policy,
