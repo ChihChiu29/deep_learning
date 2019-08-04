@@ -20,7 +20,7 @@ class PolicyTest(numpy_util_test.NumpyTestCase):
       policy.Decide(
         env=environment_impl.SingleStateEnvironment(
           action_space_size=2, step_limit=10),
-        qfunc=mock_qfunc,
+        brain=mock_qfunc,
         state=numpy.array([[0]]),
         episode_idx=0,
         num_of_episodes=500))
@@ -34,7 +34,7 @@ class PolicyTest(numpy_util_test.NumpyTestCase):
       policy.Decide(
         env=environment_impl.SingleStateEnvironment(
           action_space_size=2, step_limit=10),
-        qfunc=mock_qfunc,
+        brain=mock_qfunc,
         state=numpy.array([[0]]),
         episode_idx=0,
         num_of_episodes=500)
@@ -55,7 +55,7 @@ class PolicyTest(numpy_util_test.NumpyTestCase):
     for _ in range(500):
       choices.append(env.GetChoiceFromAction(policy.Decide(
         env=env,
-        qfunc=mock_qfunc,
+        brain=mock_qfunc,
         state=numpy.array([[0]]),
         episode_idx=0,
         num_of_episodes=500)))
@@ -81,7 +81,7 @@ class PolicyTest(numpy_util_test.NumpyTestCase):
     for _ in range(500):
       choices.append(env.GetChoiceFromAction(policy.Decide(
         env=env,
-        qfunc=mock_qfunc,
+        brain=mock_qfunc,
         state=numpy.array([[0]]),
         episode_idx=0,
         num_of_episodes=500)))
@@ -96,7 +96,7 @@ class PolicyTest(numpy_util_test.NumpyTestCase):
     for _ in range(500):
       choices.append(env.GetChoiceFromAction(policy.Decide(
         env=env,
-        qfunc=mock_qfunc,
+        brain=mock_qfunc,
         state=numpy.array([[0]]),
         episode_idx=500,
         num_of_episodes=500)))

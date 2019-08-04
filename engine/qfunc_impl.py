@@ -8,8 +8,8 @@ from keras import models
 from keras import optimizers
 
 from deep_learning.engine import q_base
-from deep_learning.engine.q_base import QValues
 from deep_learning.engine.q_base import States
+from deep_learning.engine.q_base import Values
 from qpylib import numpy_util
 from qpylib import t
 
@@ -43,13 +43,13 @@ class RandomValueQFunction(q_base.QFunction):
     pass
 
   # @Override
-  def _protected_GetValues(self, states: States) -> QValues:
+  def _protected_GetValues(self, states: States) -> Values:
     return numpy.random.randint(
       0, self._action_space_size - 1,
       size=(len(states), self._action_space_size))
 
   # @Override
-  def _protected_SetValues(self, states: States, values: QValues) -> None:
+  def _protected_SetValues(self, states: States, values: Values) -> None:
     """Writes has no effect."""
     pass
 
@@ -88,7 +88,7 @@ class MemoizationQFunction(q_base.QFunction):
   def _protected_GetValues(
       self,
       states: q_base.States,
-  ) -> q_base.QValues:
+  ) -> q_base.Values:
     qvalues = numpy.vstack([
       self._storage.get(self._Key(s), numpy.zeros((1, self._action_space_size)))
       for s in states])
@@ -98,7 +98,7 @@ class MemoizationQFunction(q_base.QFunction):
   def _protected_SetValues(
       self,
       states: q_base.States,
-      values: q_base.QValues,
+      values: q_base.Values,
   ) -> None:
     for s, v in zip(states, values):
       self._storage[self._Key(s)] = v
@@ -157,14 +157,14 @@ class DQN(q_base.QFunction):
   def _protected_GetValues(
       self,
       states: q_base.States,
-  ) -> q_base.QValues:
+  ) -> q_base.Values:
     return self._model.predict(states)
 
   # @Override
   def _protected_SetValues(
       self,
       states: q_base.States,
-      values: q_base.QValues,
+      values: q_base.Values,
   ) -> None:
     self._model.fit(
       states, values, batch_size=self._training_batch_size, verbose=0)
@@ -226,14 +226,14 @@ class DQN_TargetNetwork(DQN):
   def _protected_GetValues(
       self,
       states: q_base.States,
-  ) -> q_base.QValues:
+  ) -> q_base.Values:
     return self._target_network.predict(states)
 
   # @Override
   def _protected_SetValues(
       self,
       states: q_base.States,
-      values: q_base.QValues,
+      values: q_base.Values,
   ) -> None:
     super()._protected_SetValues(states, values)
     self._step_count += 1
@@ -297,11 +297,11 @@ class DDQN(q_base.QFunction):
     self._q2.load_weights(filepath)
 
   # @Override
-  def _protected_GetValues(self, states: States) -> QValues:
+  def _protected_GetValues(self, states: States) -> Values:
     return self._q1.predict(states)
 
   # @Override
-  def _protected_SetValues(self, states: States, values: QValues) -> None:
+  def _protected_SetValues(self, states: States, values: Values) -> None:
     self._q1.fit(
       states, values, batch_size=self._training_batch_size, verbose=0)
 
@@ -309,7 +309,7 @@ class DDQN(q_base.QFunction):
   def UpdateValues(
       self,
       transitions: t.Iterable[q_base.Transition],
-  ) -> t.Tuple[q_base.States, q_base.Actions, q_base.QActionValues]:
+  ) -> t.Tuple[q_base.States, q_base.Actions, q_base.ActionValues]:
     """Update Q-values using the given set of transitions.
 
     The iteration equation only calls interface methods to get values from

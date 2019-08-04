@@ -11,12 +11,12 @@ class GreedyPolicy(q_base.Policy):
   def Decide(
       self,
       env: q_base.Environment,
-      qfunc: q_base.Brain,
+      brain: q_base.Brain,
       state: q_base.State,
       episode_idx: int,
       num_of_episodes: int,
   ) -> q_base.Action:
-    values = qfunc.GetValues(state)
+    values = brain.GetValues(state)
     choice = int(numpy.argmax(values))
     logging.vlog(
       20, 'making greedy decision for state %s using values: %s; choice: %d',
@@ -44,7 +44,7 @@ class GreedyPolicyWithRandomness(q_base.Policy):
   def Decide(
       self,
       env: q_base.Environment,
-      qfunc: q_base.Brain,
+      brain: q_base.Brain,
       state: q_base.State,
       episode_idx: int,
       num_of_episodes: int,
@@ -57,7 +57,7 @@ class GreedyPolicyWithRandomness(q_base.Policy):
     else:
       return self._greedy_policy.Decide(
         env=env,
-        qfunc=qfunc,
+        brain=brain,
         state=state,
         episode_idx=episode_idx,
         num_of_episodes=num_of_episodes,
@@ -97,7 +97,7 @@ class GreedyPolicyWithDecreasingRandomness(q_base.Policy):
   def Decide(
       self,
       env: q_base.Environment,
-      qfunc: q_base.Brain,
+      brain: q_base.Brain,
       state: q_base.State,
       episode_idx: int,
       num_of_episodes: int,
@@ -114,7 +114,7 @@ class GreedyPolicyWithDecreasingRandomness(q_base.Policy):
     else:
       return self._greedy_policy.Decide(
         env=env,
-        qfunc=qfunc,
+        brain=brain,
         state=state,
         episode_idx=episode_idx,
         num_of_episodes=num_of_episodes,

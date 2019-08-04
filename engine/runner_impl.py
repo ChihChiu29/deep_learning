@@ -17,7 +17,7 @@ class NoOpRunner(q_base.Runner):
   # @Override
   def _protected_ProcessTransition(
       self,
-      qfunc: q_base.Brain,
+      brain: q_base.Brain,
       transition: q_base.Transition,
       step_idx: int,
   ) -> None:
@@ -30,11 +30,11 @@ class SimpleRunner(q_base.Runner):
   # @Override
   def _protected_ProcessTransition(
       self,
-      qfunc: q_base.Brain,
+      brain: q_base.Brain,
       transition: q_base.Transition,
       step_idx: int,
   ) -> None:
-    qfunc.UpdateValues([transition])
+    brain.UpdateValues([transition])
 
 
 class _Experience:
@@ -89,13 +89,13 @@ class ExperienceReplayRunner(q_base.Runner):
   # @Override
   def _protected_ProcessTransition(
       self,
-      qfunc: q_base.Brain,
+      brain: q_base.Brain,
       transition: q_base.Transition,
       step_idx: int,
   ) -> None:
     self._experience.AddTransition(transition)
     if step_idx % self._train_every_n_steps == 0:
-      qfunc.UpdateValues(
+      brain.UpdateValues(
         self._experience.Sample(self._experience_sample_batch_size))
 
   def SampleFromHistory(self, size: int) -> t.Iterable[q_base.Transition]:

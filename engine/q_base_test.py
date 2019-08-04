@@ -206,5 +206,5 @@ class RunnerTest(numpy_util_test.NumpyTestCase):
 
     # Tests that the second call is with the new state 1.
     self.policy.Decide.assert_called_with(
-      env=mock.ANY, qfunc=mock.ANY, state=numpy.array([[1]]),
+      env=mock.ANY, brain=mock.ANY, state=numpy.array([[1]]),
       episode_idx=0, num_of_episodes=1)

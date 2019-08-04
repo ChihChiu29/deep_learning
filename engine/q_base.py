@@ -43,18 +43,19 @@ Action = numpy.ndarray
 # An m x k numpy array holding m states.
 Actions = numpy.ndarray
 
-# A Q-value is a 1 x k vector, and the i-th component is the Q value for
-# the i-th action (all values are for the same state).
-QValue = numpy.ndarray
+# A value is a 1 x k vector, and the i-th component is the value for
+# the i-th action (all values are for the same state). An example of value is
+# the value of a Q-function.
+Value = numpy.ndarray
 
-# An m x k numpy array holding m Q-values.
-QValues = numpy.ndarray
+# An m x k numpy array holding m values.
+Values = numpy.ndarray
 
-# Q-value for a state and an action.
-QActionValue = float
+# A value for a state and an action.
+ActionValue = float
 
-# An (m,)-shape numpy array holding m Q-action-values.
-QActionValues = numpy.ndarray
+# An (m,)-shape numpy array holding m action-values.
+ActionValues = numpy.ndarray
 
 # Reward from environment for a single step.
 Reward = float
@@ -156,11 +157,33 @@ class Environment(abc.ABC):
 
 class Brain(abc.ABC):
   """A generic brain that learns from environment."""
-  pass
+
+  @abc.abstractmethod
+  def GetValues(
+      self,
+      states: States,
+  ) -> Values:
+    """Gets the Q values for states, for all actions."""
+    pass
+
+  @abc.abstractmethod
+  def Save(self, filepath: t.Text) -> None:
+    """Saves the brain state (maybe partially) to a file."""
+    pass
+
+  @abc.abstractmethod
+  def Load(self, filepath: t.Text) -> None:
+    """Loads the brain state from the file saved by Save.
+
+    The convention is that the parameters used to construct the brain is not
+    guaranteed to be saved. The user is responsible to create an instance that
+    has the save configuration as the saved one in order for load to work.
+    """
+    pass
 
 
 class QFunction(Brain, abc.ABC):
-  """A generic Q-function."""
+  """A brain implemented using Q-value function."""
 
   def __init__(
       self,
@@ -182,20 +205,10 @@ class QFunction(Brain, abc.ABC):
       learning_rate if learning_rate is not None
       else DEFAULT_LEARNING_RATE)
 
-  @abc.abstractmethod
-  def Save(self, filepath: t.Text) -> None:
-    """Saves (maybe partially) to a file."""
-    pass
-
-  @abc.abstractmethod
-  def Load(self, filepath: t.Text) -> None:
-    """Loads from the file saved by Save."""
-    pass
-
   def GetValues(
       self,
       states: States,
-  ) -> QValues:
+  ) -> Values:
     """Gets the Q values for states, for all actions."""
     values = self._protected_GetValues(states)
     logging.vlog(26, 'GET: (%s) -> %s', states, values)
@@ -205,15 +218,15 @@ class QFunction(Brain, abc.ABC):
   def _protected_GetValues(
       self,
       states: States,
-  ) -> QValues:
+  ) -> Values:
     """Gets the Q values for states, for all actions."""
     pass
 
   def GetActionValues(
       self,
-      values: QValues,
+      values: Values,
       actions: Actions,
-  ) -> QActionValues:
+  ) -> ActionValues:
     """Gets Q values for (state, action) pairs from Q values.
 
     The numbers of states and actions must equal. You should call GetValues
@@ -225,7 +238,7 @@ class QFunction(Brain, abc.ABC):
   def _SetValues(
       self,
       states: States,
-      values: QValues,
+      values: Values,
   ) -> None:
     """Sets/trains Q values for states.
 
@@ -242,7 +255,7 @@ class QFunction(Brain, abc.ABC):
   def _protected_SetValues(
       self,
       states: States,
-      values: QValues,
+      values: Values,
   ) -> None:
     """Sets/trains Q values for states.
 
@@ -258,9 +271,9 @@ class QFunction(Brain, abc.ABC):
       self,
       states: States,
       actions: Actions,
-      action_values: QActionValues,
-      values: QValues = None,
-  ) -> t.Tuple[States, Actions, QActionValues]:
+      action_values: ActionValues,
+      values: Values = None,
+  ) -> t.Tuple[States, Actions, ActionValues]:
     """Sets/trains the Q values for (s, a) pairs.
 
     For each state, only one action is taken (the one with the same index in
@@ -289,7 +302,7 @@ class QFunction(Brain, abc.ABC):
   def UpdateValues(
       self,
       transitions: t.Iterable[Transition],
-  ) -> t.Tuple[States, Actions, QActionValues]:
+  ) -> t.Tuple[States, Actions, ActionValues]:
     """Update Q-values using the given set of transitions.
 
     Notes when there are multiple transitions from the same state
@@ -349,7 +362,7 @@ class Policy(abc.ABC):
   def Decide(
       self,
       env: Environment,
-      qfunc: Brain,
+      brain: Brain,
       state: State,
       episode_idx: int,
       num_of_episodes: int,
@@ -369,7 +382,7 @@ class RunnerExtension(abc.ABC):
   def OnEpisodeFinishedCallback(
       self,
       env: Environment,
-      qfunc: Brain,
+      brain: Brain,
       episode_idx: int,
       num_of_episodes: int,
       episode_reward: float,
@@ -382,7 +395,7 @@ class RunnerExtension(abc.ABC):
   def OnCompletionCallback(
       self,
       env: Environment,
-      qfunc: Brain,
+      brain: Brain,
       num_of_episodes: int,
   ):
     """Called at the end of the runner.Run method."""
@@ -397,7 +410,7 @@ class Runner(abc.ABC):
   @abc.abstractmethod
   def _protected_ProcessTransition(
       self,
-      qfunc: Brain,
+      brain: Brain,
       transition: Transition,
       step_idx: int,
   ) -> None:
@@ -436,14 +449,14 @@ class Runner(abc.ABC):
         tran = env.TakeAction(
           policy.Decide(
             env=env,
-            qfunc=qfunc,
+            brain=qfunc,
             state=s,
             episode_idx=episode_idx,
             num_of_episodes=num_of_episodes,
           ))
         logging.vlog(26, '%s', tran)
         self._protected_ProcessTransition(
-          qfunc=qfunc,
+          brain=qfunc,
           transition=tran,
           step_idx=step_idx)
         episode_reward += tran.r
@@ -456,7 +469,7 @@ class Runner(abc.ABC):
       for reporter in self._callbacks:
         reporter.OnEpisodeFinishedCallback(
           env=env,
-          qfunc=qfunc,
+          brain=qfunc,
           episode_idx=episode_idx,
           num_of_episodes=num_of_episodes,
           episode_reward=episode_reward,
@@ -467,6 +480,6 @@ class Runner(abc.ABC):
     for reporter in self._callbacks:
       reporter.OnCompletionCallback(
         env=env,
-        qfunc=qfunc,
+        brain=qfunc,
         num_of_episodes=num_of_episodes,
       )

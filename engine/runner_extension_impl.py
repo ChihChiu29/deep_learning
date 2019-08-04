@@ -35,7 +35,7 @@ class ProgressTracer(q_base.RunnerExtension):
   def OnEpisodeFinishedCallback(
       self,
       env: Environment,
-      qfunc: Brain,
+      brain: Brain,
       episode_idx: int,
       num_of_episodes: int,
       episode_reward: float,
@@ -61,7 +61,7 @@ class ProgressTracer(q_base.RunnerExtension):
   def OnCompletionCallback(
       self,
       env: Environment,
-      qfunc: Brain,
+      brain: Brain,
       num_of_episodes: int):
     logging.printf(
       'Total: run %d episodes, avg_reward = %3.2f, avg_steps=%3.2f',
@@ -119,12 +119,12 @@ class ValueTracer(q_base.RunnerExtension):
   def OnEpisodeFinishedCallback(
       self,
       env: Environment,
-      qfunc: Brain,
+      brain: Brain,
       episode_idx: int,
       num_of_episodes: int,
       episode_reward: float,
       steps: int):
-    values = qfunc.GetValues(self._states)
+    values = brain.GetValues(self._states)
     for idx, v in enumerate(values):
       for a in self._actions:
         self._value_traces[a][idx].append(v[a])
@@ -133,7 +133,7 @@ class ValueTracer(q_base.RunnerExtension):
   def OnCompletionCallback(
       self,
       env: Environment,
-      qfunc: Brain,
+      brain: Brain,
       num_of_episodes: int,
   ):
     for a in self._actions:
@@ -178,7 +178,7 @@ class ModelSaver(q_base.RunnerExtension):
   def OnEpisodeFinishedCallback(
       self,
       env: Environment,
-      qfunc: Brain,
+      brain: Brain,
       episode_idx: int,
       num_of_episodes: int,
       episode_reward: float,
@@ -194,12 +194,12 @@ class ModelSaver(q_base.RunnerExtension):
 
     logging.vlog(6, 'saving model for new best value: %s', new_value)
     self._best_value = new_value
-    qfunc.Save(self._save_filepath)
+    brain.Save(self._save_filepath)
 
   # @Override
   def OnCompletionCallback(
       self,
       env: Environment,
-      qfunc: Brain,
+      brain: Brain,
       num_of_episodes: int):
     pass
