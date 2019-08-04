@@ -385,33 +385,13 @@ class QFunction(Brain, abc.ABC):
     Returns:
       The tuple of (states, actions, target_action_values).
     """
-    s_list = []  # type: t.List[State]
-    a_list = []  # type: t.List[Action]
-    r_list = []  # type: t.List[Reward]
-    sp_list = []  # type: t.List[State]
-    done_sp_indices = []
-    for idx, transition in enumerate(transitions):
-      s_list.append(transition.s)
-      a_list.append(transition.a)
-      r_list.append(transition.r)
-      if transition.sp is not None:
-        sp_list.append(transition.sp)
-      else:
-        # If environment is done, max(Q*(sp,a)) is replaced by 0.
-        sp_list.append(transition.s)
-        done_sp_indices.append(idx)
-    states, actions, rewards, new_states = (
-      numpy.concatenate(s_list),
-      numpy.concatenate(a_list),
-      numpy.array(r_list),
-      numpy.concatenate(sp_list),
-    )
+    states, actions, rewards, new_states, reward_mask = (
+      self.CombineTransitions(transitions))
     # See: https://en.wikipedia.org/wiki/Q-learning
     # axis=1 because action is always assumed to be 1-dimensional.
     new_action_values = numpy.amax(self.GetValues(new_states), axis=1)
-    for idx in done_sp_indices:
-      new_action_values[idx] = 0.0
-    learn_new_action_values = rewards + self._gamma * new_action_values
+    learn_new_action_values = (
+        rewards + self._gamma * new_action_values * reward_mask)
 
     if self._alpha < 0.9999999:
       values = self.GetValues(states)

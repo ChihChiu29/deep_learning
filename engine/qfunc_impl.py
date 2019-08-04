@@ -321,27 +321,8 @@ class DDQN(q_base.QFunction):
     Returns:
       The target action values to update to.
     """
-    s_list = []  # type: t.List[q_base.State]
-    a_list = []  # type: t.List[q_base.Action]
-    r_list = []  # type: t.List[q_base.Reward]
-    sp_list = []  # type: t.List[q_base.State]
-    done_sp_indices = []
-    for idx, transition in enumerate(transitions):
-      s_list.append(transition.s)
-      a_list.append(transition.a)
-      r_list.append(transition.r)
-      if transition.sp is not None:
-        sp_list.append(transition.sp)
-      else:
-        # If environment is done, max(Q*(sp,a)) is replaced by 0.
-        sp_list.append(transition.s)
-        done_sp_indices.append(idx)
-    states, actions, rewards, new_states = (
-      numpy.concatenate(s_list),
-      numpy.concatenate(a_list),
-      numpy.array(r_list),
-      numpy.concatenate(sp_list),
-    )
+    states, actions, rewards, new_states, reward_mask = (
+      self.CombineTransitions(transitions))
 
     q1_values = self.GetValues(new_states)
     q1_action_choices = numpy.argmax(q1_values, axis=1)
@@ -349,9 +330,8 @@ class DDQN(q_base.QFunction):
       q1_action_choices, self._action_space_size)
     q2_values = self._q2.predict(new_states)
     new_action_values = self.GetActionValues(q2_values, q1_actions)
-    for idx in done_sp_indices:
-      new_action_values[idx] = 0.0
-    learn_new_action_values = rewards + self._gamma * new_action_values
+    learn_new_action_values = (
+        rewards + self._gamma * new_action_values * reward_mask)
     target_action_values = self._SetActionValues(
       states, actions, learn_new_action_values)
 
