@@ -1,4 +1,5 @@
 """Unit tests for q_base.py."""
+import unittest
 from unittest import mock
 
 import numpy
@@ -7,10 +8,49 @@ from deep_learning.engine import q_base
 from deep_learning.engine import qfunc_impl
 from deep_learning.engine import runner_impl
 from qpylib import logging
+from qpylib import numpy_util
 from qpylib import numpy_util_test
 
 
-class QFunctionTest(numpy_util_test.NumpyTestCase):
+class BrainTest(unittest.TestCase):
+
+  def testGetActionValues(self):
+    numpy_util.TestUtil.AssertArrayEqual(
+      numpy.array([2, 6]),
+      q_base.Brain.GetActionValues(
+        numpy.array([[1, 2, 3], [4, 5, 6]]),
+        numpy.array([[0, 1, 0], [0, 0, 1]]),
+      ))
+
+  def testCombineTransitions(self):
+    states, actions, rewards, new_states, reward_mask = (
+      q_base.Brain.CombineTransitions([
+        q_base.Transition(
+          s=numpy.array([[1, 2, 3]]),
+          a=numpy.array([[0, 1, 0]]),
+          r=1.0,
+          sp=numpy.array([[4, 5, 6]]),
+        ),
+        q_base.Transition(
+          s=numpy.array([[4, 5, 6]]),
+          a=numpy.array([[0, 0, 1]]),
+          r=-1.0,
+          sp=None,
+        ),
+      ]))
+    numpy_util.TestUtil.AssertArrayEqual(
+      numpy.array([[1, 2, 3], [4, 5, 6]]), states)
+    numpy_util.TestUtil.AssertArrayEqual(
+      numpy.array([[0, 1, 0], [0, 0, 1]]), actions)
+    numpy_util.TestUtil.AssertArrayEqual(
+      numpy.array([1.0, -1.0]), rewards)
+    numpy_util.TestUtil.AssertArrayEqual(
+      numpy.array([[4, 5, 6], [4, 5, 6]]), new_states)
+    numpy_util.TestUtil.AssertArrayEqual(
+      numpy.array([1, 0]), reward_mask)
+
+
+class QFunctionTest(unittest.TestCase):
 
   def setUp(self) -> None:
     # State space size is 3; Action space size is 2.
@@ -38,7 +78,7 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
 
   def test_GetActionValues(self):
     self.qfunc._protected_SetValues(self.states, self.values)
-    self.assertArrayEq(
+    numpy_util.TestUtil.AssertArrayEqual(
       numpy.array([0.5, 0.7]),
       self.qfunc.GetActionValues(
         self.qfunc.GetValues(self.states), self.actions))
@@ -48,7 +88,7 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
     self.qfunc._SetActionValues(
       self.states, self.actions, numpy.array([0.2, 0.8]))
     logging.info(self.states)
-    self.assertArrayEq(
+    numpy_util.TestUtil.AssertArrayEqual(
       numpy.array([[0.2, 0.5], [0.3, 0.8]]),
       self.qfunc.GetValues(self.states))
 
@@ -75,7 +115,7 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
     # The new values for state (1,2,3) should be:
     # - action (1,0): 0.5, since it's not changed.
     # - action (0,1): max(0.8, 0.9) * 0.5 + 1.0 = 1.45
-    self.assertArrayEq(
+    numpy_util.TestUtil.AssertArrayEqual(
       numpy.array([[0.5, 1.45]]),
       self.qfunc.GetValues(numpy.array([[1, 2, 3]])))
 
@@ -112,7 +152,7 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
     # The new values for state (4,5,6) should be:
     # - action (1,0): 0.3, since it's not changed.
     # - action (0,1): max(0.8, 0.9) * 0.5 + 0.7 = 1.15
-    self.assertArrayEq(
+    numpy_util.TestUtil.AssertArrayEqual(
       numpy.array([[0.5, 1.45], [0.3, 1.15]]),
       self.qfunc.GetValues(numpy.array([[1, 2, 3], [4, 5, 6]])))
 
@@ -137,7 +177,7 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
     # The new values for state (1,2,3) should be:
     # - action (1,0): 0.5, since it's not changed.
     # - action (0,1): 1.0, since environment is done, only reward is used.
-    self.assertArrayEq(
+    numpy_util.TestUtil.AssertArrayEqual(
       numpy.array([[0.5, 1.0]]),
       self.qfunc.GetValues(numpy.array([[1, 2, 3]])))
 
@@ -167,7 +207,7 @@ class QFunctionTest(numpy_util_test.NumpyTestCase):
     # The new values for state (1,2,3) should be:
     # - action (1,0): 0.5, since it's not changed.
     # - action (0,1): (1-0.9) * 0.6 + 0.9 * 1.0 = 0.96.
-    self.assertArrayEq(
+    numpy_util.TestUtil.AssertArrayEqual(
       numpy.array([[0.5, 0.96]]),
       qfunc.GetValues(numpy.array([[1, 2, 3]])))
 

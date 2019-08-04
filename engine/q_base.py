@@ -170,8 +170,8 @@ class Brain(abc.ABC):
     """
     pass
 
+  @staticmethod
   def GetActionValues(
-      self,
       values: Values,
       actions: Actions,
   ) -> ActionValues:
@@ -202,8 +202,8 @@ class Brain(abc.ABC):
     """
     pass
 
+  @staticmethod
   def CombineTransitions(
-      self,
       transitions: t.Iterable[Transition],
   ) -> t.Tuple[States, Actions, Rewards, States, numpy.ndarray]:
     """Groups properties in transitions into arrays.
@@ -235,10 +235,10 @@ class Brain(abc.ABC):
       r_list.append(transition.r)
       if transition.sp is not None:
         sp_list.append(transition.sp)
-        r_mask_list.append(0)
+        r_mask_list.append(1)
       else:
         sp_list.append(transition.s)
-        r_mask_list.append(1)
+        r_mask_list.append(0)
     return (
       numpy.concatenate(s_list),
       numpy.concatenate(a_list),
