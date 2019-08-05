@@ -42,12 +42,12 @@ def main(_):
   # Train 500 episodes.
   logging.ENV.debug_verbosity = 3
   policy = policy_impl.GreedyPolicyWithRandomness(epsilon=0.1)
-  runner.Run(env=env, qfunc=qfunc, policy=policy, num_of_episodes=500)
+  runner.Run(env=env, brain=qfunc, policy=policy, num_of_episodes=500)
 
   # Test for 100 episodes.
   logging.ENV.debug_verbosity = 4
   policy = policy_impl.GreedyPolicy()
-  runner.Run(env=env, qfunc=qfunc, policy=policy, num_of_episodes=100)
+  runner.Run(env=env, brain=qfunc, policy=policy, num_of_episodes=100)
 
   # Demo with video.
   env.TurnOnRendering(should_render=True, fps=24)
@@ -55,11 +55,11 @@ def main(_):
   # First 5 runs with random actions:
   runner.Run(
     env=env,
-    qfunc=qfunc_impl.RandomQFunction(env.GetActionSpaceSize()),
+    brain=qfunc_impl.RandomQFunction(env.GetActionSpaceSize()),
     policy=policy,
     num_of_episodes=5)
   # Then 10 runs with trained qfunc:
-  runner.Run(env=env, qfunc=qfunc, policy=policy, num_of_episodes=10)
+  runner.Run(env=env, brain=qfunc, policy=policy, num_of_episodes=10)
   # env.StopRecording()  # uncomment if record video is called.
 
 

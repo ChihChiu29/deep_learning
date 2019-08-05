@@ -24,14 +24,14 @@ class RunnerTest(unittest.TestCase):
   def test_simpleRunner(self):
     # Tests that it can run; quality if not important for this test.
     runner_impl.SimpleRunner().Run(
-      env=self.env, qfunc=self.qfunc, policy=self.policy, num_of_episodes=1)
+      env=self.env, brain=self.qfunc, policy=self.policy, num_of_episodes=1)
 
   def test_experienceReplayRunner(self):
     # Tests that it can run; quality if not important for this test.
     runner_impl.ExperienceReplayRunner(
       experience_capacity=100,
       experience_sample_batch_size=10).Run(
-      env=self.env, qfunc=self.qfunc, policy=self.policy,
+      env=self.env, brain=self.qfunc, policy=self.policy,
       num_of_episodes=1)
 
 
@@ -49,12 +49,12 @@ class PolicyTest(unittest.TestCase):
   def test_GreedyPolicy(self):
     # Tests that it can run; quality if not important for this test.
     self.runner.Run(
-      env=self.env, qfunc=self.qfunc,
+      env=self.env, brain=self.qfunc,
       policy=policy_impl.GreedyPolicy(), num_of_episodes=1)
 
   def test_GreedyPolicyWithRandomness(self):
     # Tests that it can run; quality if not important for this test.
     self.runner.Run(
-      env=self.env, qfunc=self.qfunc,
+      env=self.env, brain=self.qfunc,
       policy=policy_impl.GreedyPolicyWithRandomness(epsilon=0.1),
       num_of_episodes=1)

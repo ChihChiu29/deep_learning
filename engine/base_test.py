@@ -237,7 +237,7 @@ class RunnerTest(numpy_util_test.NumpyTestCase):
 
     self.runner.Run(
       env=self.env,
-      qfunc=self.qfunc,
+      brain=self.qfunc,
       policy=self.policy,
       num_of_episodes=1,
     )

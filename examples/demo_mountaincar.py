@@ -36,9 +36,9 @@ def main(_):
   env.StartRecording(video_filename='mountaincar_demo.mp4')
   # First 5 runs with random actions:
   rand_qfunc = qfunc_impl.RandomQFunction(env.GetActionSpaceSize())
-  runner.Run(env=env, qfunc=rand_qfunc, policy=policy, num_of_episodes=5)
+  runner.Run(env=env, brain=rand_qfunc, policy=policy, num_of_episodes=5)
   # Then 10 runs with trained qfunc:
-  runner.Run(env=env, qfunc=qfunc, policy=policy, num_of_episodes=10)
+  runner.Run(env=env, brain=qfunc, policy=policy, num_of_episodes=10)
   env.StopRecording()
 
 

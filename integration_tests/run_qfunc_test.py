@@ -25,7 +25,7 @@ class E2E_MemoizationQFunctionTest(unittest.TestCase):
     policy = policy_impl.GreedyPolicyWithRandomness(epsilon=1.0)
 
     runner_impl.SimpleRunner().Run(
-      env=env, qfunc=qfunc, policy=policy, num_of_episodes=1)
+      env=env, brain=qfunc, policy=policy, num_of_episodes=1)
 
   def test_CartPole(self):
     self._RunEnv(gym.make('CartPole-v0'))
@@ -61,7 +61,7 @@ class E2E_DQNTest(unittest.TestCase):
     policy = policy_impl.GreedyPolicyWithRandomness(epsilon=1.0)
 
     runner_impl.SimpleRunner().Run(
-      env=env, qfunc=qfunc, policy=policy, num_of_episodes=10)
+      env=env, brain=qfunc, policy=policy, num_of_episodes=10)
 
   def test_CartPole(self):
     self._RunEnv(gym.make('CartPole-v0'))

@@ -98,7 +98,7 @@ class StateLearningPipeline:
 
     self.runner.Run(
       env=self.env,
-      qfunc=self.qfunc,
+      brain=self.qfunc,
       policy=self.policy,
       num_of_episodes=num_of_episodes)
 
@@ -117,7 +117,7 @@ class StateLearningPipeline:
       report_every_num_of_episodes=1))
     runner.Run(
       env=self.env,
-      qfunc=self.qfunc,
+      brain=self.qfunc,
       policy=policy_impl.GreedyPolicy(),
       num_of_episodes=num_of_episodes)
     self.env.StopRecording()
@@ -223,7 +223,7 @@ class ScreenLearningPipeline:
 
     self.runner.Run(
       env=self.env,
-      qfunc=self.qfunc,
+      brain=self.qfunc,
       policy=self.policy,
       num_of_episodes=num_of_episodes)
 
@@ -239,7 +239,7 @@ class ScreenLearningPipeline:
     self.env.StartRecording(video_filename=save_video_to)
     runner_impl.NoOpRunner().Run(
       env=self.env,
-      qfunc=self.qfunc,
+      brain=self.qfunc,
       policy=policy_impl.GreedyPolicy(),
       num_of_episodes=num_of_episodes)
     self.env.StopRecording()

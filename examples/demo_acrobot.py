@@ -34,7 +34,7 @@ def main(_):
 
   env.TurnOnRendering(should_render=True, fps=10)
   logging.ENV.debug_verbosity = 9
-  runner.Run(env=env, qfunc=qfunc, policy=policy, num_of_episodes=10)
+  runner.Run(env=env, brain=qfunc, policy=policy, num_of_episodes=10)
 
 
 if __name__ == '__main__':

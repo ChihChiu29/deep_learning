@@ -469,7 +469,7 @@ class Runner(abc.ABC):
   def Run(
       self,
       env: Environment,
-      qfunc: Brain,
+      brain: Brain,
       policy: Policy,
       num_of_episodes: int,
   ):
@@ -489,14 +489,14 @@ class Runner(abc.ABC):
         tran = env.TakeAction(
           policy.Decide(
             env=env,
-            brain=qfunc,
+            brain=brain,
             state=s,
             episode_idx=episode_idx,
             num_of_episodes=num_of_episodes,
           ))
         logging.vlog(26, '%s', tran)
         self._protected_ProcessTransition(
-          brain=qfunc,
+          brain=brain,
           transition=tran,
           step_idx=step_idx)
         episode_reward += tran.r
@@ -509,7 +509,7 @@ class Runner(abc.ABC):
       for reporter in self._callbacks:
         reporter.OnEpisodeFinishedCallback(
           env=env,
-          brain=qfunc,
+          brain=brain,
           episode_idx=episode_idx,
           num_of_episodes=num_of_episodes,
           episode_reward=episode_reward,
@@ -520,6 +520,6 @@ class Runner(abc.ABC):
     for reporter in self._callbacks:
       reporter.OnCompletionCallback(
         env=env,
-        brain=qfunc,
+        brain=brain,
         num_of_episodes=num_of_episodes,
       )
