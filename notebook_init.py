@@ -7,6 +7,7 @@ from keras import layers
 from keras import models
 from keras import optimizers
 
+from deep_learning.engine import a3c_impl
 from deep_learning.engine import base
 from deep_learning.engine import environment_impl
 from deep_learning.engine import policy_impl
@@ -34,6 +35,7 @@ __will_use = (
   numpy_util,
   running_environment,
 
+  a3c_impl,
   base,
   environment_impl,
   policy_impl,

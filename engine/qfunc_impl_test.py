@@ -7,6 +7,9 @@ import numpy
 from deep_learning.engine import base
 from deep_learning.engine import qfunc_impl
 from qpylib import numpy_util
+from qpylib import running_environment
+
+running_environment.ForceCpuForTheRun()
 
 
 class RandomValueQFunctionTest(unittest.TestCase):
@@ -187,44 +190,31 @@ class DDQNTest(unittest.TestCase):
     self.assertEqual(q2, self.qfunc._q1)
 
   def test_convergence(self):
-    trans = [base.Transition(
-      s=numpy.array([[1, 2, 3]]),
-      a=numpy.array([[1, 0]]),
-      r=1.0,
-      sp=None,
-    )]
-    states, actions, target_action_values = None, None, None
+    s = numpy.array([[1, 2, 3]])
+    a = numpy.array([[1, 0]])
+    trans = [base.Transition(s=s, a=a, r=1.0, sp=None)]
     for _ in range(100):
-      states, actions, target_action_values = self.qfunc.UpdateFromTransitions(
-        trans)
+      self.qfunc.UpdateFromTransitions(trans)
 
-    error1_1 = numpy.sum(numpy.abs(
-      self.qfunc.GetActionValues(self.qfunc.GetValues(states), actions) -
-      target_action_values))
-    states, actions, target_action_values = self.qfunc.UpdateFromTransitions(
-      trans)
-    error1_2 = numpy.sum(numpy.abs(
-      self.qfunc.GetActionValues(self.qfunc.GetValues(states), actions) -
-      target_action_values))
+    error1_1 = numpy.abs(
+      self.qfunc.GetActionValues(self.qfunc.GetValues(s), a) - 1.0)
+    self.qfunc.UpdateFromTransitions(trans)  # flip q1 and q2
+    error1_2 = numpy.abs(
+      self.qfunc.GetActionValues(self.qfunc.GetValues(s), a) - 1.0)
     # Needs this to swap back q1 and q2.
-    states, actions, target_action_values = self.qfunc.UpdateFromTransitions(
-      trans)
+    self.qfunc.UpdateFromTransitions(trans)
 
     # Since an even number of iterations was used in the first loop, an even
     # number must be used here as well to make sure it's the same model that's
     # being compared.
     for _ in range(100):
-      states, actions, target_action_values = self.qfunc.UpdateFromTransitions(
-        trans)
+      self.qfunc.UpdateFromTransitions(trans)
 
-    error2_1 = numpy.sum(numpy.abs(
-      self.qfunc.GetActionValues(self.qfunc.GetValues(states), actions) -
-      target_action_values))
-    states, actions, target_action_values = self.qfunc.UpdateFromTransitions(
-      trans)
-    error2_2 = numpy.sum(numpy.abs(
-      self.qfunc.GetActionValues(self.qfunc.GetValues(states), actions) -
-      target_action_values))
+    error2_1 = numpy.abs(
+      self.qfunc.GetActionValues(self.qfunc.GetValues(s), a) - 1.0)
+    self.qfunc.UpdateFromTransitions(trans)  # flip q1 and q2
+    error2_2 = numpy.abs(
+      self.qfunc.GetActionValues(self.qfunc.GetValues(s), a) - 1.0)
 
     # Only compare errors from the same model.
     self.assertLessEqual(error2_1, error1_1)

@@ -31,7 +31,6 @@ DEFAULT_LEARNING_RATE = 0.9  # "alpha"
 
 # A state is a 1 x (state.shape) numpy array.
 State = numpy.ndarray
-
 # An m x (state.shape) numpy array holding m states.
 States = numpy.ndarray
 
@@ -39,29 +38,31 @@ States = numpy.ndarray
 # actions. The index of the position of the 1 in the vector is called a
 # "choice".
 Action = numpy.ndarray
-
 # An m x k numpy array holding m states.
 Actions = numpy.ndarray
 
 # A value is a 1 x k vector, and the i-th component is the value for
-# the i-th action (all values are for the same state). An example of value is
-# the value of a Q-function for a given state.
+# the i-th action (all values are for the same state). Examples:
+# - Q-function values for a given state.
+# - Pi values for a given state.
 Value = numpy.ndarray
-
 # An m x k numpy array holding m values.
 Values = numpy.ndarray
 
 # A value for a state and an action.
 ActionValue = float
-
 # An (m,)-shape numpy array holding m action-values.
 ActionValues = numpy.ndarray
 
-# Reward from environment for a single step.
-Reward = float
+# A single value.
+Scalar = float
+# An (m,)-shape numpy array holding m scalars.
+OneDArray = numpy.ndarray
 
+# Reward from environment for a single step.
+Reward = Scalar
 # An (m,)-shape numpy array holding m rewards.
-Rewards = numpy.ndarray
+Rewards = OneDArray
 
 
 class Transition:
@@ -190,9 +191,10 @@ class Brain(abc.ABC):
   ) -> None:
     """Updates brain from a set of transitions.
 
-    Notes when there are multiple transitions from the same state
-    (different actions), there is a conflict since the values for other actions
-    for each transition is read from the current QFunction before update.
+    Notes when there are multiple transitions from the same state (different
+    actions), there is a conflict since the values for other actions for each
+    transition is read from the current QFunction before update. The effect
+    of the conflict depends on the implementation.
     """
     pass
 

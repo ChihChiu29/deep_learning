@@ -7,7 +7,6 @@ import numpy
 from deep_learning.engine import base
 from deep_learning.engine import qfunc_impl
 from deep_learning.engine import runner_impl
-from qpylib import logging
 from qpylib import numpy_util
 from qpylib import numpy_util_test
 
@@ -87,7 +86,6 @@ class QFunctionTest(unittest.TestCase):
     self.qfunc._protected_SetValues(self.states, self.values)
     self.qfunc._SetActionValues(
       self.states, self.actions, numpy.array([0.2, 0.8]))
-    logging.info(self.states)
     numpy_util.TestUtil.AssertArrayEqual(
       numpy.array([[0.2, 0.5], [0.3, 0.8]]),
       self.qfunc.GetValues(self.states))
