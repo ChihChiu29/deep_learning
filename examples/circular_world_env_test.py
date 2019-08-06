@@ -51,10 +51,12 @@ class CircularWorldTest(numpy_util_test.NumpyTestCase):
     self.env._current_state = 5
     tran = self.env.TakeAction(self.right)
     self.assertEqual(-5, tran.sp)
+    self.assertEqual(-1, tran.r)
 
     self.env._current_state = -5
     tran = self.env.TakeAction(self.left)
     self.assertEqual(5, tran.sp)
+    self.assertEqual(-1, tran.r)
 
   def test_environmentDone(self):
     self.env._num_actions_taken = circular_world_env.STEP_LIMIT
