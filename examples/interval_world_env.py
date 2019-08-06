@@ -13,6 +13,14 @@ class IntervalWorld(base.Environment):
   or going right from n ends the environment. Any action getting closer
   to 0 is given +1 reward, with getting away given -1 reward and not moving
   with 0 reward.
+
+  For this environment it's easy to calculate various values theoretically.
+  Examples:
+  * Q(-n, left) = -1 when Q's learning rate (alpha) is 0.
+  * Q(-(n-1), left) = -1 - gamma when Q's learning rate (alpha) is 0.
+  * Q(0, stay) = 0 since Q(0, stay) == 0 + gamma*Q(0, stay).
+  * V(0) = 0 for the optimal pi since stay is the best action therefore
+      V(0) = 0 + gamma*(1.0*V(0)+0*V(-1)+0*V(1))
   """
 
   def __init__(self, size: int = 5):
