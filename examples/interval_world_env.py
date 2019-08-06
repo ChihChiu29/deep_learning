@@ -6,11 +6,11 @@ from deep_learning.engine import base
 STEP_LIMIT = 500
 
 
-class CircularWorld(base.Environment):
-  """A circular world consists of integers between -n and n.
+class IntervalWorld(base.Environment):
+  """A world consists of integers between -n and n.
 
   Possible actions are go left (0), right (2), or stay (1). Going left from -n
-  ends with n, and going right from n ends with -n. Any action getting closer
+  or going right from n ends the environment. Any action getting closer
   to 0 is given +1 reward, with getting away given -1 reward and not moving
   with 0 reward.
   """
@@ -29,7 +29,7 @@ class CircularWorld(base.Environment):
     self.Reset()
 
   def Reset(self) -> base.State:
-    self._current_state = 0
+    self._current_state = numpy.random.randint(-self._size, self._size + 1)
     self._num_actions_taken = 0
     return numpy.array([[self._current_state]])
 
@@ -37,6 +37,9 @@ class CircularWorld(base.Environment):
     current_state = self._current_state
     move = self.GetChoiceFromAction(action) - 1  # -1, 0, 1
     new_state = current_state + move
+
+    s = numpy.array([[current_state]])
+    a = action
 
     r = None
     if move == 0:
@@ -50,16 +53,14 @@ class CircularWorld(base.Environment):
         r = -1
 
     if new_state > self._size:
-      new_state = -self._size
+      sp = None
     elif new_state < -self._size:
-      new_state = self._size
-
-    s = numpy.array([[current_state]])
-    a = action
-    if self._num_actions_taken >= STEP_LIMIT:
       sp = None
     else:
       sp = numpy.array([[new_state]])
+
+    if self._num_actions_taken >= STEP_LIMIT:
+      sp = None
 
     self._current_state = new_state
     self._num_actions_taken += 1
