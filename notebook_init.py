@@ -15,6 +15,7 @@ from deep_learning.engine import qfunc_impl
 from deep_learning.engine import runner_extension_impl
 from deep_learning.engine import runner_impl
 from deep_learning.examples import circular_world_env
+from deep_learning.examples import interval_world_env
 from deep_learning.examples import shortcut
 from deep_learning.experimental import guided_environments
 from deep_learning.experimental import model_builder
@@ -45,6 +46,7 @@ __will_use = (
   shortcut,
 
   circular_world_env,
+  interval_world_env,
   model_builder,
   guided_environments,
 )

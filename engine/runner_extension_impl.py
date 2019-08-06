@@ -93,18 +93,16 @@ class ValueTracer(base.RunnerExtension):
       self,
       trace_states: t.Iterable[base.State],
       trace_actions: t.Iterable[int],
-      plot_every_num_of_episodes: int = 50,
   ):
     """Constructor.
 
     Args:
       trace_states: trace values of these states.
       trace_actions: the action choices to trace.
-      plot_every_num_of_episodes: plot every this number of episodes.
     """
-    self._states = numpy.concatenate(list(trace_states))  # type: base.States
+    self._trace_states = list(trace_states)
+    self._states = numpy.concatenate(self._trace_states)  # type: base.States
     self._actions = list(trace_actions)
-    self._plot_every_num_of_episodes = plot_every_num_of_episodes
 
     self._num_of_states = len(self._states)
 
@@ -137,9 +135,11 @@ class ValueTracer(base.RunnerExtension):
       num_of_episodes: int,
   ):
     for a in self._actions:
+      pyplot.figure(figsize=(18, 10))
       pyplot.title('Action: %d' % a)
-      for s_values in self._value_traces[a].values():
-        pyplot.plot(s_values)
+      for idx, s_values in self._value_traces[a].items():
+        pyplot.plot(s_values, label=self._trace_states[idx])
+      pyplot.legend()
       pyplot.show(block=False)
 
 

@@ -90,7 +90,7 @@ class A3C(base.Brain):
     """Use Pi values to make decision."""
     self._CheckActive()
     pi_values, v = self._model.predict(states)
-    logging.vlog(20, 'pi: %s', pi_values)
+    logging.vlog(20, 'GET pi for state %s: %s', states, pi_values)
     return pi_values
 
   # @Override
