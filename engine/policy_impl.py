@@ -24,7 +24,7 @@ class GreedyPolicy(base.Policy):
     return env.GetActionFromChoice(choice)
 
 
-class WeightedPiPolicy(base.Policy):
+class PiWeightedPolicy(base.Policy):
   """Takes an action according to prob. dist. of Pi.
 
   This policy can only be applied to brains whose GetValues returns prob.

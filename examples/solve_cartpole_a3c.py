@@ -33,7 +33,7 @@ def main(_):
   )
 
   policy = policy_impl.PolicyWithDecreasingRandomness(
-    base_policy=policy_impl.WeightedPiPolicy(),
+    base_policy=policy_impl.PiWeightedPolicy(),
     initial_epsilon=0.4,
     final_epsilon=0.05,
     decay_by_half_after_num_of_episodes=500,
