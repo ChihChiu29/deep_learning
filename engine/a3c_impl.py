@@ -25,7 +25,7 @@ _ACTIVE_INSTANCES = []  # type: t.List['A3C']
 # Some notes:
 # - A3C with single environment is less stable than DQN/DQN_TargetNetwork/DDQN.
 # - It seems SimpleRunner is more stable with A3C than N-step return runner.
-# -
+# - The PiWeightedPolicy seems to do slightly better than Greedy policy.
 class A3C(base.Brain):
   """A A3C brain."""
 

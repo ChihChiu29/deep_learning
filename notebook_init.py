@@ -38,13 +38,13 @@ __will_use = (
   running_environment,
 
   base,
+  a3c_impl,
   environment_impl,
   policy_impl,
   qfunc_impl,
   runner_extension_impl,
   runner_impl,
 
-  a3c_impl,
   circular_world_env,
   interval_world_env,
   model_builder,
