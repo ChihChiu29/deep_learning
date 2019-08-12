@@ -10,6 +10,8 @@ from keras import backend
 from keras import layers
 
 from deep_learning.engine import base
+from deep_learning.engine.base import Brain
+from deep_learning.engine.base import Transition
 from deep_learning.engine.base import Values
 from qpylib import logging
 from qpylib import t
@@ -170,6 +172,17 @@ def CreateModel(
       staring with the input layer.
     activation: the activation, for example "relu".
   """
+  l_input = layers.Input(batch_shape=(None, state_shape[0]))
+  l_dense = layers.Dense(16, activation='relu')(l_input)
+
+  out_actions = layers.Dense(action_space_size, activation='softmax')(l_dense)
+  out_value = layers.Dense(1, activation='linear')(l_dense)
+
+  model = keras.Model(inputs=[l_input], outputs=[out_actions, out_value])
+  model._make_predict_function()  # have to initialize before threading
+
+  return model
+
   hidden_layer_sizes = tuple(hidden_layer_sizes)
   input_layer = layers.Input(shape=state_shape)
 
@@ -195,3 +208,61 @@ def CreateDefaultOptimizer(
 ) -> tensorflow.train.Optimizer:
   """Creates a default optimizer."""
   return tensorflow.train.RMSPropOptimizer(learning_rate, decay=.99)
+
+
+class NStepExperienceRunner(base.Runner):
+  """A runner the uses n-step experience."""
+
+  def __init__(
+      self,
+      discount_factor: float = _DEFAULT_DISCOUNT_FACTOR,
+      n_step_return: int = 8,
+  ):
+    """Ctor.
+
+    Args:
+      discount_factor: the discount factor gamma.
+      n_step_return: use this n-step-return.
+    """
+    super().__init__()
+    self._gamma = discount_factor
+    self._n_step_return = n_step_return
+
+    self._inv_gamma_n = 1.0 / self._gamma
+
+    # Stores the last n_step_return transitions.
+    self._memory = []  # type: t.List[base.Transition]
+
+  def _protected_ProcessTransition(
+      self,
+      brain: Brain,
+      transition: Transition,
+      step_idx: int,
+  ) -> None:
+    train_transitions = []
+    self._memory.append(transition)
+    train_transitions.append(self._GetNStepTransition())
+
+    if len(self._memory) >= self._n_step_return:
+      self._memory.pop(0)
+
+    if transition.sp is None:
+      while self._memory:
+        train_transitions.append(self._GetNStepTransition())
+        self._memory.pop(0)
+
+    brain.UpdateFromTransitions(train_transitions)
+
+  def _GetNStepTransition(self) -> base.Transition:
+    # TODO: can be optimized.
+    R = 0.0
+    next_discount_factor = 1.0
+    for tran in self._memory:
+      R += tran.r * next_discount_factor
+      next_discount_factor *= self._gamma
+    return base.Transition(
+      s=self._memory[0].s,
+      a=self._memory[0].a,
+      r=R,
+      sp=self._memory[-1].sp,
+    )

@@ -37,20 +37,20 @@ __will_use = (
   numpy_util,
   running_environment,
 
-  a3c_impl,
   base,
   environment_impl,
   policy_impl,
   qfunc_impl,
   runner_extension_impl,
   runner_impl,
-  shortcut,
 
+  a3c_impl,
   circular_world_env,
   interval_world_env,
   model_builder,
   guided_environments,
   other_runners,
+  shortcut,
 )
 
 # Add this to the first cell of your notebook:
