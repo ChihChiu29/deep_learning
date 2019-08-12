@@ -7,6 +7,8 @@
 # https://jaromiru.com/2017/02/16/lets-make-an-a3c-theory/
 #
 # author: Jaromir Janisch, 2017
+
+import numpy
 from matplotlib import pyplot
 
 from deep_learning.engine import base
@@ -27,7 +29,7 @@ from keras.layers import *
 # -- constants
 ENV = 'CartPole-v0'
 
-RUN_TIME = 60
+RUN_TIME = 300
 THREADS = 1
 OPTIMIZERS = 1
 THREAD_DELAY = 0.001
@@ -69,7 +71,8 @@ class Brain:
 
   def train_push(self, s, a, r, s_):
     return self._brain.UpdateFromTransitions(
-      [base.Transition(s=s, a=self._env.GetActionFromChoice(a), r=r, sp=s_)])
+      [base.Transition(
+        s=numpy.array([s]), a=numpy.array([a]), r=r, sp=numpy.array([s_]))])
 
   def optimize(self):
     pass
@@ -87,6 +90,8 @@ class Agent:
 
     self.memory = []  # used for n_step return
     self.R = 0.
+
+    self._a3c_runner = a3c_impl.NStepExperienceRunner()
 
   def getEpsilon(self):
     if (frames >= self.eps_steps):
@@ -123,6 +128,10 @@ class Agent:
     a_cats = np.zeros(NUM_ACTIONS)  # turn action into one-hot representation
     a_cats[a] = 1
 
+    # trans = self._a3c_runner._protected_ProcessTransition(
+    #   mock.MagicMock(), base.Transition(s=s, a=a_cats, r=r, sp=s_), 0)
+    # print('R cmp, mine: %s' % ','.join(str(t) for t in trans))
+
     self.memory.append((s, a_cats, r, s_))
 
     self.R = (self.R + r * GAMMA_N) / GAMMA
@@ -131,6 +140,7 @@ class Agent:
       while len(self.memory) > 0:
         n = len(self.memory)
         s, a, r, s_ = get_sample(self.memory, n)
+        # print('R cmp, original: %s' % ([s, a, r, s_]))
         brain.train_push(s, a, r, s_)
 
         self.R = (self.R - self.memory[0][2]) / GAMMA
@@ -140,6 +150,7 @@ class Agent:
 
     if len(self.memory) >= N_STEP_RETURN:
       s, a, r, s_ = get_sample(self.memory, N_STEP_RETURN)
+      # print('R cmp, original: %s' % ([s, a, r, s_]))
       brain.train_push(s, a, r, s_)
 
       self.R = self.R - self.memory[0][2]
@@ -211,6 +222,11 @@ class Optimizer(threading.Thread):
   def stop(self):
     self.stop_signal = True
 
+
+env_test = Environment(render=True, eps_start=0., eps_end=0.)
+NUM_STATE = env_test.env.observation_space.shape[0]
+NUM_ACTIONS = env_test.env.action_space.n
+NONE_STATE = np.zeros(NUM_STATE)
 
 brain = Brain()  # brain is global in A3C
 
