@@ -113,7 +113,7 @@ class A3C(base.Brain):
     states, actions, rewards, new_states, reward_mask = (
       self.CombineTransitions(transitions))
 
-    v_values = self._GetV(states)
+    v_values = self._GetV(new_states)
     rewards = rewards + self._gamma * v_values * reward_mask
 
     s_input, a_input, r_input, minimize = self._graph
