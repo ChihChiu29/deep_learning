@@ -8,6 +8,8 @@
 #
 # author: Jaromir Janisch, 2017
 
+# VERY UNSTABLE; ALMOST NOT WORKING
+
 import numpy
 from matplotlib import pyplot
 

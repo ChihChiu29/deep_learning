@@ -20,6 +20,7 @@ from deep_learning.engine.base import States
 from deep_learning.engine.base import Transition
 from deep_learning.engine.base import Values
 from deep_learning.experimental import a3c_impl
+from qpylib import logging
 from qpylib import running_environment
 from qpylib import t
 
@@ -64,10 +65,8 @@ NUM_ACTIONS = env.GetActionSpaceSize()
 NONE_STATE = np.zeros(NUM_STATE)
 
 
-# ---------
-class JBrain:
-  train_queue = [[], [], [], [], []]  # s, a, r, s', s' terminal mask
-  lock_queue = threading.Lock()
+class A3C_EXP(base.Brain):
+  """A A3C brain."""
 
   def __init__(self):
     self.session = tf.Session()
@@ -83,7 +82,6 @@ class JBrain:
     self.default_graph.finalize()  # avoid modifications
 
   def _build_model(self):
-
     l_input = Input(batch_shape=(None, NUM_STATE))
     l_dense = Dense(16, activation='relu')(l_input)
 
@@ -118,6 +116,82 @@ class JBrain:
 
     return s_t, a_t, r_t, minimize
 
+  # @Override
+  def GetValues(
+      self,
+      states: base.States,
+  ) -> Values:
+    """Use Pi values to make decision."""
+    pi_values, v = self.predict(states)
+    logging.vlog(20, 'GET pi for state %s: %s', states, pi_values)
+    return pi_values
+
+  # @Override
+  def UpdateFromTransitions(
+      self,
+      transitions: t.Iterable[base.Transition],
+  ) -> None:
+    states, actions, rewards, new_states, reward_mask = (
+      self.CombineTransitions(transitions))
+
+    v_values = self._GetV(states)
+    rewards = rewards + self._gamma * v_values * reward_mask
+
+    s_input, a_input, r_input, minimize = self._graph
+    self.session.run(
+      minimize, feed_dict={s_input: states, a_input: actions, r_input: rewards})
+
+    v = self.predict_v(s_)
+    r = r + GAMMA_N * v * s_mask  # set v to 0 where s_ is terminal state
+
+    s_t, a_t, r_t, minimize = self.graph
+    self.session.run(minimize, feed_dict={s_t: s, a_t: a, r_t: r})
+
+  # @Override
+  def Save(self, filepath: t.Text) -> None:
+    pass
+
+  # @Override
+  def Load(self, filepath: t.Text) -> None:
+    pass
+
+  def _GetV(self, states: base.States) -> base.OneDArray:
+    return self.predict_v(states)
+
+  def predict(self, s):
+    with self.default_graph.as_default():
+      p, v = self.model.predict(s)
+      return p, v
+
+  def predict_p(self, s):
+    with self.default_graph.as_default():
+      p, v = self.model.predict(s)
+      return p
+
+  def predict_v(self, s):
+    with self.default_graph.as_default():
+      p, v = self.model.predict(s)
+      return v
+
+
+# ---------
+class JBrain:
+  train_queue = [[], [], [], [], []]  # s, a, r, s', s' terminal mask
+  lock_queue = threading.Lock()
+
+  def __init__(self):
+    self.session = tf.Session()
+    K.set_session(self.session)
+    K.manual_variable_initialization(True)
+
+    self.model = self._build_model()
+    self.graph = self._build_graph(self.model)
+
+    self.session.run(tf.global_variables_initializer())
+    self.default_graph = tf.get_default_graph()
+
+    self.default_graph.finalize()  # avoid modifications
+
   def optimize(self):
     if len(self.train_queue[0]) < MIN_BATCH:
       # time.sleep(0)  # yield
@@ -140,12 +214,6 @@ class JBrain:
     if len(s) > 5 * MIN_BATCH: print(
       "Optimizer alert! Minimizing batch of %d" % len(s))
 
-    v = self.predict_v(s_)
-    r = r + GAMMA_N * v * s_mask  # set v to 0 where s_ is terminal state
-
-    s_t, a_t, r_t, minimize = self.graph
-    self.session.run(minimize, feed_dict={s_t: s, a_t: a, r_t: r})
-
   def train_push(self, s, a, r, s_):
     with self.lock_queue:
       self.train_queue[0].append(s)
@@ -158,21 +226,6 @@ class JBrain:
       else:
         self.train_queue[3].append(s_)
         self.train_queue[4].append(1.)
-
-  def predict(self, s):
-    with self.default_graph.as_default():
-      p, v = self.model.predict(s)
-      return p, v
-
-  def predict_p(self, s):
-    with self.default_graph.as_default():
-      p, v = self.model.predict(s)
-      return p
-
-  def predict_v(self, s):
-    with self.default_graph.as_default():
-      p, v = self.model.predict(s)
-      return v
 
 
 class QBrain(base.Brain):
@@ -208,7 +261,7 @@ def main(_):
   )
   runner = a3c_impl.NStepExperienceRunner()
   runner.AddCallback(
-    runner_extension_impl.ProgressTracer(report_every_num_of_episodes=100))
+    runner_extension_impl.ProgressTracer(report_every_num_of_episodes=10))
   runner.Run(env=env, brain=brain, policy=policy, num_of_episodes=1200)
 
 
