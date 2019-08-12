@@ -5,12 +5,16 @@ Ref:
   https://jaromiru.com/2017/03/26/lets-make-an-a3c-implementation/
 """
 import keras
+import numpy
 import tensorflow
 from keras import backend
 from keras import layers
 
 from deep_learning.engine import base
+from deep_learning.engine.base import Action
 from deep_learning.engine.base import Brain
+from deep_learning.engine.base import Environment
+from deep_learning.engine.base import State
 from deep_learning.engine.base import Transition
 from deep_learning.engine.base import Values
 from qpylib import logging
@@ -210,6 +214,25 @@ def CreateDefaultOptimizer(
   return tensorflow.train.RMSPropOptimizer(learning_rate, decay=.99)
 
 
+class WeightedPiPolicy(base.Policy):
+  """Takes an action according to prob. dist. of Pi.
+
+  This policy can only be applied to brains whose GetValues returns prob.
+  of taking actions (e.g. A3C).
+  """
+
+  def Decide(
+      self,
+      env: Environment,
+      brain: Brain,
+      state: State,
+      episode_idx: int,
+      num_of_episodes: int,
+  ) -> Action:
+    return env.GetActionFromChoice(numpy.random.choice(
+      env.GetActionSpaceSize(), p=brain.GetValues(state)[0]))
+
+
 class NStepExperienceRunner(base.Runner):
   """A runner the uses n-step experience."""
 
@@ -228,7 +251,12 @@ class NStepExperienceRunner(base.Runner):
     self._gamma = discount_factor
     self._n_step_return = n_step_return
 
-    self._inv_gamma_n = 1.0 / self._gamma
+    gamma_power = 1.0
+    gamma_powers = []
+    for _ in range(self._n_step_return):
+      gamma_powers.append(gamma_power)
+      gamma_power *= self._gamma
+    self._gamma_powers = numpy.array(gamma_powers)
 
     # Stores the last n_step_return transitions.
     self._memory = []  # type: t.List[base.Transition]
@@ -250,7 +278,6 @@ class NStepExperienceRunner(base.Runner):
       while self._memory:
         train_transitions.append(self._GetNStepTransition())
         self._memory.pop(0)
-
     brain.UpdateFromTransitions(train_transitions)
 
   def _GetNStepTransition(self) -> base.Transition:
@@ -260,6 +287,12 @@ class NStepExperienceRunner(base.Runner):
     for tran in self._memory:
       R += tran.r * next_discount_factor
       next_discount_factor *= self._gamma
+
+    # rewards = numpy.zeros(self._n_step_return)
+    # for idx, tran in enumerate(self._memory):
+    #   rewards[idx] = tran.r
+    # R = numpy.sum(self._gamma_powers * rewards)
+
     return base.Transition(
       s=self._memory[0].s,
       a=self._memory[0].a,

@@ -76,11 +76,9 @@ class ProgressTracer(base.RunnerExtension):
     # in notebooks.
     pyplot.title('Episode Rewards')
     pyplot.plot(self._episode_rewards)
-    pyplot.show(block=False)
 
     pyplot.title('Episode Steps')
     pyplot.plot(self._episode_steps)
-    pyplot.show(block=False)
 
 
 class ValueTracer(base.RunnerExtension):
