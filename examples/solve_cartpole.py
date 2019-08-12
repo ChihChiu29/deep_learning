@@ -16,7 +16,7 @@ from qpylib import logging
 
 # Profiler instruction:
 # 1) Generate profiler file:
-#   $ python -m cProfile -o result.prof
+#   $ python -m cProfile -o result.prof \
 #   deep_learning/examples/solve_cartpole.py
 # 2) Visualize it:
 #   $ snakeviz result.prof

@@ -7,6 +7,7 @@ from keras import layers
 from keras import models
 from keras import optimizers
 
+from deep_learning.engine import a3c_impl
 from deep_learning.engine import base
 from deep_learning.engine import environment_impl
 from deep_learning.engine import policy_impl
@@ -16,7 +17,6 @@ from deep_learning.engine import runner_impl
 from deep_learning.examples import circular_world_env
 from deep_learning.examples import interval_world_env
 from deep_learning.examples import shortcut
-from deep_learning.experimental import a3c_impl
 from deep_learning.experimental import guided_environments
 from deep_learning.experimental import model_builder
 from deep_learning.experimental import other_runners

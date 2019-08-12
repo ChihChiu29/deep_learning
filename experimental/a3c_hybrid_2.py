@@ -12,6 +12,7 @@
 
 import gym
 
+from deep_learning.engine import a3c_impl
 from deep_learning.engine import base
 from deep_learning.engine import environment_impl
 from deep_learning.engine import policy_impl
@@ -19,7 +20,6 @@ from deep_learning.engine import runner_extension_impl
 from deep_learning.engine.base import States
 from deep_learning.engine.base import Transition
 from deep_learning.engine.base import Values
-from deep_learning.experimental import a3c_impl
 from qpylib import running_environment
 from qpylib import t
 

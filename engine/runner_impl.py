@@ -101,3 +101,72 @@ class ExperienceReplayRunner(base.Runner):
   def SampleFromHistory(self, size: int) -> t.Iterable[base.Transition]:
     """Samples a set of transitions from experience history."""
     return self._experience.Sample(size)
+
+
+class NStepExperienceRunner(base.Runner):
+  """A runner the uses n-step experience."""
+
+  def __init__(
+      self,
+      discount_factor: float = 0.99,
+      n_step_return: int = 8,
+  ):
+    """Ctor.
+
+    Args:
+      discount_factor: the discount factor gamma.
+      n_step_return: use this n-step-return.
+    """
+    super().__init__()
+    self._gamma = discount_factor
+    self._n_step_return = n_step_return
+
+    gamma_power = 1.0
+    gamma_powers = []
+    for _ in range(self._n_step_return):
+      gamma_powers.append(gamma_power)
+      gamma_power *= self._gamma
+    self._gamma_powers = numpy.array(gamma_powers)
+
+    # Stores the last n_step_return transitions.
+    self._memory = []  # type: t.List[base.Transition]
+
+  def _protected_ProcessTransition(
+      self,
+      brain: base.Brain,
+      transition: base.Transition,
+      step_idx: int,
+  ) -> None:
+    train_transitions = []
+    self._memory.append(transition)
+    train_transitions.append(self._GetNStepTransition())
+
+    if len(self._memory) >= self._n_step_return:
+      self._memory.pop(0)
+
+    if transition.sp is None:
+      while self._memory:
+        train_transitions.append(self._GetNStepTransition())
+        self._memory.pop(0)
+    brain.UpdateFromTransitions(train_transitions)
+
+  def _GetNStepTransition(self) -> base.Transition:
+    # This implementation takes 3.542e-06 sec per call.
+    R = 0.0
+    next_discount_factor = 1.0
+    for tran in self._memory:
+      R += tran.r * next_discount_factor
+      next_discount_factor *= self._gamma
+
+    # The commented implementation takes 7.322e-06 sec per call.
+    # rewards = numpy.zeros(self._n_step_return)
+    # for idx, tran in enumerate(self._memory):
+    #   rewards[idx] = tran.r
+    # R = numpy.sum(self._gamma_powers * rewards)
+
+    return base.Transition(
+      s=self._memory[0].s,
+      a=self._memory[0].a,
+      r=R,
+      sp=self._memory[-1].sp,
+    )

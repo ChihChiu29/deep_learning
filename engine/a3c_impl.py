@@ -5,17 +5,11 @@ Ref:
   https://jaromiru.com/2017/03/26/lets-make-an-a3c-implementation/
 """
 import keras
-import numpy
 import tensorflow
 from keras import backend
 from keras import layers
 
 from deep_learning.engine import base
-from deep_learning.engine.base import Action
-from deep_learning.engine.base import Brain
-from deep_learning.engine.base import Environment
-from deep_learning.engine.base import State
-from deep_learning.engine.base import Transition
 from deep_learning.engine.base import Values
 from qpylib import logging
 from qpylib import t
@@ -28,11 +22,9 @@ _DEFAULT_LOSS_ENTROPY = .01  # entropy coefficient
 _ACTIVE_INSTANCES = []  # type: t.List['A3C']
 
 
-# Not ready for mass usage:
-#   * Interval World: always stable.
-#   * Circular World: use SimpleRunner, and a Greedy policy with epsilon=0.1
-#     works with a (20, 20, 20) model.
-#   * CartPole-v0: doesn't work.
+# Some notes:
+# - A3C with single environment is less stable than DQN/DQN_TargetNetwork/DDQN.
+# - It seems SimpleRunner is more stable with A3C than N-step return runner.
 class A3C(base.Brain):
   """A A3C brain."""
 
@@ -176,17 +168,6 @@ def CreateModel(
       staring with the input layer.
     activation: the activation, for example "relu".
   """
-  l_input = layers.Input(batch_shape=(None, state_shape[0]))
-  l_dense = layers.Dense(16, activation='relu')(l_input)
-
-  out_actions = layers.Dense(action_space_size, activation='softmax')(l_dense)
-  out_value = layers.Dense(1, activation='linear')(l_dense)
-
-  model = keras.Model(inputs=[l_input], outputs=[out_actions, out_value])
-  model._make_predict_function()  # have to initialize before threading
-
-  return model
-
   hidden_layer_sizes = tuple(hidden_layer_sizes)
   input_layer = layers.Input(shape=state_shape)
 
@@ -212,90 +193,3 @@ def CreateDefaultOptimizer(
 ) -> tensorflow.train.Optimizer:
   """Creates a default optimizer."""
   return tensorflow.train.RMSPropOptimizer(learning_rate, decay=.99)
-
-
-class WeightedPiPolicy(base.Policy):
-  """Takes an action according to prob. dist. of Pi.
-
-  This policy can only be applied to brains whose GetValues returns prob.
-  of taking actions (e.g. A3C).
-  """
-
-  def Decide(
-      self,
-      env: Environment,
-      brain: Brain,
-      state: State,
-      episode_idx: int,
-      num_of_episodes: int,
-  ) -> Action:
-    return env.GetActionFromChoice(numpy.random.choice(
-      env.GetActionSpaceSize(), p=brain.GetValues(state)[0]))
-
-
-class NStepExperienceRunner(base.Runner):
-  """A runner the uses n-step experience."""
-
-  def __init__(
-      self,
-      discount_factor: float = _DEFAULT_DISCOUNT_FACTOR,
-      n_step_return: int = 8,
-  ):
-    """Ctor.
-
-    Args:
-      discount_factor: the discount factor gamma.
-      n_step_return: use this n-step-return.
-    """
-    super().__init__()
-    self._gamma = discount_factor
-    self._n_step_return = n_step_return
-
-    gamma_power = 1.0
-    gamma_powers = []
-    for _ in range(self._n_step_return):
-      gamma_powers.append(gamma_power)
-      gamma_power *= self._gamma
-    self._gamma_powers = numpy.array(gamma_powers)
-
-    # Stores the last n_step_return transitions.
-    self._memory = []  # type: t.List[base.Transition]
-
-  def _protected_ProcessTransition(
-      self,
-      brain: Brain,
-      transition: Transition,
-      step_idx: int,
-  ) -> None:
-    train_transitions = []
-    self._memory.append(transition)
-    train_transitions.append(self._GetNStepTransition())
-
-    if len(self._memory) >= self._n_step_return:
-      self._memory.pop(0)
-
-    if transition.sp is None:
-      while self._memory:
-        train_transitions.append(self._GetNStepTransition())
-        self._memory.pop(0)
-    brain.UpdateFromTransitions(train_transitions)
-
-  def _GetNStepTransition(self) -> base.Transition:
-    # TODO: can be optimized.
-    R = 0.0
-    next_discount_factor = 1.0
-    for tran in self._memory:
-      R += tran.r * next_discount_factor
-      next_discount_factor *= self._gamma
-
-    # rewards = numpy.zeros(self._n_step_return)
-    # for idx, tran in enumerate(self._memory):
-    #   rewards[idx] = tran.r
-    # R = numpy.sum(self._gamma_powers * rewards)
-
-    return base.Transition(
-      s=self._memory[0].s,
-      a=self._memory[0].a,
-      r=R,
-      sp=self._memory[-1].sp,
-    )

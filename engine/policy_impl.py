@@ -24,6 +24,25 @@ class GreedyPolicy(base.Policy):
     return env.GetActionFromChoice(choice)
 
 
+class WeightedPiPolicy(base.Policy):
+  """Takes an action according to prob. dist. of Pi.
+
+  This policy can only be applied to brains whose GetValues returns prob.
+  of taking actions (e.g. A3C).
+  """
+
+  def Decide(
+      self,
+      env: base.Environment,
+      brain: base.Brain,
+      state: base.State,
+      episode_idx: int,
+      num_of_episodes: int,
+  ) -> base.Action:
+    return env.GetActionFromChoice(numpy.random.choice(
+      env.GetActionSpaceSize(), p=brain.GetValues(state)[0]))
+
+
 class PolicyWithRandomness(base.Policy):
   """A policy that almost performs like another policy."""
 

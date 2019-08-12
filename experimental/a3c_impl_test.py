@@ -3,8 +3,8 @@ import unittest
 
 import numpy
 
+from deep_learning.engine import a3c_impl
 from deep_learning.engine import base
-from deep_learning.experimental import a3c_impl
 from qpylib import logging
 from qpylib import numpy_util
 from qpylib import running_environment
