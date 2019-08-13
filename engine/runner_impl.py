@@ -4,6 +4,7 @@ Ref:
   https://en.wikipedia.org/wiki/Q-learning
   https://jaromiru.com/2016/09/27/lets-make-a-dqn-theory/
 """
+import abc
 
 import numpy
 
@@ -173,8 +174,8 @@ class NStepExperienceRunner(base.Runner):
     )
 
 
-class SimpleMultiEnvironmentRunner:
-  """A simple runner that uses multiple environments.
+class MultiEnvsSequentialRunner(abc.ABC):
+  """A base runner that uses multiple environments.
 
   It runs one environment for one step, then changes to another environment.
   Each step the brain is updated. An episode is finished when all environments
@@ -184,6 +185,7 @@ class SimpleMultiEnvironmentRunner:
   def __init__(self):
     self._callbacks = []
 
+  @abc.abstractmethod
   def _protected_ProcessTransition(
       self,
       brain: base.Brain,
@@ -191,7 +193,7 @@ class SimpleMultiEnvironmentRunner:
       step_idx: int,
   ) -> None:
     """Processes a new transition; e.g. to train the QFunction."""
-    brain.UpdateFromTransitions([transition])
+    pass
 
   def AddCallback(self, ext: base.RunnerExtension):
     """Adds a callback which extends Runner's ability."""
@@ -261,3 +263,40 @@ class SimpleMultiEnvironmentRunner:
         brain=brain,
         num_of_episodes=num_of_episodes,
       )
+
+
+class MultiEnvsSequentialSimpleRunner(MultiEnvsSequentialRunner):
+  """A simple runner that updates brain every step."""
+
+  # @Override
+  def _protected_ProcessTransition(
+      self,
+      brain: base.Brain,
+      transition: base.Transition,
+      step_idx: int,
+  ) -> None:
+    """Processes a new transition; e.g. to train the QFunction."""
+    brain.UpdateFromTransitions([transition])
+
+
+class MultiEnvsSequentialBatchedRunner(MultiEnvsSequentialRunner):
+  """A runner that updates brain only when buffer is full."""
+
+  def __init__(self, batch_size: int):
+    super().__init__()
+    self._batch_size = batch_size
+
+    self._memory = []  # type: t.List[base.Transition]
+
+  # @Override
+  def _protected_ProcessTransition(
+      self,
+      brain: base.Brain,
+      transition: base.Transition,
+      step_idx: int,
+  ) -> None:
+    """Processes a new transition; e.g. to train the QFunction."""
+    self._memory.append(transition)
+    if len(self._memory) == self._batch_size:
+      brain.UpdateFromTransitions(self._memory)
+      self._memory = []
