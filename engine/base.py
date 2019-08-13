@@ -396,7 +396,11 @@ class QFunction(Brain, abc.ABC):
 
 
 class Policy(abc.ABC):
-  """The Policy that uses a Q-function to make decisions."""
+  """The Policy that uses a brain to make decisions.
+
+  A policy should be stateless -- calling Decide should be change any internal
+  state.
+  """
 
   @abc.abstractmethod
   def Decide(
@@ -407,7 +411,7 @@ class Policy(abc.ABC):
       episode_idx: int,
       num_of_episodes: int,
   ) -> Action:
-    """Makes an decision using a QFunction.
+    """Makes an decision using a brain.
 
     The episode info is provided to support policy that changes parameters
     over training.
