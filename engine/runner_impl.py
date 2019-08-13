@@ -173,10 +173,12 @@ class NStepExperienceRunner(base.Runner):
     )
 
 
-class MultiEnvironmentRunner:
-  """A runner that uses multiple environments.
+class SimpleMultiEnvironmentRunner:
+  """A simple runner that uses multiple environments.
 
-  Environments are ran sequentially.
+  It runs one environment for one step, then changes to another environment.
+  Each step the brain is updated. An episode is finished when all environments
+  are done.
   """
 
   def __init__(self):
