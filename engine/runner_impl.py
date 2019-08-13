@@ -8,6 +8,7 @@ Ref:
 import numpy
 
 from deep_learning.engine import base
+from qpylib import logging
 from qpylib import t
 
 
@@ -170,3 +171,91 @@ class NStepExperienceRunner(base.Runner):
       r=R,
       sp=self._memory[-1].sp,
     )
+
+
+class MultiEnvironmentRunner:
+  """A runner that uses multiple environments.
+
+  Environments are ran sequentially.
+  """
+
+  def __init__(self):
+    self._callbacks = []
+
+  def _protected_ProcessTransition(
+      self,
+      brain: base.Brain,
+      transition: base.Transition,
+      step_idx: int,
+  ) -> None:
+    """Processes a new transition; e.g. to train the QFunction."""
+    brain.UpdateFromTransitions([transition])
+
+  def AddCallback(self, ext: base.RunnerExtension):
+    """Adds a callback which extends Runner's ability."""
+    self._callbacks.append(ext)
+
+  def ClearCallbacks(self):
+    """Removes all registered callbacks."""
+    self._callbacks = []
+
+  def Run(
+      self,
+      envs: t.Iterable[base.Environment],
+      brain: base.Brain,
+      policy: base.Policy,
+      num_of_episodes: int,
+  ):
+    """Runs an agent for some episodes.
+
+    For each episode, the environment is reset first, then run until it's
+    done. Between episodes, Report function is called to give user feedback.
+    """
+    envs_list = list(envs)
+    for episode_idx in range(num_of_episodes):
+      logging.vlog(10, 'Running episode: %d', episode_idx)
+
+      queue = [(env, env.Reset()) for env in envs_list]
+      step_idx = 0
+      episode_reward = 0.0
+      while queue:
+        env, s = queue.pop(0)
+        logging.vlog(
+          20, 'Running environment %s: episode: %d, step: %d',
+          env, episode_idx, step_idx)
+        tran = env.TakeAction(
+          policy.Decide(
+            env=env,
+            brain=brain,
+            state=s,
+            episode_idx=episode_idx,
+            num_of_episodes=num_of_episodes,
+          ))
+        logging.vlog(26, '%s', tran)
+        self._protected_ProcessTransition(
+          brain=brain,
+          transition=tran,
+          step_idx=step_idx)
+        episode_reward += tran.r
+        if tran.sp is not None:
+          queue.append((env, tran.sp))
+        step_idx += 1
+
+      # Handle callback functions.
+      for reporter in self._callbacks:
+        reporter.OnEpisodeFinishedCallback(
+          env=None,
+          brain=brain,
+          episode_idx=episode_idx,
+          num_of_episodes=num_of_episodes,
+          episode_reward=episode_reward / len(envs_list),
+          steps=float(step_idx) / len(envs_list),
+        )
+
+    # All runs finished.
+    for reporter in self._callbacks:
+      reporter.OnCompletionCallback(
+        env=None,
+        brain=brain,
+        num_of_episodes=num_of_episodes,
+      )
