@@ -186,6 +186,7 @@ def CreateModel(
   out_v = layers.Dense(1, activation='linear')(l)
 
   model = keras.Model(inputs=[input_layer], outputs=[out_pi, out_v])
+  model._make_predict_function()  # have to initialize before threading
   return model
 
 

@@ -20,14 +20,17 @@ class ProgressTracer(base.RunnerExtension):
   def __init__(
       self,
       report_every_num_of_episodes: int = 100,
+      report_steps: bool = False,
   ):
     """Ctor.
 
     Args:
       report_every_num_of_episodes: prints a report every this number of
         episodes.
+      report_steps: whether to report steps as well.
     """
     self._report_every_num_of_episodes = report_every_num_of_episodes
+    self._report_steps = report_steps
 
     self._episode_rewards = []
     self._episode_steps = []
@@ -78,9 +81,10 @@ class ProgressTracer(base.RunnerExtension):
     pyplot.plot(self._episode_rewards)
     pyplot.show()
 
-    pyplot.title('Episode Steps')
-    pyplot.plot(self._episode_steps)
-    pyplot.show()
+    if self._report_steps:
+      pyplot.title('Episode Steps')
+      pyplot.plot(self._episode_steps)
+      pyplot.show()
 
 
 class ValueTracer(base.RunnerExtension):

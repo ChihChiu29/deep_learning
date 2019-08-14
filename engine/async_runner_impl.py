@@ -102,6 +102,7 @@ class _AsyncEnvRunner(threading.Thread):
       if tran.sp is None:
         self._experience.AddEpisodeInfo(episode_reward, steps)
         episode_reward = 0.0
+        steps = 0
         episode_idx += 1
         if episode_idx == self._num_of_episodes:
           self.Stop()
@@ -152,6 +153,8 @@ class MultiEnvsParallelBatchedRunner:
     For each episode, the environment is reset first, then run until it's
     done. Between episodes, Report function is called to give user feedback.
     """
+    envs = list(envs)
+    total_num_of_episodes = num_of_episodes * len(envs)
 
     def ExtCaller(
         episode_idx: int,
@@ -162,7 +165,7 @@ class MultiEnvsParallelBatchedRunner:
           env=None,
           brain=brain,
           episode_idx=episode_idx,
-          num_of_episodes=num_of_episodes,
+          num_of_episodes=total_num_of_episodes,
           episode_reward=episode_reward,
           steps=episode_steps,
         )
