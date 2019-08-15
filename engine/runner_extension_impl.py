@@ -63,12 +63,9 @@ class ProgressTracer(base.RunnerExtension):
 
   def OnCompletionCallback(self):
     logging.printf(
-      'Total: run %d episodes, avg_reward = %3.2f, avg_steps=%3.2f',
-      num_of_episodes,
-      float(numpy.mean(
-        self._episode_rewards[-num_of_episodes:])),
-      float(numpy.mean(
-        self._episode_steps[-num_of_episodes:])),
+      'Total: avg_reward = %3.2f, avg_steps=%3.2f',
+      float(numpy.mean(self._episode_rewards)),
+      float(numpy.mean(self._episode_steps)),
     )
     # Note that since "block=False", if you run it on CLI the image will be
     # shown then disappear immediately. The result will persist if you run it
