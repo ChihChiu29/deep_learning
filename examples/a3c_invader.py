@@ -17,6 +17,9 @@ running_environment.ForceCpuForTheRun()
 logging.ENV.debug_verbosity = 6
 
 
+def CreateModel()
+
+
 def Train(_):
   env = environment_impl.GymEnvironment(gym.make('CartPole-v0'))
   async_env_runners = []  # type: t.List[async_runner_impl.AsyncEnvRunner]
