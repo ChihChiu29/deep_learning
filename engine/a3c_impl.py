@@ -191,7 +191,7 @@ def CreateModel(
 
 
 def CreateDefaultOptimizer(
-    learning_rate: float = 5e-3,
+    learning_rate: float = 2.5e-3,
 ) -> tensorflow.train.Optimizer:
   """Creates a default optimizer."""
   return tensorflow.train.RMSPropOptimizer(learning_rate, decay=.99)

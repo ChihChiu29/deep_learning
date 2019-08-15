@@ -181,7 +181,7 @@ class ModelSaver(base.RunnerExtension):
       self._values.append(steps)
 
     new_value = numpy.mean(self._values[-self._average_over_num_of_episodes:])
-    if new_value < self._best_value:
+    if new_value <= self._best_value:
       return
 
     logging.vlog(6, 'saving model for new best value: %s', new_value)
