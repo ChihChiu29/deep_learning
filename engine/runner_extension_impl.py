@@ -61,11 +61,7 @@ class ProgressTracer(base.RunnerExtension):
         self._report_every_num_of_episodes,
       )
 
-  def OnCompletionCallback(
-      self,
-      env: Environment,
-      brain: Brain,
-      num_of_episodes: int):
+  def OnCompletionCallback(self):
     logging.printf(
       'Total: run %d episodes, avg_reward = %3.2f, avg_steps=%3.2f',
       num_of_episodes,
@@ -132,12 +128,7 @@ class ValueTracer(base.RunnerExtension):
         self._value_traces[a][idx].append(v[a])
 
   # @Override
-  def OnCompletionCallback(
-      self,
-      env: Environment,
-      brain: Brain,
-      num_of_episodes: int,
-  ):
+  def OnCompletionCallback(self):
     for a in self._actions:
       pyplot.figure(figsize=(18, 10))
       pyplot.title('Action: %d' % a)
@@ -201,9 +192,5 @@ class ModelSaver(base.RunnerExtension):
     brain.Save(self._save_filepath)
 
   # @Override
-  def OnCompletionCallback(
-      self,
-      env: Environment,
-      brain: Brain,
-      num_of_episodes: int):
+  def OnCompletionCallback(self):
     pass

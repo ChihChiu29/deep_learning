@@ -2,7 +2,176 @@
 import threading
 
 from deep_learning.engine import base
+from deep_learning.engine.base import States
+from deep_learning.engine.base import Values
 from qpylib import t
+
+
+class AsyncBrain(base.Brain):
+  """A thread safe and batch training wrapper for another brain."""
+
+  def __init__(
+      self,
+      brain: base.Brain,
+      batch_size: int = 64,
+  ):
+    """Ctor.
+
+    Args:
+      brain: the brain to wrap around.
+      batch_size: the batch size. Training only happens when this number of data
+        is collected.
+    """
+    self._brain = brain
+    self._batch_size = batch_size
+
+    self._lock = threading.Lock()
+    self._batch_buffer = []  # type: t.List[base.Transition]
+
+  # @Override
+  def GetValues(self, states: States) -> Values:
+    return self._brain.GetValues(states)
+
+  # @Override
+  def UpdateFromTransitions(
+      self,
+      transitions: t.Iterable[base.Transition],
+  ) -> None:
+    with self._lock:
+      self._batch_buffer.extend(transitions)
+      if len(self._batch_buffer) > self._batch_size:
+        self._brain.UpdateFromTransitions(self._batch_buffer)
+        self._batch_buffer = []
+
+  # @Override
+  def Save(self, filepath: t.Text) -> None:
+    self._brain.Save(filepath)
+
+  # @Override
+  def Load(self, filepath: t.Text) -> None:
+    with self._lock:
+      self._brain.Load(filepath)
+
+
+class AsyncEnvRunner:
+  """Wrapper for a runner running an environment."""
+
+  def __init__(
+      self,
+      env: base.Environment,
+      runner: base.Runner,
+  ):
+    """Ctor.
+
+    Args:
+      env: the environment to run.
+      runner: the runner to wrap.
+    """
+    super().__init__()
+    self._env = env
+    self._runner = runner
+
+  @property
+  def runner(self):
+    return self._runner
+
+  def Run(
+      self,
+      brain: AsyncBrain,
+      policy: base.Policy,
+      num_of_episodes: int,
+  ):
+    """Runs the environment using this given runner."""
+    self._runner.Run(self._env, brain, policy, num_of_episodes=num_of_episodes)
+
+
+class AsyncRunnerExtension(base.RunnerExtension):
+  """Makes a runner extension thread safe."""
+
+  def __init__(self, runner_ext: base.RunnerExtension):
+    self._ext = runner_ext
+    self._lock = threading.Lock()
+
+  def OnEpisodeFinishedCallback(
+      self,
+      env: base.Environment,
+      brain: base.Brain,
+      episode_idx: int,
+      num_of_episodes: int,
+      episode_reward: float,
+      steps: int):
+    with self._lock:
+      self._ext.OnEpisodeFinishedCallback(
+        env=env,
+        brain=brain,
+        episode_idx=episode_idx,
+        num_of_episodes=num_of_episodes,
+        episode_reward=episode_reward,
+        steps=steps)
+
+  def OnCompletionCallback(self):
+    # Mute this since this can be called from a async runner.
+    # OnAllThreadsCompletion should be called explicitly instead.
+    pass
+
+  def OnAllThreadsCompletion(self):
+    self._ext.OnCompletionCallback()
+
+
+class ParallelRunner:
+  """Helps to run multiple runners in parallel."""
+
+  def __init__(
+      self,
+      async_runners: t.Iterable[AsyncEnvRunner],
+  ):
+    """Ctor.
+
+    Args:
+      async_runners: the environments and corresponding runners.
+    """
+    super().__init__()
+    self._env_runners = async_runners
+
+    self._exts = []  # type: t.List[AsyncRunnerExtension]
+
+  def AddCallback(self, ext: AsyncRunnerExtension):
+    """Adds a callback which extends Runner's ability."""
+    self._exts.append(ext)
+    for env_runner in self._env_runners:
+      env_runner.runner.AddCallback(ext)
+
+  def ClearCallbacks(self):
+    """Removes all registered callbacks."""
+    self._exts = []
+    for env_runner in self._env_runners:
+      env_runner.runner.ClearCallbacks()
+
+  def Run(
+      self,
+      brain: AsyncBrain,
+      policy: base.Policy,
+      num_of_episodes: int,
+  ):
+    """Runs an agent for some episodes.
+
+    Args:
+      brain: the async-ready brain.
+      policy: make the decision.
+      num_of_episodes: number of episodes to run for each runner.
+    """
+    threads = []
+    for env_runner in self._env_runners:
+      thread = threading.Thread(
+        target=env_runner.Run, args=(brain, policy, num_of_episodes))
+      thread.start()
+      threads.append(thread)
+
+    for thread in threads:
+      thread.join()
+
+    for ext in self._exts:
+      ext.OnAllThreadsCompletion()
 
 
 class _ThreadSafeHistory:
@@ -193,8 +362,4 @@ class MultiEnvsParallelBatchedRunner:
 
     # All runs finished.
     for reporter in self._callbacks:
-      reporter.OnCompletionCallback(
-        env=None,
-        brain=brain,
-        num_of_episodes=num_of_episodes,
-      )
+      reporter.OnCompletionCallback()

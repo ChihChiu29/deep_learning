@@ -436,12 +436,7 @@ class RunnerExtension(abc.ABC):
     pass
 
   @abc.abstractmethod
-  def OnCompletionCallback(
-      self,
-      env: Environment,
-      brain: Brain,
-      num_of_episodes: int,
-  ):
+  def OnCompletionCallback(self):
     """Called at the end of the runner.Run method."""
     pass
 
@@ -522,8 +517,4 @@ class Runner(abc.ABC):
 
     # All runs finished.
     for reporter in self._callbacks:
-      reporter.OnCompletionCallback(
-        env=env,
-        brain=brain,
-        num_of_episodes=num_of_episodes,
-      )
+      reporter.OnCompletionCallback()

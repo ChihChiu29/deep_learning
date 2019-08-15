@@ -258,11 +258,7 @@ class MultiEnvsSequentialRunner(abc.ABC):
 
     # All runs finished.
     for reporter in self._callbacks:
-      reporter.OnCompletionCallback(
-        env=None,
-        brain=brain,
-        num_of_episodes=num_of_episodes,
-      )
+      reporter.OnCompletionCallback()
 
 
 class MultiEnvsSequentialSimpleRunner(MultiEnvsSequentialRunner):
