@@ -1,16 +1,77 @@
 # Deep Reinforcement Learning (RL) Beginner Toolkit
 
-This project aims for building a clean, efficient, and easy-to-use Deep RL frameworks for researchers, especially new researches.
+This project aims for building a clean, efficient, and easy-to-use Deep RL
+frameworks for researchers, especially new researches.
 
-* It has a clean design. The DL running loop is broken into a few key interfaces, each aiming for only one functionality. The structure of data they use to exchange is very well documented.
- 
-* It's easy to use. Implementations are provided for all interfaces for commonly used tools. For example Gym environment is wrapped into an `Environment` interface, which has APIs to easily show animation and record videos. Some implementations for academic examples are provided as well. 
+* It has a clean design. The DL running loop is broken into a few key
+  interfaces, each aiming for only one functionality. The structure of data
+  they use to exchange is very well documented.
 
-* It's efficient. Extra attention was given to avoid extra copying in Python, and numpy is used intensively. The interface also forces the usage of numpy data structure to ensure high performance. As a result, training a CartPole environment for 500 episodes on a i5 CPU only takes 2 min.
+* It's easy to use. Implementations are provided for all interfaces for
+  commonly used tools. For example Gym environment is wrapped into an
+  `Environment` interface, which has APIs to easily show animation and
+  record videos. Some implementations for academic examples are provided
+  as well.
+
+* It's efficient. Extra attention was given to avoid extra copying in Python,
+  and numpy is used intensively. The interface also forces the usage of numpy
+  data structure to ensure high performance. As a result, training a CartPole
+  environment for 500 episodes on a i5 CPU only takes 2 min.
 
 * It's well tested. Unit and integration tests are provided to ensure the
- integrity of the implementations. Pytype is used everywhere.
+  integrity of the implementations. Pytype is used everywhere.
 
+## Install / Setup
+
+The easiest way to run this repository is to run it from a pre-built Docker
+image. Create a new directory then run the following commands:
+
+```bash
+git clone git@github.com:ChihChiu29/paio-docker.git
+cd paio-docker
+./update_image.sh
+cd external/
+mkdir saved_models logs
+git clone git@github.com:ChihChiu29/qpylib.git
+git clone git@github.com:ChihChiu29/deep_learning.git
+cd ../../
+```
+
+After this you should be in a directory called `paio-docker`. This is the
+entry directory for running the support Docker image, and the `external`
+directory will be mounted from the host the Docker container as the persistent
+workspace.
+
+To start Jupyter lab with Cloud9 web editor:
+
+```bash
+./run_image_with_cloud9.sh lab
+```
+
+Then you can use port 8887 to access the Cloud9 web editor, and 8888 to access
+Jupyter server. The security token should be printed to the console. You can
+then run notebooks from `external/deep_learning/notebooks`.
+
+To run a Python program from command line (in addition to having Jupyer lab
+running), start a new tab then run `./join.sh`. This allows you to go to the
+runing Docker container and put you under `external` directory. This is the
+root Python directory for this project and you can then run a file using
+either `python -m <package>` or `python /path/to/script.py`. For example you
+can run the following demo from a running container:
+
+```bash
+python -m deep_learning.examples.solve_cartpole_concise
+```
+
+Alternatively, you can also invoke the same package from the host using the
+`py.sh` script (initialization is slower as it starts a new container; after
+that running time is about the same):
+
+```bash
+./py.sh deep_learning.examples.solve_cartpole_concise
+```
+
+Enjoy!
 
 ## Concept
 
@@ -31,7 +92,7 @@ There are 4 major types of interfaces: `Environment`, `Brain`, `Policy`, and
    used by classical RL.
   - `DQN`: this is an implementation of the Deep-Q-Network (DQN) based Q
   -value function.
-  
+
 * `Policy`: the policy makes the decision. It uses environment and Q
 -function as references. Implementations for random policy and greedy
  policies etc. are provided.
@@ -46,7 +107,7 @@ The interfaces are defined in `engine/base.py`, and the implementations for
  these types are defined in `engine/<type>_impl.py` modules. The `engine
  /base.py` module also contains explanation for the basic data structures
  , like value, action, etc. (They are all numpy arrays for efficiency; their
-  shape are explained.)   
+  shape are explained.)
 
 
 ## Usage example
