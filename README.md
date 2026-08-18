@@ -1,3 +1,5 @@
+
+
 # Deep Reinforcement Learning (RL) Beginner Toolkit
 
 This project aims for building a clean, efficient, and easy-to-use Deep RL
@@ -118,7 +120,7 @@ To run it, clone this repository and https://github.com/ChihChiu29/qpylib so
  that they are sibling directories under the same "parent" directory, then
   run the following from the parent directory:
 ```shell
-python3 -m deep_learning.example.solve_cartpole_concise
+python3 -m deep_learning.examples.solve_cartpole_concise
 ```
 It will print out convergence info (it converges in about 300 episodes, which
  takes about 5 min on an i5 CPU).
@@ -145,7 +147,3 @@ Note that the Docker image has many more tools installed, like PyCharm, OCR
 , WebDriver, etc. To use a tool with a UI the host that runs Docker needs to
  have a valid X server -- Linux works, and with Mac OS you can install and
   run XQuartz first.
-
-
-
-
